@@ -1,4 +1,4 @@
-package com.example.campusbites.ui.theme
+package presentation.ui
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily
@@ -15,14 +15,14 @@ val provider = GoogleFont.Provider(
 
 val bodyFontFamily = FontFamily(
     Font(
-        googleFont = GoogleFont("ADLaM Display"),
+        googleFont = GoogleFont("Lexend"),
         fontProvider = provider,
     )
 )
 
 val displayFontFamily = FontFamily(
     Font(
-        googleFont = GoogleFont("Actor"),
+        googleFont = GoogleFont("Lexend"),
         fontProvider = provider,
     )
 )
