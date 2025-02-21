@@ -46,7 +46,7 @@ import androidx.compose.ui.unit.dp
 import com.example.campusbites.data.TestData
 import com.example.campusbites.domain.model.Comment
 import com.example.campusbites.domain.model.Restaurant
-import com.example.campusbites.presentation.ui.CampusBitesTheme
+import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)

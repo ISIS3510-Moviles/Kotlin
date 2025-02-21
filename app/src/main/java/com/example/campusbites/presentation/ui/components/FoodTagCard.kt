@@ -47,8 +47,7 @@ fun FoodTagCard(
                 contentDescription = "${foodTag.name} icon",
                 modifier = Modifier
                     .fillMaxWidth()
-                    .size(76.dp)
-                    .padding(2.dp)
+                    .size(72.dp)
             )
             Text(
                 text = foodTag.name,
@@ -66,5 +65,5 @@ fun FoodTagCard(
 @Preview(showBackground = true)
 @Composable
 fun FoodTagCardPreview() {
-    FoodTagCard(foodTags.get(0))
+    FoodTagCard(foodTags.get(6))
 }

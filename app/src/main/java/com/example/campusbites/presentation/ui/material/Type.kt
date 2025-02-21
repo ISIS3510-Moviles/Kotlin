@@ -1,4 +1,4 @@
-package com.example.campusbites.presentation.ui
+package com.example.campusbites.presentation.ui.material
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.font.FontFamily

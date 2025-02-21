@@ -1,4 +1,4 @@
-package com.example.campusbites.presentation.ui
+package com.example.campusbites.presentation.ui.material
 
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme

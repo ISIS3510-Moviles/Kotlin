@@ -1,4 +1,4 @@
-package com.example.campusbites.presentation.ui
+package com.example.campusbites.presentation.ui.material
 import androidx.compose.ui.graphics.Color
 
 val primaryLight = Color(0xFF9D3900)
