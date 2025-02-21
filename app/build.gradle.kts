@@ -2,6 +2,14 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("dagger.hilt.android.plugin")
+    id("kotlin-kapt")
+    id("com.google.dagger.hilt.android")
+}
+
+configurations.all {
+    exclude(group = "xmlpull", module = "xmlpull")
+    exclude(group = "xpp3", module = "xpp3")
 }
 
 android {
@@ -17,6 +25,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
+
 
     buildTypes {
         release {
@@ -37,6 +46,12 @@ android {
     buildFeatures {
         compose = true
     }
+
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+        }
+    }
 }
 
 dependencies {
@@ -51,6 +66,7 @@ dependencies {
     implementation(libs.androidx.material3)
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.navigation.safe.args.generator)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -59,5 +75,8 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
     implementation(libs.androidx.ui.text.google.fonts)
+    implementation(libs.hilt.android.v254)
+    kapt(libs.hilt.android.compiler.v254)
+    implementation(libs.hilt.navigation.compose)
 
 }
