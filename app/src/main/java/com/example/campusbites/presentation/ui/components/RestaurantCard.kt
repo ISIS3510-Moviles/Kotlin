@@ -63,7 +63,7 @@ fun RestaurantCard(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
         modifier = Modifier
-            .fillMaxWidth()
+            .width(380.dp)
             .wrapContentHeight()
             .padding(4.dp)
             .clickable { onRestaurantClick(restaurant.id) }

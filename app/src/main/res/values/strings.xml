@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">CampusBites</string>
+    <string name="near_to_you">Near to you</string>
+    <string name="notifications">Notifications</string>
+    <string name="profile">Profile</string>
+    <string name="the_nearest_restaurants_waiting_for_you">The nearest restaurants waiting for you!</string>
+    <string name="search">Search</string>
+    <string name="search_the_coolest_restaurants">Search the coolest restaurants</string>
+    <string name="la_arepa_so_ada">La Arepa Soñada</string>
 </resources>

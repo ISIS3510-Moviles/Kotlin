@@ -1,7 +1,10 @@
 package com.example.campusbites.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,9 +21,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.campusbites.presentation.ui.components.RestaurantList
+import androidx.navigation.safe.args.generator.ErrorMessage
+import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
+import com.example.campusbites.presentation.ui.components.RestaurantListRow
+import com.example.campusbites.presentation.ui.components.SearchBar
 import com.example.campusbites.presentation.ui.viewmodel.HomeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,7 +61,7 @@ fun HomeScreen(
                     IconButton(onClick = { navController.navigate(NavigationRoutes.PROFILE_SCREEN) }) {
                         Icon(
                             imageVector = Icons.Filled.Person,
-                            contentDescription = "Perfil"
+                            contentDescription = stringResource(R.string.profile)
                         )
                     }
                 },
@@ -60,23 +69,42 @@ fun HomeScreen(
                     IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
                         Icon(
                             imageVector = Icons.Filled.Notifications,
-                            contentDescription = "Notificaciones"
+                            contentDescription = stringResource(R.string.notifications)
                         )
                     }
                 }
             )
         },
         content = { innerPadding ->
-            when {
-                uiState.isLoading -> {
-                    CircularProgressIndicator()
-                }
-                else -> {
-                    RestaurantList(
-                        restaurants = uiState.restaurants,
-                        onRestaurantClick = onRestaurantClick,
-                        modifier = modifier.padding(innerPadding)
-                    )
+            Column(
+                verticalArrangement = Arrangement.Top,
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+            ) {
+                SearchBar(
+                    query = uiState.searchQuery,
+                    onQueryChange = viewModel::onSearchQueryChanged,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+
+                when {
+                    uiState.isLoading -> {
+                        CircularProgressIndicator()
+                    }
+
+                    else -> {
+
+                        RestaurantListRow(
+                            name = stringResource(R.string.near_to_you),
+                            description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
+                            restaurants = uiState.restaurants,
+                            onRestaurantClick = onRestaurantClick,
+                            modifier = Modifier
+                                .padding(4.dp)
+                        )
+
+                    }
                 }
             }
         }
