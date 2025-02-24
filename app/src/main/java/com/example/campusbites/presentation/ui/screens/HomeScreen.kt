@@ -28,6 +28,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.safe.args.generator.ErrorMessage
 import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
+import com.example.campusbites.presentation.ui.components.FoodTagGrid
 import com.example.campusbites.presentation.ui.components.RestaurantListRow
 import com.example.campusbites.presentation.ui.components.SearchBar
 import com.example.campusbites.presentation.ui.viewmodel.HomeViewModel
@@ -95,6 +96,12 @@ fun HomeScreen(
 
                     else -> {
 
+                        FoodTagGrid(
+                            foodTags = uiState.foodTags,
+                            modifier = Modifier
+                                .padding(4.dp)
+                        )
+
                         RestaurantListRow(
                             name = stringResource(R.string.near_to_you),
                             description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
@@ -106,6 +113,7 @@ fun HomeScreen(
 
                     }
                 }
+
             }
         }
     )
