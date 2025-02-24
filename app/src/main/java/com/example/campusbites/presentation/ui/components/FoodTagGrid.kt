@@ -24,6 +24,7 @@ import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 @Composable
 fun FoodTagGrid(
     foodTags: List<FoodTag>,
+    onFoodTagClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column (
@@ -42,6 +43,7 @@ fun FoodTagGrid(
             foodTags.forEach { foodTag ->
                 FoodTagCard(
                     foodTag = foodTag,
+                    onFoodTagClick = onFoodTagClick,
                     modifier = Modifier
                         .padding(8.dp)
                 )
@@ -56,7 +58,8 @@ fun FoodTagGrid(
 fun FoodTagFlowRowPreview(){
     CampusBitesTheme {
         FoodTagGrid(
-            TestData.foodTags
+            TestData.foodTags,
+            onFoodTagClick = {}
         )
     }
 }

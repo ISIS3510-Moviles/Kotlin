@@ -10,14 +10,17 @@ import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
+import com.example.campusbites.presentation.ui.screens.SearchingScreen
 
 object NavigationRoutes {
     const val HOME_SCREEN = "home_screen"
     const val RESTAURANT_DETAIL = "restaurant_detail/{id}"
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
+    const val SEARCHING_SCREEN = "searching_screen/{query}"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
+    fun createSearchingRoute(query: String) = "searching_screen/$query"
 }
 
 @Composable
@@ -32,6 +35,9 @@ fun NavGraph(navController: NavHostController) {
                 navController = navController,
                 onRestaurantClick = { restaurantId ->
                     navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
+                },
+                onFoodTagClick = { foodTag ->
+                    navController.navigate(NavigationRoutes.createSearchingRoute(foodTag))
                 }
             )
         }
@@ -51,6 +57,17 @@ fun NavGraph(navController: NavHostController) {
         // Alerts Screen
         composable(NavigationRoutes.ALERTS_SCREEN) {
             AlertsScreen()
+        }
+
+        // Searching Screen
+        composable(
+            route = NavigationRoutes.SEARCHING_SCREEN,
+            arguments = listOf(navArgument("query") { type = NavType.StringType })
+        ) {
+            val query = it.arguments?.getString("query") ?: ""
+            SearchingScreen(
+                query = query
+            )
         }
     }
 }

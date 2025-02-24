@@ -38,6 +38,7 @@ import com.example.campusbites.presentation.ui.viewmodel.HomeViewModel
 fun HomeScreen(
     navController: NavHostController,
     onRestaurantClick: (String) -> Unit,
+    onFoodTagClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -98,6 +99,7 @@ fun HomeScreen(
 
                         FoodTagGrid(
                             foodTags = uiState.foodTags,
+                            onFoodTagClick = onFoodTagClick,
                             modifier = Modifier
                                 .padding(4.dp)
                         )

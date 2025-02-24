@@ -1,6 +1,7 @@
 package com.example.campusbites.presentation.ui.components
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -24,6 +25,7 @@ import com.example.campusbites.domain.model.FoodTag
 @Composable
 fun FoodTagCard(
     foodTag: FoodTag,
+    onFoodTagClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -35,6 +37,7 @@ fun FoodTagCard(
         modifier = modifier
             .wrapContentSize()
             .size(100.dp)
+            .clickable { onFoodTagClick(foodTag.name) }
     ) {
         Column (
             verticalArrangement = Arrangement.SpaceBetween,
@@ -65,5 +68,8 @@ fun FoodTagCard(
 @Preview(showBackground = true)
 @Composable
 fun FoodTagCardPreview() {
-    FoodTagCard(foodTags.get(6))
+    FoodTagCard(
+        foodTags.get(0),
+        onFoodTagClick = {}
+    )
 }
