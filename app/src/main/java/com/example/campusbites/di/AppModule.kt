@@ -1,7 +1,9 @@
 package com.example.campusbites.di
 
+import com.example.campusbites.data.repository.FakeFoodRepositoryImpl
 import com.example.campusbites.data.repository.FakeFoodTagRepositoryImpl
 import com.example.campusbites.data.repository.FakeRestaurantRepositoryImpl
+import com.example.campusbites.domain.repository.FoodRepository
 import com.example.campusbites.domain.repository.FoodTagRepository
 import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.usecase.food.GetFoodTags
@@ -38,6 +40,12 @@ object AppModule {
     @Singleton
     fun provideGetFoodTagsUseCase(repository: FoodTagRepository): GetFoodTags {
         return GetFoodTags(repository)
+    }
+
+    @Provides
+    @Singleton
+    fun provideFoodRepository(): FoodRepository {
+        return FakeFoodRepositoryImpl()
     }
 
 }

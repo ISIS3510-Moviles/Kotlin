@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -28,6 +30,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.safe.args.generator.ErrorMessage
 import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
+import com.example.campusbites.presentation.ui.components.FoodListRow
 import com.example.campusbites.presentation.ui.components.FoodTagGrid
 import com.example.campusbites.presentation.ui.components.RestaurantListRow
 import com.example.campusbites.presentation.ui.components.SearchBar
@@ -39,6 +42,7 @@ fun HomeScreen(
     navController: NavHostController,
     onRestaurantClick: (String) -> Unit,
     onFoodTagClick: (String) -> Unit,
+    onFoodClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -83,6 +87,7 @@ fun HomeScreen(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
             ) {
                 SearchBar(
                     query = uiState.searchQuery,
@@ -109,6 +114,15 @@ fun HomeScreen(
                             description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
                             restaurants = uiState.restaurants,
                             onRestaurantClick = onRestaurantClick,
+                            modifier = Modifier
+                                .padding(4.dp)
+                        )
+
+                        FoodListRow(
+                            name = "Recommended foods",
+                            description = "The ones according to your preferences",
+                            foods = uiState.foods,
+                            onFoodClick = { onFoodClick(it) },
                             modifier = Modifier
                                 .padding(4.dp)
                         )

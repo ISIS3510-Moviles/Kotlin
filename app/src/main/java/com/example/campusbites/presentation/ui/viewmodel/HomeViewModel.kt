@@ -2,10 +2,12 @@ package com.example.campusbites.presentation.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusbites.domain.model.Food
 import com.example.campusbites.domain.model.FoodTag
 import com.example.campusbites.domain.model.Restaurant
 import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.usecase.food.GetFoodTags
+import com.example.campusbites.domain.usecase.food.GetFoods
 import com.example.campusbites.domain.usecase.restaurant.FilterRestaurants
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurants
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +22,8 @@ import javax.inject.Inject
 class HomeViewModel @Inject constructor(
     private val getRestaurants: GetRestaurants,
     private val filterRestaurants: FilterRestaurants,
-    private val getFoodTags: GetFoodTags
+    private val getFoodTags: GetFoodTags,
+    private val getFoods: GetFoods
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -29,6 +32,7 @@ class HomeViewModel @Inject constructor(
     init {
         loadRestaurants()
         loadFoodTags()
+        loadFoods()
     }
 
     private fun loadRestaurants() {
@@ -67,6 +71,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun loadFoods() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val foods = getFoods()
+                _uiState.value = _uiState.value.copy(
+                    foods = foods,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Error loading foods",
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+
     fun onSearchQueryChanged(query: String) {
         viewModelScope.launch {
             _uiState.update { currentState ->
@@ -82,6 +105,7 @@ class HomeViewModel @Inject constructor(
 data class HomeUiState(
     val restaurants: List<Restaurant> = emptyList(),
     val filteredRestaurants: List<Restaurant> = emptyList(),
+    val foods: List<Food> = emptyList(),
     val foodTags: List<FoodTag> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = true,

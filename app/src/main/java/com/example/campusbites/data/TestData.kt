@@ -2,6 +2,7 @@ package com.example.campusbites.data
 
 import com.example.campusbites.R
 import com.example.campusbites.domain.model.Comment
+import com.example.campusbites.domain.model.Food
 import com.example.campusbites.domain.model.FoodTag
 import com.example.campusbites.domain.model.Restaurant
 import com.example.campusbites.domain.model.User
@@ -61,6 +62,57 @@ object TestData {
             id = "3",
             text = "Comida deliciosa y ambiente agradable",
             rating = 4.8
+        )
+    )
+
+    val food = listOf(
+        Food(
+            id = "1",
+            name = "Pepperoni Pizza",
+            description = "Pepperoni and cheese",
+            photo = R.drawable.pizza_food,
+            restaurantId = "1",
+            meanTimeToGet = 15,
+            price = 10000,
+            rating = 4.5,
+            tagNames = listOf("Pizza", "Lunch", "BBC"),
+            comments = comments
+        ),
+        Food(
+            id = "2",
+            name = "Cheese Burger",
+            description = "Cheese and beef",
+            photo = R.drawable.hambur_food,
+            restaurantId = "2",
+            meanTimeToGet = 10,
+            price = 8000,
+            rating = 4.2,
+            tagNames = listOf("Lunch", "Burger", "Fast Food", "BBC"),
+            comments = comments
+        ),
+        Food(
+            id = "3",
+            name = "Artisanal beer",
+            description = "The best of the best",
+            photo = R.drawable.cerveza_food,
+            restaurantId = "1",
+            meanTimeToGet = 20,
+            price = 4750,
+            rating = 4.8,
+            tagNames = listOf("BBC"),
+            comments = comments
+        ),
+        Food(
+            id = "4",
+            name = "Canola Rolls",
+            description = "Delicious rolls with cream",
+            photo = R.drawable.canela_rolls_food,
+            restaurantId = "2",
+            meanTimeToGet = 15,
+            price = 12000,
+            rating = 4.3,
+            tagNames = listOf("Asian", "Lunch", "BBC"),
+            comments = comments
         )
     )
 

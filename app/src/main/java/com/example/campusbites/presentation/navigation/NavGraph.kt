@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
+import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
@@ -18,9 +19,11 @@ object NavigationRoutes {
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
     const val SEARCHING_SCREEN = "searching_screen/{query}"
+    const val FOOD_DETAIL = "food_detail/{id}"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
+    fun createFoodDetailRoute(id: String) = "food_detail/$id"
 }
 
 @Composable
@@ -38,6 +41,9 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onFoodTagClick = { foodTag ->
                     navController.navigate(NavigationRoutes.createSearchingRoute(foodTag))
+                },
+                onFoodClick = { foodId ->
+                    navController.navigate(NavigationRoutes.createFoodDetailRoute(foodId))
                 }
             )
         }
@@ -68,6 +74,15 @@ fun NavGraph(navController: NavHostController) {
             SearchingScreen(
                 query = query
             )
+        }
+
+        // Food Detail
+        composable(
+            route = NavigationRoutes.FOOD_DETAIL,
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
+        ) {
+            val foodId = it.arguments?.getString("id") ?: ""
+            FoodDetailScreen(foodId = foodId)
         }
     }
 }

@@ -218,13 +218,13 @@ fun TagList(
 }
 
 @Composable
-private fun TagChip(tag: String) {
+fun TagChip(tag: String, modifier: Modifier = Modifier) {
     Card(
         shape = MaterialTheme.shapes.small,
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.onSurface
         ),
-        modifier = Modifier
+        modifier = modifier
             .padding(2.dp)
     ) {
         Text(
