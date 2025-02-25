@@ -43,6 +43,7 @@ fun HomeScreen(
     onRestaurantClick: (String) -> Unit,
     onFoodTagClick: (String) -> Unit,
     onFoodClick: (String) -> Unit,
+    onSearch: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
@@ -92,6 +93,7 @@ fun HomeScreen(
                 SearchBar(
                     query = uiState.searchQuery,
                     onQueryChange = viewModel::onSearchQueryChanged,
+                    onSearch = onSearch,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
 

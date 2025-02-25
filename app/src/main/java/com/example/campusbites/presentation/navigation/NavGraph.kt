@@ -44,6 +44,9 @@ fun NavGraph(navController: NavHostController) {
                 },
                 onFoodClick = { foodId ->
                     navController.navigate(NavigationRoutes.createFoodDetailRoute(foodId))
+                },
+                onSearch = { query ->
+                    navController.navigate(NavigationRoutes.createSearchingRoute(query))
                 }
             )
         }

@@ -34,13 +34,14 @@ import com.example.campusbites.R
 fun SearchBar(
     query: String,
     onQueryChange: (String) -> Unit,
+    onSearch: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val focusManager = LocalFocusManager.current
 
     TextField(
         value = query,
-        onValueChange = onQueryChange,
+        onValueChange = { onQueryChange(it) },
         shape = RoundedCornerShape(24.dp),
         leadingIcon = {
             Icon(
@@ -63,7 +64,10 @@ fun SearchBar(
         },
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
         keyboardActions = KeyboardActions(
-            onSearch = { focusManager.clearFocus() }
+            onSearch = {
+                focusManager.clearFocus()
+                onSearch(query)
+            }
         ),
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge,
@@ -82,7 +86,8 @@ fun SearchBarPreview() {
     Surface {
         SearchBar(
             query = query,
-            onQueryChange = { newQuery -> query = newQuery },
+            onQueryChange = { query = it },
+            onSearch = { },
             modifier = Modifier.fillMaxWidth()
         )
     }

@@ -94,8 +94,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { currentState ->
                 currentState.copy(
-                    searchQuery = query,
-                    filteredRestaurants = filterRestaurants()
+                    searchQuery = query
                 )
             }
         }
