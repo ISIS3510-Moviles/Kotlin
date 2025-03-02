@@ -65,7 +65,12 @@ fun NavGraph(navController: NavHostController) {
         }
         // Alerts Screen
         composable(NavigationRoutes.ALERTS_SCREEN) {
-            AlertsScreen()
+            AlertsScreen(
+                onBackClick = { navController.popBackStack() },
+                onAlertClick = { alertId ->
+                    // Manejar el click en una alerta
+                }
+            )
         }
 
         // Searching Screen

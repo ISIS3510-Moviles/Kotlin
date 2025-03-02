@@ -1,6 +1,7 @@
 package com.example.campusbites.data
 
 import com.example.campusbites.R
+import com.example.campusbites.domain.model.Alert
 import com.example.campusbites.domain.model.Comment
 import com.example.campusbites.domain.model.Food
 import com.example.campusbites.domain.model.FoodTag
@@ -138,6 +139,21 @@ object TestData {
             distance = 1.2,
             comments = comments,
             tags = listOf("Lunch", "Burger", "Fast Food", "BBC")
+        )
+    )
+
+    val Alerts = listOf(
+        Alert(
+            id = "0",
+            imageRes = R.drawable.restaurant_logo,
+            title = "Doña Blanca",
+            message = "Thank you for reserving table 1 on Thursday at 11:00 am."
+        ),
+        Alert(
+            id = "1",
+            imageRes = R.drawable.restaurant_logo,
+            title = "Doña Blanca",
+            message = "We have changed our opening time. Now Doña Blanca opens at 5:00 am."
         )
     )
 
