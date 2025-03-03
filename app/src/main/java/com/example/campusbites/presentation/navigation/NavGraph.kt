@@ -6,6 +6,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
+import com.example.campusbites.data.TestData
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
@@ -61,7 +62,10 @@ fun NavGraph(navController: NavHostController) {
 
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {
-            ProfileScreen()
+            ProfileScreen(
+                onBackClick = { navController.popBackStack() },
+                user = TestData.sampleUser
+            )
         }
         // Alerts Screen
         composable(NavigationRoutes.ALERTS_SCREEN) {

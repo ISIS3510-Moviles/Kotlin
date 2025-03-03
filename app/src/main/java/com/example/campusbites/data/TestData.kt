@@ -1,12 +1,16 @@
 package com.example.campusbites.data
 
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.campusbites.R
+import com.example.campusbites.data.TestData.sampleUser
 import com.example.campusbites.domain.model.Alert
 import com.example.campusbites.domain.model.Comment
 import com.example.campusbites.domain.model.Food
 import com.example.campusbites.domain.model.FoodTag
 import com.example.campusbites.domain.model.Restaurant
 import com.example.campusbites.domain.model.User
+import com.example.campusbites.domain.model.UserProfile
 
 object TestData {
     val foodTags = listOf(
@@ -155,6 +159,31 @@ object TestData {
             title = "Doña Blanca",
             message = "We have changed our opening time. Now Doña Blanca opens at 5:00 am."
         )
+    )
+
+    val sampleUser = UserProfile(
+        name = "María García",
+        profileImage = R.drawable.profile_picture,
+        role = "Estudiante",
+        dietaryPreferences = listOf("Vegana", "Sin gluten"),
+        favoriteFoodTypes = listOf("Desayuno", "Snacks"),
+        preferredPriceRange = "$20000 - $30000",
+        recentlyVisitedRestaurants = listOf("Cafetería Central", "La Esquina", "Rincón Saludable"),
+        comments = listOf(
+            "Excelente servicio y ambiente acogedor.",
+            "Buen lugar para tomar un snack rápido."
+        ),
+        uploadedPhotos = listOf(
+            "https://via.placeholder.com/100",
+            "https://via.placeholder.com/100"
+        ),
+        favoriteRestaurants = listOf("Cafetería Central", "Rincón Saludable"),
+        notificationsEnabled = true,
+        contactInfo = "maria.garcia@universidad.edu",
+        privacySettings = "Público",
+        visitsCount = 25,
+        averageRating = 4.5,
+        communityParticipationCount = 10
     )
 
     val user = User(
