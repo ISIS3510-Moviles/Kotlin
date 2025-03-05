@@ -85,9 +85,13 @@ fun NavGraph(navController: NavHostController) {
         ) {
             val query = it.arguments?.getString("query") ?: ""
             SearchingScreen(
-                query = query
+                query = query,
+                onRestaurantClick = { restaurantId ->
+                    navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
+                }
             )
         }
+
 
         // Food Detail
         composable(
