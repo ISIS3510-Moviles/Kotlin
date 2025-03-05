@@ -6,6 +6,6 @@ import com.example.campusbites.domain.repository.FoodTagRepository
 
 class FakeFoodTagRepositoryImpl: FoodTagRepository {
     override suspend fun getFoodTags(): List<FoodTag> {
-        return TestData.foodTags
+        return emptyList()
     }
 }

@@ -46,7 +46,7 @@ fun RestaurantDetailScreen(
                     .verticalScroll(rememberScrollState())
             ) {
                 Image(
-                    painter = painterResource(id = it.overviewPhoto),
+                    painter = painterResource(id = it.overviewPhoto.id.toInt()),
                     contentDescription = "Restaurant Overview",
                     modifier = Modifier
                         .fillMaxWidth()
@@ -60,7 +60,7 @@ fun RestaurantDetailScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
                 Text(
-                    text = "⭐ ${it.rating} | ${it.distance} km away",
+                    text = "⭐ ${it.rating} | ${it.description} km away",
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
@@ -80,7 +80,7 @@ fun RestaurantDetailScreen(
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     it.tags.forEach { tag ->
-                        Chip(text = tag)
+                        Chip(text = tag.toString())
                         Spacer(modifier = Modifier.width(8.dp))
                     }
                 }
@@ -113,7 +113,7 @@ fun CommentCard(comment: Comment, modifier: Modifier = Modifier) {
     Card(modifier = modifier.padding(8.dp).fillMaxWidth()) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(text = "Rating: ${comment.rating}", style = MaterialTheme.typography.bodyMedium)
-            Text(text = comment.text, style = MaterialTheme.typography.bodySmall)
+            Text(text = comment.toString(), style = MaterialTheme.typography.bodySmall)
         }
     }
 }

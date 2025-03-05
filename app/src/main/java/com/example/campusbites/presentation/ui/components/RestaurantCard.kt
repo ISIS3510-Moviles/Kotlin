@@ -66,11 +66,11 @@ fun RestaurantCard(
             .width(380.dp)
             .wrapContentHeight()
             .padding(4.dp)
-            .clickable { onRestaurantClick(restaurant.id) }
+            .clickable { onRestaurantClick(restaurant.id.toString()) }
     ) {
         Column {
             Image(
-                painter = painterResource(id = restaurant.overviewPhoto),
+                painter = painterResource(id = restaurant.overviewPhoto.image.toInt()),
                 contentDescription = "${restaurant.name} photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -87,17 +87,17 @@ fun RestaurantCard(
                     .padding(8.dp)
             ) {
                 Profile(
-                    profilePhoto = restaurant.profilePhoto,
+                    profilePhoto = restaurant.profilePhoto.id.toInt(),
                     name = restaurant.name,
-                    distance = restaurant.distance,
-                    rating = restaurant.rating,
+                    distance = restaurant.latitude,
+                    rating = restaurant.rating.toDouble(),
                     comments = restaurant.comments
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 TagList(
-                    tags = restaurant.tags,
+                    tags = listOf( restaurant.tags.toString()),
                     modifier = Modifier.width(100.dp)
                 )
 
@@ -144,7 +144,7 @@ fun RestaurantCard(
                                 modifier = Modifier.fillMaxWidth()
                             ) {
                                 restaurant.tags.forEach { tag ->
-                                    TagChip(tag = tag)
+                                    TagChip(tag = tag.toString())
                                 }
                             }
                         }

@@ -37,7 +37,7 @@ fun AlertList(
 @Composable
 fun AlertListPreview() {
     AlertList(
-        notifications = TestData.Alerts,
+        notifications = emptyList(),
         onAlertClick = { /* Maneja el click, por ejemplo imprimir el id */ }
     )
 }

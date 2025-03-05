@@ -12,7 +12,7 @@ import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 
 @Composable
 fun AlertsScreen(
-    notifications: List<com.example.campusbites.domain.model.Alert> = TestData.Alerts,
+    notifications: List<com.example.campusbites.domain.model.Alert> = emptyList(),
     onBackClick: () -> Unit,
     onAlertClick: (String) -> Unit
 ) {
@@ -30,7 +30,7 @@ fun AlertsScreen(
 fun AlertsScreenPreview() {
     CampusBitesTheme {
         AlertsScreen(
-            notifications = TestData.Alerts,
+            notifications = emptyList(),
             onBackClick = { /* Accion de volver */ },
             onAlertClick = { alertId -> /* Manejar click en alerta, ejemplo: println(alertId) */ }
         )

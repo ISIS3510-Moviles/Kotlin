@@ -2,12 +2,11 @@ package com.example.campusbites.domain.model
 
 import java.time.LocalDateTime
 
-data class Alert(
+data class Reservation(
     val id: String,
     val datetime: LocalDateTime,
-    val icon: Photo,
-    val message: String,
-    val votes: Int,
-    val publisher: User,
+    val numberCommensals: Int,
+    val isCompleted: Boolean,
+    val user: User,
     val restaurant: Restaurant
 )

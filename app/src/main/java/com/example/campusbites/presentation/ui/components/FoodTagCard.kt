@@ -19,7 +19,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.data.TestData.foodTags
 import com.example.campusbites.domain.model.FoodTag
 
 @Composable
@@ -46,7 +45,7 @@ fun FoodTagCard(
                 .padding(2.dp)
         ) {
             Image(
-                painter = painterResource(id = foodTag.icon),
+                painter = painterResource(id = foodTag.icon.id.toInt()),
                 contentDescription = "${foodTag.name} icon",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -68,6 +67,7 @@ fun FoodTagCard(
 @Preview(showBackground = true)
 @Composable
 fun FoodTagCardPreview() {
+    val foodTags: List<FoodTag> = emptyList()
     FoodTagCard(
         foodTags.get(0),
         onFoodTagClick = {}

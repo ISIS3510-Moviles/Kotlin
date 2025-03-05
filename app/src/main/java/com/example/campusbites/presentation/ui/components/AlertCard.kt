@@ -15,7 +15,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.campusbites.data.TestData
 import com.example.campusbites.domain.model.Alert
+import com.example.campusbites.domain.model.Photo
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
+import java.time.LocalDateTime
 
 @Composable
 fun AlertCard(notification: Alert, onAlertClick: (String) -> Unit) {
@@ -36,7 +38,7 @@ fun AlertCard(notification: Alert, onAlertClick: (String) -> Unit) {
                 .padding(16.dp)
         ) {
             Image(
-                painter = painterResource(id = notification.imageRes),
+                painter = painterResource(id = notification.votes),
                 contentDescription = "Notification Icon",
                 modifier = Modifier
                     .size(40.dp)
@@ -44,7 +46,7 @@ fun AlertCard(notification: Alert, onAlertClick: (String) -> Unit) {
             )
             Column {
                 Text(
-                    text = notification.title,
+                    text = notification.message,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
@@ -62,7 +64,15 @@ fun AlertCard(notification: Alert, onAlertClick: (String) -> Unit) {
 fun AlertCardPreview() {
     CampusBitesTheme {
         AlertCard(
-            notification = TestData.Alerts[0],
+            notification = Alert(
+                id = "1",
+                message = "Promoción especial en pizzas hoy",
+                datetime = LocalDateTime.of(2025, 3, 5, 10, 0),
+                icon = Photo("p", "image.com", "descripcion"),
+                votes = 0,
+                publisher = TestData.sampleUser,
+                restaurant = TestData.sampleRestaurant
+            ),
             onAlertClick = {}
         )
     }

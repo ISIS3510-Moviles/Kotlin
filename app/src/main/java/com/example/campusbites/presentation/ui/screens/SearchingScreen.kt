@@ -29,8 +29,7 @@ fun SearchingScreen(
     val uiState by viewModel.uiState.collectAsState()
     val matchingRestaurants = uiState.restaurants.filter { restaurant ->
         restaurant.name.contains(query, ignoreCase = true) ||
-                restaurant.description.contains(query, ignoreCase = true) ||
-                restaurant.tags.any { tag -> tag.contains(query, ignoreCase = true) }
+                restaurant.description.contains(query, ignoreCase = true)
     }
 
 
@@ -59,7 +58,7 @@ fun SearchingScreen(
             )
             RestaurantSearchResultItem(
                 restaurant = bestMatch,
-                onClick = { onRestaurantClick(bestMatch.id) }
+                onClick = { onRestaurantClick(bestMatch.id.toString()) }
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -71,7 +70,7 @@ fun SearchingScreen(
                 matchingRestaurants.drop(1).forEach { restaurant ->
                     RestaurantSearchResultItem(
                         restaurant = restaurant,
-                        onClick = { onRestaurantClick(restaurant.id) }
+                        onClick = { onRestaurantClick(restaurant.id.toString()) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                 }
@@ -94,7 +93,7 @@ fun RestaurantSearchResultItem(
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
             Image(
-                painter = painterResource(id = restaurant.profilePhoto),
+                painter = painterResource(id = restaurant.profilePhoto.id.toInt()),
                 contentDescription = "Restaurant Logo",
                 modifier = Modifier.size(64.dp),
                 contentScale = ContentScale.Crop
@@ -106,7 +105,7 @@ fun RestaurantSearchResultItem(
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "⭐ ${restaurant.rating} | ${restaurant.distance} km",
+                    text = "⭐ ${restaurant.rating} | ${restaurant.description} km",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(

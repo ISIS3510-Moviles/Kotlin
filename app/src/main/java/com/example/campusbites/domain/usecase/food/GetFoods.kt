@@ -1,13 +1,13 @@
 package com.example.campusbites.domain.usecase.food
 
-import com.example.campusbites.domain.model.Food
-import com.example.campusbites.domain.repository.FoodRepository
+import com.example.campusbites.domain.model.Product
+import com.example.campusbites.domain.repository.ProductRepository
 import jakarta.inject.Inject
 
 class GetFoods @Inject constructor(
-    private val repository: FoodRepository
+    private val repository: ProductRepository
 ){
-    suspend operator fun invoke(): List<Food> {
-        return repository.getFoods()
+    suspend operator fun invoke(): List<Product> {
+        return repository.getProducts()
     }
 }

@@ -1,7 +1,6 @@
 package com.example.campusbites.presentation.ui.components
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -16,12 +15,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.campusbites.data.TestData
-import com.example.campusbites.domain.model.Food
+import com.example.campusbites.domain.model.Product
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
@@ -29,7 +27,7 @@ import java.util.Locale
 
 @Composable
 fun FoodCard(
-    food: Food,
+    food: Product,
     onFoodClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -54,7 +52,7 @@ fun FoodCard(
                 .fillMaxWidth()
         ) {
             Image(
-                painter = painterResource(id = food.photo),
+                painter = painterResource(id = food.photo.id.toInt()),
                 contentDescription = "${food.name} photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -89,7 +87,7 @@ fun FoodCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = food.rating.toString() + " (+${food.comments.size} opinions)",
+                        text = food.rating.toString() + " (+${food.name} opinions)",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -103,13 +101,13 @@ fun FoodCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = "${food.meanTimeToGet} min",
+                        text = "${food.description} min",
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
                 TagChip(
-                    food.tagNames[0],
+                    food.tags.toString(),
                     modifier = Modifier.padding(top = 2.dp)
                 )
 
@@ -131,7 +129,7 @@ fun FoodCard(
 fun FoodCardPreview() {
     CampusBitesTheme {
         FoodCard(
-            food = TestData.food[0],
+            food = TestData.sampleProduct,
             onFoodClick = {}
         )
     }

@@ -12,13 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.domain.model.Food
+import com.example.campusbites.domain.model.Product
 
 @Composable
 fun FoodListRow(
     name: String,
     description: String,
-    foods: List<Food>,
+    foods: List<Product>,
     onFoodClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {

@@ -2,7 +2,7 @@ package com.example.campusbites.presentation.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.campusbites.domain.model.Food
+import com.example.campusbites.domain.model.Product
 import com.example.campusbites.domain.model.FoodTag
 import com.example.campusbites.domain.model.Restaurant
 import com.example.campusbites.domain.usecase.food.GetFoodTags
@@ -127,7 +127,7 @@ data class HomeUiState(
     val restaurants: List<Restaurant> = emptyList(),
     val filteredRestaurants: List<Restaurant> = emptyList(),
     val selectedRestaurant: Restaurant? = null, // Nuevo
-    val foods: List<Food> = emptyList(),
+    val foods: List<Product> = emptyList(),
     val foodTags: List<FoodTag> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = true,

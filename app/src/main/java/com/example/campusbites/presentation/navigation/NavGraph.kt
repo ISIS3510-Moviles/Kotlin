@@ -65,7 +65,6 @@ fun NavGraph(navController: NavHostController) {
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
                 onBackClick = { navController.popBackStack() },
-                user = TestData.sampleUser
             )
         }
         // Alerts Screen
