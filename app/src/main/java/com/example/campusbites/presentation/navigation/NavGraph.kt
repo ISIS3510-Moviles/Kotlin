@@ -55,10 +55,11 @@ fun NavGraph(navController: NavHostController) {
         composable(
             route = NavigationRoutes.RESTAURANT_DETAIL,
             arguments = listOf(navArgument("id") { type = NavType.StringType })
-        ) { backStackEntry ->
-            val restaurantId = backStackEntry.arguments?.getString("id") ?: ""
+        ) {
+            val restaurantId = it.arguments?.getString("id") ?: ""
             RestaurantDetailScreen(restaurantId = restaurantId)
         }
+
 
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {

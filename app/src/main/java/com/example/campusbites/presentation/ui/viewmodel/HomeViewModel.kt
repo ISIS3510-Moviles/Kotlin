@@ -5,11 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.Food
 import com.example.campusbites.domain.model.FoodTag
 import com.example.campusbites.domain.model.Restaurant
-import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.usecase.food.GetFoodTags
 import com.example.campusbites.domain.usecase.food.GetFoods
-import com.example.campusbites.domain.usecase.restaurant.FilterRestaurants
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurants
+import com.example.campusbites.domain.usecase.restaurant.GetRestaurantById
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -21,9 +20,9 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getRestaurants: GetRestaurants,
-    private val filterRestaurants: FilterRestaurants,
     private val getFoodTags: GetFoodTags,
-    private val getFoods: GetFoods
+    private val getFoods: GetFoods,
+    private val getRestaurantById: GetRestaurantById
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -99,11 +98,35 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
+
+    fun loadRestaurantDetails(id: String) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val restaurant = getRestaurantById(id)
+                _uiState.value = _uiState.value.copy(
+                    selectedRestaurant = restaurant,
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Error loading restaurant details",
+                    isLoading = false
+                )
+            }
+        }
+    }
+
+
+
 }
+
+
 
 data class HomeUiState(
     val restaurants: List<Restaurant> = emptyList(),
     val filteredRestaurants: List<Restaurant> = emptyList(),
+    val selectedRestaurant: Restaurant? = null, // Nuevo
     val foods: List<Food> = emptyList(),
     val foodTags: List<FoodTag> = emptyList(),
     val searchQuery: String = "",

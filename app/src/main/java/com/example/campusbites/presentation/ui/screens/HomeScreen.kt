@@ -4,7 +4,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
@@ -23,11 +22,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.safe.args.generator.ErrorMessage
 import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.components.FoodListRow
@@ -40,11 +37,10 @@ import com.example.campusbites.presentation.ui.viewmodel.HomeViewModel
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    onRestaurantClick: (String) -> Unit,
+    onRestaurantClick: (String) -> Unit, // Usado en el NavGraph
     onFoodTagClick: (String) -> Unit,
     onFoodClick: (String) -> Unit,
     onSearch: (String) -> Unit,
-    modifier: Modifier = Modifier
 ) {
     val viewModel: HomeViewModel = hiltViewModel()
     val uiState by viewModel.uiState.collectAsState()
@@ -115,10 +111,12 @@ fun HomeScreen(
                             name = stringResource(R.string.near_to_you),
                             description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
                             restaurants = uiState.restaurants,
-                            onRestaurantClick = onRestaurantClick,
-                            modifier = Modifier
-                                .padding(4.dp)
+                            onRestaurantClick = { restaurantId ->
+                                navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
+                            },
+                            modifier = Modifier.padding(4.dp)
                         )
+
 
                         FoodListRow(
                             name = "Recommended foods",

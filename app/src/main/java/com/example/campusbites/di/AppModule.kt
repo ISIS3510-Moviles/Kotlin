@@ -8,6 +8,7 @@ import com.example.campusbites.domain.repository.FoodTagRepository
 import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.usecase.food.GetFoodTags
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurants
+import com.example.campusbites.domain.usecase.restaurant.GetRestaurantById
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -46,6 +47,12 @@ object AppModule {
     @Singleton
     fun provideFoodRepository(): FoodRepository {
         return FakeFoodRepositoryImpl()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGetRestaurantByIdUseCase(repository: RestaurantRepository): GetRestaurantById {
+        return GetRestaurantById(repository)
     }
 
 }
