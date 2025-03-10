@@ -1,29 +1,35 @@
 package com.example.campusbites.domain.model
 
-import java.time.LocalDateTime
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
+@Serializable
 data class Restaurant(
-    val id: Int,
+    val id: String,
     val name: String,
     val description: String,
-    val rating: Int,
     val latitude: Double,
     val longitude: Double,
     val routeIndications: String,
-    val openingTime: LocalDateTime,
-    val closingTime: LocalDateTime,
-    val openHolidays: Boolean,
-    val openWeekends: Boolean,
-    val estimatedWaitTime: Int,
+    val openingTime: String,
+    val closingTime: String,
+    val opensHolidays: Boolean,
+    val opensWeekends: Boolean,
     val isActive: Boolean,
-    val overviewPhoto: Photo,
-    val profilePhoto: Photo,
-    val photos: List<Photo>  = emptyList(),
-    val reservations: List<Reservation>  = emptyList(),
-    val alerts: List<Alert>  = emptyList(),
-    val subscribers: List<User>  = emptyList(),
-    val visits: List<Visit>  = emptyList(),
-    val comments: List<Comment>  = emptyList(),
-    val products: List<Product>  = emptyList(),
-    val tags: List<Tag>  = emptyList()
+    val rating: Double,
+    val address: String,
+    val phone: String,
+    val email: String,
+    val overviewPhoto: String,
+    val profilePhoto: String,
+    val photos: List<String>,
+    val foodTagsIds: List<String>,
+    val dietaryTagsIds: List<String>,
+    val alertsIds: List<String>  = emptyList(),
+    val reservationsIds: List<String>  = emptyList(),
+    val suscribersIds: List<String>  = emptyList(),
+    val visitsIds: List<String>  = emptyList(),
+    val commentsIds: List<String>  = emptyList(),
+    val productsIds: List<String>  = emptyList(),
 )

@@ -14,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.data.TestData
 import com.example.campusbites.domain.model.Restaurant
 
 @Composable
@@ -53,23 +52,5 @@ fun RestaurantListRow (
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RestaurantListRowPreview() {
-    Column (
-        horizontalAlignment = Alignment.End,
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        RestaurantListRow(
-            name = "Near to you",
-            description = "Restaurants near you",
-            restaurants = TestData.restaurants,
-            onRestaurantClick = {},
-            modifier = Modifier
-        )
     }
 }

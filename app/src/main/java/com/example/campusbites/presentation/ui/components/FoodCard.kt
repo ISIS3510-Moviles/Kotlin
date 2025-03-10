@@ -18,7 +18,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.data.TestData
 import com.example.campusbites.domain.model.Product
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 import java.text.DecimalFormat
@@ -124,13 +123,3 @@ fun FoodCard(
     }
 }
 
-@Preview(showBackground = true)
-@Composable
-fun FoodCardPreview() {
-    CampusBitesTheme {
-        FoodCard(
-            food = TestData.sampleProduct,
-            onFoodClick = {}
-        )
-    }
-}

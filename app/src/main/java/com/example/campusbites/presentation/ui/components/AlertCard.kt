@@ -13,7 +13,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.data.TestData
 import com.example.campusbites.domain.model.Alert
 import com.example.campusbites.domain.model.Photo
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
@@ -56,24 +55,5 @@ fun AlertCard(notification: Alert, onAlertClick: (String) -> Unit) {
                 )
             }
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AlertCardPreview() {
-    CampusBitesTheme {
-        AlertCard(
-            notification = Alert(
-                id = "1",
-                message = "Promoción especial en pizzas hoy",
-                datetime = LocalDateTime.of(2025, 3, 5, 10, 0),
-                icon = Photo("p", "image.com", "descripcion"),
-                votes = 0,
-                publisher = TestData.sampleUser,
-                restaurant = TestData.sampleRestaurant
-            ),
-            onAlertClick = {}
-        )
     }
 }

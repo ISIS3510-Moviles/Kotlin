@@ -30,10 +30,6 @@ fun RestaurantDetailScreen(
     val uiState by viewModel.uiState.collectAsState()
     val restaurant = uiState.selectedRestaurant
 
-    LaunchedEffect(restaurantId) {
-        viewModel.loadRestaurantDetails(restaurantId)
-    }
-
     if (uiState.isLoading) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator()
@@ -45,6 +41,7 @@ fun RestaurantDetailScreen(
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
             ) {
+                /*
                 Image(
                     painter = painterResource(id = it.overviewPhoto.id.toInt()),
                     contentDescription = "Restaurant Overview",
@@ -53,6 +50,7 @@ fun RestaurantDetailScreen(
                         .height(200.dp),
                     contentScale = ContentScale.Crop
                 )
+                */
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
                     text = it.name,
@@ -79,7 +77,7 @@ fun RestaurantDetailScreen(
                         .horizontalScroll(rememberScrollState())
                         .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
-                    it.tags.forEach { tag ->
+                    it.dietaryTagsIds.forEach { tag ->
                         Chip(text = tag.toString())
                         Spacer(modifier = Modifier.width(8.dp))
                     }
@@ -89,9 +87,12 @@ fun RestaurantDetailScreen(
                     style = MaterialTheme.typography.titleMedium,
                     modifier = Modifier.padding(horizontal = 16.dp)
                 )
+                /*
                 it.comments.forEach { comment ->
                     CommentCard(comment = comment)
                 }
+
+                 */
             }
         } ?: run {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

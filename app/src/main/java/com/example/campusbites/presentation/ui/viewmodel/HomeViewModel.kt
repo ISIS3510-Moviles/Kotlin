@@ -1,14 +1,12 @@
 package com.example.campusbites.presentation.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.Product
 import com.example.campusbites.domain.model.FoodTag
 import com.example.campusbites.domain.model.Restaurant
-import com.example.campusbites.domain.usecase.food.GetFoodTags
-import com.example.campusbites.domain.usecase.food.GetFoods
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurants
-import com.example.campusbites.domain.usecase.restaurant.GetRestaurantById
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -20,9 +18,6 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getRestaurants: GetRestaurants,
-    private val getFoodTags: GetFoodTags,
-    private val getFoods: GetFoods,
-    private val getRestaurantById: GetRestaurantById
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -30,8 +25,6 @@ class HomeViewModel @Inject constructor(
 
     init {
         loadRestaurants()
-        loadFoodTags()
-        loadFoods()
     }
 
     private fun loadRestaurants() {
@@ -43,47 +36,13 @@ class HomeViewModel @Inject constructor(
                     restaurants = restaurants,
                     isLoading = false
                 )
+                Log.d("API_TEXT", "Loaded restaurants: $restaurants")
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(
                     errorMessage = e.message ?: "Error loading restaurants",
                     isLoading = false
                 )
-            }
-        }
-    }
-
-    private fun loadFoodTags() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val foodTags = getFoodTags()
-                _uiState.value = _uiState.value.copy(
-                    foodTags = foodTags,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading food tags",
-                    isLoading = false
-                )
-            }
-        }
-    }
-
-    private fun loadFoods() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val foods = getFoods()
-                _uiState.value = _uiState.value.copy(
-                    foods = foods,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading foods",
-                    isLoading = false
-                )
+                Log.e("API_TEST", "Error: ${e.message}", e)
             }
         }
     }
@@ -98,26 +57,6 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
-    fun loadRestaurantDetails(id: String) {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val restaurant = getRestaurantById(id)
-                _uiState.value = _uiState.value.copy(
-                    selectedRestaurant = restaurant,
-                    isLoading = false
-                )
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading restaurant details",
-                    isLoading = false
-                )
-            }
-        }
-    }
-
-
 
 }
 

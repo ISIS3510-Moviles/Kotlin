@@ -1,14 +1,9 @@
 package com.example.campusbites.di
 
-import com.example.campusbites.data.repository.FakeProductRepositoryImpl
-import com.example.campusbites.data.repository.FakeFoodTagRepositoryImpl
-import com.example.campusbites.data.repository.FakeRestaurantRepositoryImpl
-import com.example.campusbites.domain.repository.ProductRepository
-import com.example.campusbites.domain.repository.FoodTagRepository
+import com.example.campusbites.data.network.ApiService
+import com.example.campusbites.data.network.CampusBitesApi
+import com.example.campusbites.data.repository.RestaurantRepositoryImpl
 import com.example.campusbites.domain.repository.RestaurantRepository
-import com.example.campusbites.domain.usecase.food.GetFoodTags
-import com.example.campusbites.domain.usecase.restaurant.GetRestaurants
-import com.example.campusbites.domain.usecase.restaurant.GetRestaurantById
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -21,38 +16,15 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRestaurantRepository(): RestaurantRepository {
-        return FakeRestaurantRepositoryImpl()
+    fun provideApiService(): ApiService {
+        return CampusBitesApi.retrofitService
     }
 
     @Provides
     @Singleton
-    fun provideGetRestaurantsUseCase(repository: RestaurantRepository): GetRestaurants {
-        return GetRestaurants(repository)
+    fun provideRestaurantRepository(apiService: ApiService): RestaurantRepository {
+        return RestaurantRepositoryImpl(apiService)
     }
 
-    @Provides
-    @Singleton
-    fun provideFoodTagRepository(): FoodTagRepository {
-        return FakeFoodTagRepositoryImpl()
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetFoodTagsUseCase(repository: FoodTagRepository): GetFoodTags {
-        return GetFoodTags(repository)
-    }
-
-    @Provides
-    @Singleton
-    fun provideProductRepository(): ProductRepository {
-        return FakeProductRepositoryImpl()
-    }
-
-    @Provides
-    @Singleton
-    fun provideGetRestaurantByIdUseCase(repository: RestaurantRepository): GetRestaurantById {
-        return GetRestaurantById(repository)
-    }
 
 }

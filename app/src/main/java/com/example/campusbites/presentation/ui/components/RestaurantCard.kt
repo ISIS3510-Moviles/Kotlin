@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -43,7 +44,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.data.TestData
+import coil.compose.AsyncImage
 import com.example.campusbites.domain.model.Comment
 import com.example.campusbites.domain.model.Restaurant
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
@@ -69,8 +70,8 @@ fun RestaurantCard(
             .clickable { onRestaurantClick(restaurant.id.toString()) }
     ) {
         Column {
-            Image(
-                painter = painterResource(id = restaurant.overviewPhoto.image.toInt()),
+            AsyncImage(
+                model = restaurant.overviewPhoto,
                 contentDescription = "${restaurant.name} photo",
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
@@ -87,17 +88,17 @@ fun RestaurantCard(
                     .padding(8.dp)
             ) {
                 Profile(
-                    profilePhoto = restaurant.profilePhoto.id.toInt(),
+                    profilePhoto = restaurant.profilePhoto,
                     name = restaurant.name,
                     distance = restaurant.latitude,
-                    rating = restaurant.rating.toDouble(),
-                    comments = restaurant.comments
+                    rating = restaurant.rating,
+                    comments = restaurant.commentsIds
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 TagList(
-                    tags = listOf( restaurant.tags.toString()),
+                    tags = restaurant.dietaryTagsIds,
                     modifier = Modifier.width(100.dp)
                 )
 
@@ -143,8 +144,8 @@ fun RestaurantCard(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                restaurant.tags.forEach { tag ->
-                                    TagChip(tag = tag.toString())
+                                restaurant.dietaryTagsIds.forEach { tag ->
+                                    TagChip(tag = tag)
                                 }
                             }
                         }
@@ -157,19 +158,20 @@ fun RestaurantCard(
 
 @Composable
 fun Profile(
-    @DrawableRes profilePhoto: Int,
+    profilePhoto: String,
     name: String,
     distance: Double,
     rating: Double,
-    comments: List<Comment>
+    comments: List<String>
 ) {
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Image(
-            painter = painterResource(id = profilePhoto),
+        AsyncImage(
+            model = profilePhoto, // URL de la imagen
             contentDescription = "$name profile Photo",
+            contentScale = ContentScale.Crop,
             modifier = Modifier
                 .size(50.dp)
-                .clip(RoundedCornerShape(50))
+                .clip(CircleShape) // O puedes usar RoundedCornerShape(50.dp)
         )
         Spacer(modifier = Modifier.width(8.dp))
         Column {
@@ -233,22 +235,5 @@ fun TagChip(tag: String, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun RestaurantCardPreview() {
-    CampusBitesTheme {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-        ) {
-            RestaurantCard(
-                restaurant = TestData.restaurants[0],
-                onRestaurantClick = {}
-            )
-        }
     }
 }

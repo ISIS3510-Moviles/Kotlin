@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("org.jetbrains.kotlin.plugin.serialization") version "2.1.0"
     id("dagger.hilt.android.plugin")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
@@ -77,5 +78,14 @@ dependencies {
     implementation(libs.hilt.android.v254)
     kapt(libs.hilt.android.compiler.v254)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.retrofit)
+    implementation(libs.converterGson)
+    implementation(libs.okhttp)
+    implementation(libs.coil.compose)
+    implementation(libs.retrofit2.kotlinx.serialization.converter)
+    implementation(libs.retrofit.v2110)
+    implementation(libs.okhttp.v4110)
+    implementation(libs.coil.compose.v240)
+    implementation(libs.kotlinx.serialization.json)
 
 }

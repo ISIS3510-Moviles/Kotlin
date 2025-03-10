@@ -99,14 +99,14 @@ fun HomeScreen(
                     }
 
                     else -> {
-
+                        /*
                         FoodTagGrid(
                             foodTags = uiState.foodTags,
                             onFoodTagClick = onFoodTagClick,
                             modifier = Modifier
                                 .padding(4.dp)
                         )
-
+                        */
                         RestaurantListRow(
                             name = stringResource(R.string.near_to_you),
                             description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
@@ -117,7 +117,7 @@ fun HomeScreen(
                             modifier = Modifier.padding(4.dp)
                         )
 
-
+                        /*
                         FoodListRow(
                             name = "Recommended foods",
                             description = "The ones according to your preferences",
@@ -126,7 +126,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .padding(4.dp)
                         )
-
+                        */
                     }
                 }
 

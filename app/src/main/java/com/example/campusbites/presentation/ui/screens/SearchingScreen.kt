@@ -92,12 +92,15 @@ fun RestaurantSearchResultItem(
             .clickable { onClick() }
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
+            /*
             Image(
                 painter = painterResource(id = restaurant.profilePhoto.id.toInt()),
                 contentDescription = "Restaurant Logo",
                 modifier = Modifier.size(64.dp),
                 contentScale = ContentScale.Crop
             )
+
+             */
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(

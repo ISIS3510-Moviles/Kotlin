@@ -5,7 +5,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.campusbites.data.TestData
 import com.example.campusbites.presentation.ui.components.AlertList
 import com.example.campusbites.presentation.ui.components.AlertTopBar
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
