@@ -1,0 +1,8 @@
+package com.example.campusbites.domain.repository
+
+import com.example.campusbites.data.dto.UserDTO
+import com.example.campusbites.domain.model.UserDomain
+
+interface UserRepository {
+    suspend fun getUserById(id: String): UserDTO
+}

@@ -12,14 +12,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.domain.model.ProductDomain
 
 @Composable
-fun RestaurantListRow (
+fun ProductListRow(
     name: String,
     description: String,
-    restaurants: List<RestaurantDomain>,
-    onRestaurantClick: (String) -> Unit,
+    products: List<ProductDomain>,
+    onProductClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column (
@@ -42,10 +42,10 @@ fun RestaurantListRow (
             modifier = Modifier
                 .wrapContentSize()
         ) {
-            items(restaurants) { restaurant ->
-                RestaurantCard(
-                    restaurant = restaurant,
-                    onRestaurantClick = onRestaurantClick
+            items(products) { product ->
+                ProductCard(
+                    product = product,
+                    onProductClick = onProductClick
                 )
             }
         }

@@ -39,11 +39,11 @@ fun NavGraph(navController: NavHostController) {
                 onRestaurantClick = { restaurantId ->
                     navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
                 },
-                onFoodTagClick = { foodTag ->
-                    navController.navigate(NavigationRoutes.createSearchingRoute(foodTag))
+                onIngredientClick = { ingredient ->
+                    navController.navigate(NavigationRoutes.createSearchingRoute(ingredient))
                 },
-                onFoodClick = { foodId ->
-                    navController.navigate(NavigationRoutes.createFoodDetailRoute(foodId))
+                onProductClick = { productId ->
+                    navController.navigate(NavigationRoutes.createFoodDetailRoute(productId))
                 },
                 onSearch = { query ->
                     navController.navigate(NavigationRoutes.createSearchingRoute(query))

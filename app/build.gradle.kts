@@ -67,6 +67,7 @@ dependencies {
     implementation(libs.androidx.navigation.runtime.ktx)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.navigation.safe.args.generator)
+    implementation(libs.play.services.location)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -87,5 +88,6 @@ dependencies {
     implementation(libs.okhttp.v4110)
     implementation(libs.coil.compose.v240)
     implementation(libs.kotlinx.serialization.json)
+    implementation(libs.accompanist.permissions)
 
 }

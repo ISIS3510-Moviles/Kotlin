@@ -11,7 +11,7 @@ import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 
 @Composable
 fun AlertsScreen(
-    notifications: List<com.example.campusbites.domain.model.Alert> = emptyList(),
+    notifications: List<com.example.campusbites.domain.model.AlertDomain> = emptyList(),
     onBackClick: () -> Unit,
     onAlertClick: (String) -> Unit
 ) {

@@ -11,15 +11,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.domain.model.Alert
-import com.example.campusbites.domain.model.Photo
-import com.example.campusbites.presentation.ui.material.CampusBitesTheme
-import java.time.LocalDateTime
+import com.example.campusbites.domain.model.AlertDomain
 
 @Composable
-fun AlertCard(notification: Alert, onAlertClick: (String) -> Unit) {
+fun AlertCard(notification: AlertDomain, onAlertClick: (String) -> Unit) {
     Card(
         modifier = Modifier
             .fillMaxWidth()

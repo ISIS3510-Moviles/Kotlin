@@ -1,6 +1,7 @@
 [versions]
+accompanistPermissions = "0.37.2"
 agp = "8.8.2"
-coilCompose = "2.4.0"
+coilCompose = "2.7.0"
 hiltAndroid = "2.54"
 hiltAndroidCompiler = "2.54"
 kotlin = "2.0.0"
@@ -12,7 +13,7 @@ kotlinxSerializationJson = "1.8.0"
 lifecycleRuntimeKtx = "2.8.7"
 activityCompose = "1.10.1"
 composeBom = "2025.02.00"
-okhttpVersion = "4.11.0"
+okhttpVersion = "4.12.0"
 retrofit2KotlinxSerializationConverter = "1.0.0"
 retrofitVersion = "2.11.0"
 uiTextGoogleFonts = "1.7.8"
@@ -20,12 +21,14 @@ navigationRuntimeKtx = "2.8.8"
 navigationCompose = "2.8.8"
 navigationSafeArgsGenerator = "2.8.8"
 hilt = "2.54"
-retrofit = "2.9.0"
+retrofit = "2.11.0"
 converterGson = "2.9.0"
 okhttp = "4.12.0"
-coil = "2.2.2"
+coil = "2.7.0"
+playServicesLocation = "21.3.0"
 
 [libraries]
+accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-ui-text-google-fonts = { module = "androidx.compose.ui:ui-text-google-fonts", version.ref = "uiTextGoogleFonts" }
 coil-compose-v240 = { module = "io.coil-kt:coil-compose", version.ref = "coilCompose" }
@@ -60,6 +63,7 @@ okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version.ref = "okhtt
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
 retrofit-v2110 = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofitVersion" }
 retrofit2-kotlinx-serialization-converter = { module = "com.jakewharton.retrofit:retrofit2-kotlinx-serialization-converter", version.ref = "retrofit2KotlinxSerializationConverter" }
+play-services-location = { group = "com.google.android.gms", name = "play-services-location", version.ref = "playServicesLocation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

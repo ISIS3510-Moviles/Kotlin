@@ -1,7 +1,5 @@
 package com.example.campusbites.presentation.ui.components
 
-import androidx.annotation.DrawableRes
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +9,6 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -40,20 +37,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
-import com.example.campusbites.domain.model.Comment
-import com.example.campusbites.domain.model.Restaurant
-import com.example.campusbites.presentation.ui.material.CampusBitesTheme
+import com.example.campusbites.domain.model.RestaurantDomain
 import java.util.Locale
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun RestaurantCard(
-    restaurant: Restaurant,
+    restaurant: RestaurantDomain,
     onRestaurantClick: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -64,7 +57,7 @@ fun RestaurantCard(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
         modifier = Modifier
-            .width(380.dp)
+            .width(388.dp)
             .wrapContentHeight()
             .padding(4.dp)
             .clickable { onRestaurantClick(restaurant.id.toString()) }
@@ -97,9 +90,12 @@ fun RestaurantCard(
 
                 Spacer(modifier = Modifier.width(8.dp))
 
-                TagList(
-                    tags = restaurant.dietaryTagsIds,
-                    modifier = Modifier.width(100.dp)
+                TagChip(
+                    tag = restaurant.foodTags.first().name,
+                )
+
+                TagChip(
+                    tag = restaurant.dietaryTags.first().name,
                 )
 
                 // Icono con menú desplegable
@@ -144,8 +140,8 @@ fun RestaurantCard(
                                 verticalArrangement = Arrangement.spacedBy(4.dp),
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                restaurant.dietaryTagsIds.forEach { tag ->
-                                    TagChip(tag = tag)
+                                restaurant.dietaryTags.forEach { tag ->
+                                    TagChip(tag = tag.name)
                                 }
                             }
                         }
@@ -213,7 +209,7 @@ fun TagList(
             .wrapContentSize(),
         verticalArrangement = Arrangement.Center
     ) {
-        tags.take(2).forEach { tag ->
+        tags.take(1).forEach { tag ->
             TagChip(tag = tag)
         }
     }

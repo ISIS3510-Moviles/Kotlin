@@ -1,8 +1,9 @@
 package com.example.campusbites.domain.repository
 
-import com.example.campusbites.domain.model.Restaurant
+import com.example.campusbites.data.dto.RestaurantDTO
+import com.example.campusbites.domain.model.RestaurantDomain
 
 interface RestaurantRepository {
-    suspend fun getRestaurants(): List<Restaurant>
+    suspend fun getRestaurants(): List<RestaurantDTO>
 }
 

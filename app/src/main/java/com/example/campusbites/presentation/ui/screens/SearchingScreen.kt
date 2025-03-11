@@ -1,6 +1,5 @@
 package com.example.campusbites.presentation.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -12,12 +11,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.campusbites.domain.model.Restaurant
-import com.example.campusbites.presentation.ui.viewmodel.HomeViewModel
+import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
 
 @Composable
 fun SearchingScreen(
@@ -57,7 +54,7 @@ fun SearchingScreen(
                 style = MaterialTheme.typography.titleMedium
             )
             RestaurantSearchResultItem(
-                restaurant = bestMatch,
+                restaurantDomain = bestMatch,
                 onClick = { onRestaurantClick(bestMatch.id.toString()) }
             )
 
@@ -69,7 +66,7 @@ fun SearchingScreen(
                 )
                 matchingRestaurants.drop(1).forEach { restaurant ->
                     RestaurantSearchResultItem(
-                        restaurant = restaurant,
+                        restaurantDomain = restaurant,
                         onClick = { onRestaurantClick(restaurant.id.toString()) }
                     )
                     Spacer(modifier = Modifier.height(8.dp))
@@ -81,7 +78,7 @@ fun SearchingScreen(
 
 @Composable
 fun RestaurantSearchResultItem(
-    restaurant: Restaurant,
+    restaurantDomain: RestaurantDomain,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -104,15 +101,15 @@ fun RestaurantSearchResultItem(
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(
-                    text = restaurant.name,
+                    text = restaurantDomain.name,
                     style = MaterialTheme.typography.headlineSmall
                 )
                 Text(
-                    text = "⭐ ${restaurant.rating} | ${restaurant.description} km",
+                    text = "⭐ ${restaurantDomain.rating} | ${restaurantDomain.description} km",
                     style = MaterialTheme.typography.bodySmall
                 )
                 Text(
-                    text = restaurant.description,
+                    text = restaurantDomain.description,
                     style = MaterialTheme.typography.bodySmall,
                     maxLines = 2
                 )
