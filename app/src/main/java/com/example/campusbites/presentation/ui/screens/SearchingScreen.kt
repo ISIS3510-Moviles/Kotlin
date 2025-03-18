@@ -13,64 +13,142 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain
-import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
+import androidx.compose.ui.graphics.Color
+import com.example.campusbites.presentation.ui.viewmodels.SearchingScreenViewModel
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import com.example.campusbites.presentation.ui.components.CustomIcons
+import com.example.campusbites.presentation.ui.components.SearchBar
+
+
+
+
 
 @Composable
 fun SearchingScreen(
-    query: String,
+    modifier: Modifier = Modifier,
     onRestaurantClick: (String) -> Unit,
-    viewModel: HomeViewModel = hiltViewModel(),
-    modifier: Modifier = Modifier
+    onFoodClick: (String) -> Unit,
+    viewModel: SearchingScreenViewModel = hiltViewModel(),
 ) {
+
+
     val uiState by viewModel.uiState.collectAsState()
-    val matchingRestaurants = uiState.restaurants.filter { restaurant ->
-        restaurant.name.contains(query, ignoreCase = true) ||
-                restaurant.description.contains(query, ignoreCase = true)
-    }
-
-
+    var selectedCategory by remember { mutableStateOf("Food") }
+    val matchingRestaurants = uiState.filteredRestaurants
+    val matchingFoods = uiState.filteredProducts
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        Text(
-            text = "Resultados para \"$query\"",
-            style = MaterialTheme.typography.headlineSmall
-        )
+        // Search bar con icono de filtro
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(onClick = { /* TODO: Open filter */ }) {
+                Icon(imageVector = CustomIcons.FilterList, contentDescription = "Filter")
+            }
+            SearchBar(
+                query = uiState.searchQuery,
+                onQueryChange = viewModel::onSearchQueryChanged,
+                onSearch = { viewModel.onSearchQueryChanged(it) },
+                modifier = Modifier.weight(1f),
+            )
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
-        if (matchingRestaurants.isEmpty()) {
+        // Category Selector
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
             Text(
-                text = "No se encontraron restaurantes",
-                style = MaterialTheme.typography.bodyLarge
+                text = "Food",
+                color = if (selectedCategory == "Food") MaterialTheme.colorScheme.primary else Color.Gray,
+                modifier = Modifier.clickable { selectedCategory = "Food" }
             )
-        } else {
-            val bestMatch = matchingRestaurants.first()
             Text(
-                text = "Mejor coincidencia:",
-                style = MaterialTheme.typography.titleMedium
+                text = "Restaurants",
+                color = if (selectedCategory == "Restaurants") MaterialTheme.colorScheme.primary else Color.Gray,
+                modifier = Modifier.clickable { selectedCategory = "Restaurants" }
             )
-            RestaurantSearchResultItem(
-                restaurantDomain = bestMatch,
-                onClick = { onRestaurantClick(bestMatch.id.toString()) }
-            )
+        }
 
-            Spacer(modifier = Modifier.height(16.dp))
-            if (matchingRestaurants.size > 1) {
-                Text(
-                    text = "Otros resultados:",
-                    style = MaterialTheme.typography.titleMedium
-                )
-                matchingRestaurants.drop(1).forEach { restaurant ->
-                    RestaurantSearchResultItem(
-                        restaurantDomain = restaurant,
-                        onClick = { onRestaurantClick(restaurant.id.toString()) }
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Show list based on category selection
+        when (selectedCategory) {
+            "Food" -> {
+                if (matchingFoods.isNotEmpty()) {
+                    matchingFoods.forEach { food ->
+                        FoodSearchResultItem(
+                            foodDomain = food,
+                            onClick = { onFoodClick(food.id.toString()) }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                } else {
+                    Text("No se encontraron productos", style = MaterialTheme.typography.bodyLarge)
                 }
+            }
+            "Restaurants" -> {
+                if (matchingRestaurants.isNotEmpty()) {
+                    matchingRestaurants.forEach { restaurant ->
+                        RestaurantSearchResultItem(
+                            restaurantDomain = restaurant,
+                            onClick = { onRestaurantClick(restaurant.id.toString()) }
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                    }
+                } else {
+                    Text("No se encontraron restaurantes", style = MaterialTheme.typography.bodyLarge)
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun FoodSearchResultItem(
+    foodDomain: ProductDomain,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+            .clickable { onClick() }
+    ) {
+        Row(modifier = Modifier.padding(16.dp)) {
+            /*
+            Image(
+                painter = painterResource(id = foodDomain.image.id.toInt()),
+                contentDescription = "Food Image",
+                modifier = Modifier.size(64.dp),
+                contentScale = ContentScale.Crop
+            )
+            */
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(
+                    text = foodDomain.name,
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    text = "$${foodDomain.price} | ${foodDomain.restaurantId}",
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
         }
     }
@@ -89,15 +167,6 @@ fun RestaurantSearchResultItem(
             .clickable { onClick() }
     ) {
         Row(modifier = Modifier.padding(16.dp)) {
-            /*
-            Image(
-                painter = painterResource(id = restaurant.profilePhoto.id.toInt()),
-                contentDescription = "Restaurant Logo",
-                modifier = Modifier.size(64.dp),
-                contentScale = ContentScale.Crop
-            )
-
-             */
             Spacer(modifier = Modifier.width(16.dp))
             Column {
                 Text(

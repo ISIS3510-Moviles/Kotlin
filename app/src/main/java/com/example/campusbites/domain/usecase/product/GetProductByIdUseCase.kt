@@ -19,7 +19,7 @@ class GetProductByIdUseCase @Inject constructor(
             description = product.description,
             price = product.price,
             photo = product.photo,
-            restaurant_id = product.restaurant_id,
+            restaurantId = product.restaurant_id,
             rating = product.rating,
             ingredientsIds = product.ingredientsIds,
             discountsIds = product.discountsIds,

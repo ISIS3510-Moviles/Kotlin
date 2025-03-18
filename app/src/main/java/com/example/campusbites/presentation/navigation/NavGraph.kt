@@ -19,7 +19,7 @@ object NavigationRoutes {
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
     const val SEARCHING_SCREEN = "searching_screen/{query}"
-    const val FOOD_DETAIL = "food_detail/{id}"
+    const val FOOD_DETAIL = "food_detail/{id}" // Asegurar consistencia con 'id'
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
@@ -50,6 +50,7 @@ fun NavGraph(navController: NavHostController) {
                 }
             )
         }
+
         // Restaurant Detail
         composable(
             route = NavigationRoutes.RESTAURANT_DETAIL,
@@ -59,13 +60,13 @@ fun NavGraph(navController: NavHostController) {
             RestaurantDetailScreen(restaurantId = restaurantId)
         }
 
-
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
                 onBackClick = { navController.popBackStack() },
             )
         }
+
         // Alerts Screen
         composable(NavigationRoutes.ALERTS_SCREEN) {
             AlertsScreen(
@@ -83,15 +84,16 @@ fun NavGraph(navController: NavHostController) {
         ) {
             val query = it.arguments?.getString("query") ?: ""
             SearchingScreen(
-                query = query,
                 onRestaurantClick = { restaurantId ->
                     navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
-                }
+                },
+                onFoodClick = { foodId ->
+                    navController.navigate(NavigationRoutes.createFoodDetailRoute(foodId))
+                },
             )
         }
 
-
-        // Food Detail
+        // Food Detail (única definición correcta)
         composable(
             route = NavigationRoutes.FOOD_DETAIL,
             arguments = listOf(navArgument("id") { type = NavType.StringType })
