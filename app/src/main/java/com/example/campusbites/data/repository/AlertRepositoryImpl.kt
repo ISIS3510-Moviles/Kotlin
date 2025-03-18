@@ -2,6 +2,7 @@ package com.example.campusbites.data.repository
 
 import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.RestaurantDTO
+import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.model.AlertDomain
@@ -18,7 +19,7 @@ class AlertRepositoryImpl @Inject constructor(
 ) : AlertRepository {
 
     private suspend fun mapDtoToDomain(dto: AlertDTO): AlertDomain {
-        // Parseamos la fecha usando ISO_OFFSET_DATE_TIME (p. ej. "2025-03-10T12:00:00Z")
+        // Parsea la fecha usando ISO_OFFSET_DATE_TIME (por ejemplo, "2025-03-10T12:00:00Z")
         val parsedDateTime = OffsetDateTime
             .parse(dto.datetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
             .toLocalDateTime()
@@ -124,5 +125,12 @@ class AlertRepositoryImpl @Inject constructor(
     override suspend fun getAlerts(): List<AlertDomain> {
         val dtos: List<AlertDTO> = apiService.getAlerts()
         return dtos.map { dto -> mapDtoToDomain(dto) }
+    }
+
+    override suspend fun updateAlertVotes(alertId: String, newVotes: Int) {
+        // Se crea un DTO parcial para la actualización utilizando solo el campo votes.
+        val updateDto = UpdateAlertDTO(votes = newVotes)
+        // Se invoca la función del ApiService para actualizar la alerta.
+        apiService.updateAlertVotes(alertId, updateDto)
     }
 }

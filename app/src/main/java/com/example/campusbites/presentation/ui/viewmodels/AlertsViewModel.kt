@@ -1,9 +1,9 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.AlertDomain
+import com.example.campusbites.domain.repository.AlertRepository
 import com.example.campusbites.domain.usecase.alert.GetAlertsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +14,8 @@ import javax.inject.Inject
 
 @HiltViewModel
 class AlertsViewModel @Inject constructor(
-    private val getAlertsUseCase: GetAlertsUseCase
+    private val getAlertsUseCase: GetAlertsUseCase,
+    private val alertRepository: AlertRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AlertsUiState())
@@ -30,12 +31,9 @@ class AlertsViewModel @Inject constructor(
             try {
                 val alerts = getAlertsUseCase()
 
-                Log.i("prueba", "Se han obtenido ${alerts.size} alertas")
-
                 _uiState.value = _uiState.value.copy(alerts = alerts, isLoading = false)
             } catch (e: Exception) {
-                Log.i("prueba", "No funciono lo del state")
-                Log.i("prueba", "Error al obtener alertas: ${e.localizedMessage}")
+
                 _uiState.value = _uiState.value.copy(
                     errorMessage = e.localizedMessage ?: "Error desconocido",
                     isLoading = false
@@ -43,6 +41,23 @@ class AlertsViewModel @Inject constructor(
             }
         }
     }
+
+    fun upvote(alert: AlertDomain) {
+        viewModelScope.launch {
+
+            alertRepository.updateAlertVotes(alert.id, alert.votes + 1)
+            fetchAlerts()
+        }
+    }
+
+    fun downvote(alert: AlertDomain) {
+        viewModelScope.launch {
+
+            alertRepository.updateAlertVotes(alert.id, alert.votes - 1)
+            fetchAlerts()
+        }
+    }
+
 }
 
 data class AlertsUiState(

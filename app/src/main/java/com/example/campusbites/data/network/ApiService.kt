@@ -7,13 +7,11 @@ import com.example.campusbites.data.dto.IngredientDTO
 import com.example.campusbites.data.dto.InstitutionDTO
 import com.example.campusbites.data.dto.ProductDTO
 import com.example.campusbites.data.dto.RestaurantDTO
+import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
-import com.example.campusbites.domain.model.DietaryTagDomain
-import com.example.campusbites.domain.model.FoodTagDomain
-import com.example.campusbites.domain.model.ProductDomain
-import com.example.campusbites.domain.model.RestaurantDomain
-import com.example.campusbites.domain.model.UserDomain
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PATCH
 import retrofit2.http.Path
 
 interface ApiService {
@@ -49,5 +47,8 @@ interface ApiService {
 
     @GET("alert")
     suspend fun getAlerts(): List<AlertDTO>
+
+    @PATCH("alert/{id}")
+    suspend fun updateAlertVotes(@Path("id") id: String,@Body updateAlertDto: UpdateAlertDTO): Boolean
 
 }

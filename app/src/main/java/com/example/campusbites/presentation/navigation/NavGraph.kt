@@ -71,8 +71,9 @@ fun NavGraph(navController: NavHostController) {
             AlertsScreen(
                 onBackClick = { navController.popBackStack() },
                 onAlertClick = { alertId ->
-                    // Manejar el click en una alerta
-                }
+                    println("Alert clicked: $alertId")
+                },
+                onFabClick = { println("Fab clicked") },
             )
         }
 

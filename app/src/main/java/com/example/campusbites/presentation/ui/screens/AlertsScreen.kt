@@ -2,10 +2,21 @@ package com.example.campusbites.presentation.ui.screens
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.campusbites.presentation.ui.components.AlertList
 import com.example.campusbites.presentation.ui.components.AlertTopBar
@@ -16,18 +27,52 @@ import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 fun AlertsScreen(
     onBackClick: () -> Unit,
     onAlertClick: (String) -> Unit,
+    onFabClick: () -> Unit,
     viewModel: AlertsViewModel = hiltViewModel()
 ) {
-
     val uiState = viewModel.uiState.collectAsState()
     val notifications = uiState.value.alerts
 
-    Column(modifier = Modifier.fillMaxSize()) {
-        AlertTopBar(onBackClick = onBackClick)
-        AlertList(
-            notifications = notifications,
-            onAlertClick = onAlertClick
-        )
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = onFabClick,
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = "Agregar alerta"
+                )
+            }
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            AlertTopBar(onBackClick = onBackClick)
+
+            Text(
+                text = "Alertas",
+                fontSize = 24.sp,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            AlertList(
+                notifications = notifications,
+                onAlertClick = onAlertClick,
+                onUpvoteClick = { alert ->
+                    viewModel.upvote(alert)
+                },
+                onDownvoteClick = { alert ->
+                    viewModel.downvote(alert)
+                }
+            )
+        }
     }
 }
 
@@ -36,8 +81,9 @@ fun AlertsScreen(
 fun AlertsScreenPreview() {
     CampusBitesTheme {
         AlertsScreen(
-            onBackClick = { /* Accion de volver */ },
-            onAlertClick = { alertId -> /* Manejar click en alerta, ejemplo: println(alertId) */ }
+            onBackClick = { /* Acción de volver */ },
+            onAlertClick = { alertId -> /* Manejar click en alerta */ },
+            onFabClick = { /* Acción al pulsar el FAB */ }
         )
     }
 }
