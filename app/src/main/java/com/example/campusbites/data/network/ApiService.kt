@@ -1,5 +1,6 @@
 package com.example.campusbites.data.network
 
+import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.DietaryTagDTO
 import com.example.campusbites.data.dto.FoodTagDTO
 import com.example.campusbites.data.dto.IngredientDTO
@@ -46,5 +47,7 @@ interface ApiService {
     @GET("ingredient")
     suspend fun getIngredients(): List<IngredientDTO>
 
+    @GET("alert")
+    suspend fun getAlerts(): List<AlertDTO>
 
 }

@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
 import com.example.campusbites.domain.model.AlertDomain
 
 @Composable
@@ -32,8 +33,8 @@ fun AlertCard(notification: AlertDomain, onAlertClick: (String) -> Unit) {
             modifier = Modifier
                 .padding(16.dp)
         ) {
-            Image(
-                painter = painterResource(id = notification.votes),
+            AsyncImage(
+                model = notification.icon,
                 contentDescription = "Notification Icon",
                 modifier = Modifier
                     .size(40.dp)
@@ -41,7 +42,7 @@ fun AlertCard(notification: AlertDomain, onAlertClick: (String) -> Unit) {
             )
             Column {
                 Text(
-                    text = notification.message,
+                    text = notification.restaurantDomain.name,
                     style = MaterialTheme.typography.titleMedium
                 )
                 Spacer(modifier = Modifier.height(4.dp))
