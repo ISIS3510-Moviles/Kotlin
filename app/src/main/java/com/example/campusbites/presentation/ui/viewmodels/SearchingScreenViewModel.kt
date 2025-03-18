@@ -48,14 +48,28 @@ class SearchingScreenViewModel @Inject constructor(
         viewModelScope.launch {
             val products = getProductsUseCase()
             val restaurants = getRestaurantsUseCase()
+
             _uiState.update { currentState ->
+                val filteredProducts = products.filter {
+                    it.name.contains(currentState.searchQuery, ignoreCase = true) ||
+                            it.description.contains(currentState.searchQuery, ignoreCase = true)
+                }
+
+                val filteredRestaurants = restaurants.filter {
+                    it.name.contains(currentState.searchQuery, ignoreCase = true) ||
+                            it.description.contains(currentState.searchQuery, ignoreCase = true)
+                }
+
                 currentState.copy(
                     products = products,
-                    restaurants = restaurants
+                    restaurants = restaurants,
+                    filteredProducts = filteredProducts,
+                    filteredRestaurants = filteredRestaurants
                 )
             }
         }
     }
+
 }
 
 data class SearchingUiState(

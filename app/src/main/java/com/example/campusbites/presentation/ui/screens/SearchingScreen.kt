@@ -4,7 +4,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,8 +12,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.example.campusbites.domain.model.ProductDomain
-import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.presentation.ui.components.RestaurantCard
+import com.example.campusbites.presentation.ui.components.ProductCard
 import androidx.compose.ui.graphics.Color
 import com.example.campusbites.presentation.ui.viewmodels.SearchingScreenViewModel
 import androidx.compose.material3.*
@@ -23,12 +22,9 @@ import androidx.compose.ui.Alignment
 import com.example.campusbites.presentation.ui.components.CustomIcons
 import com.example.campusbites.presentation.ui.components.SearchBar
 
-
-
-
-
 @Composable
 fun SearchingScreen(
+    query: String,
     modifier: Modifier = Modifier,
     onRestaurantClick: (String) -> Unit,
     onFoodClick: (String) -> Unit,
@@ -40,6 +36,11 @@ fun SearchingScreen(
     var selectedCategory by remember { mutableStateOf("Food") }
     val matchingRestaurants = uiState.filteredRestaurants
     val matchingFoods = uiState.filteredProducts
+
+    LaunchedEffect(query) {
+        viewModel.onSearchQueryChanged(query)
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -90,9 +91,9 @@ fun SearchingScreen(
             "Food" -> {
                 if (matchingFoods.isNotEmpty()) {
                     matchingFoods.forEach { food ->
-                        FoodSearchResultItem(
-                            foodDomain = food,
-                            onClick = { onFoodClick(food.id.toString()) }
+                        ProductCard(
+                            product = food,
+                            onProductClick = { onFoodClick(food.id.toString()) }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -103,9 +104,9 @@ fun SearchingScreen(
             "Restaurants" -> {
                 if (matchingRestaurants.isNotEmpty()) {
                     matchingRestaurants.forEach { restaurant ->
-                        RestaurantSearchResultItem(
-                            restaurantDomain = restaurant,
-                            onClick = { onRestaurantClick(restaurant.id.toString()) }
+                        RestaurantCard(
+                            restaurant = restaurant,
+                            onRestaurantClick = { onRestaurantClick(restaurant.id.toString()) }
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                     }
@@ -118,71 +119,3 @@ fun SearchingScreen(
 }
 
 
-@Composable
-fun FoodSearchResultItem(
-    foodDomain: ProductDomain,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onClick() }
-    ) {
-        Row(modifier = Modifier.padding(16.dp)) {
-            /*
-            Image(
-                painter = painterResource(id = foodDomain.image.id.toInt()),
-                contentDescription = "Food Image",
-                modifier = Modifier.size(64.dp),
-                contentScale = ContentScale.Crop
-            )
-            */
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = foodDomain.name,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Text(
-                    text = "$${foodDomain.price} | ${foodDomain.restaurantId}",
-                    style = MaterialTheme.typography.bodySmall
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun RestaurantSearchResultItem(
-    restaurantDomain: RestaurantDomain,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clickable { onClick() }
-    ) {
-        Row(modifier = Modifier.padding(16.dp)) {
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = restaurantDomain.name,
-                    style = MaterialTheme.typography.headlineSmall
-                )
-                Text(
-                    text = "⭐ ${restaurantDomain.rating} | ${restaurantDomain.description} km",
-                    style = MaterialTheme.typography.bodySmall
-                )
-                Text(
-                    text = restaurantDomain.description,
-                    style = MaterialTheme.typography.bodySmall,
-                    maxLines = 2
-                )
-            }
-        }
-    }
-}
