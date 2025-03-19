@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.example.campusbites.domain.model.AlertDomain
@@ -41,7 +42,7 @@ fun AlertCard(
             modifier = Modifier.padding(16.dp)
         ) {
             AsyncImage(
-                model = notification.icon,
+                model = notification.restaurantDomain.profilePhoto,
                 contentDescription = "Icono de alerta",
                 modifier = Modifier
                     .size(40.dp)
@@ -54,6 +55,16 @@ fun AlertCard(
                     text = notification.restaurantDomain.name,
                     style = MaterialTheme.typography.titleMedium
                 )
+
+                // Añadimos el nombre del creador aquí
+                Text(
+                    text = "Por: ${notification.publisher.name}",
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontStyle = FontStyle.Italic,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                )
+
                 Spacer(modifier = Modifier.height(4.dp))
                 Text(
                     text = notification.message,

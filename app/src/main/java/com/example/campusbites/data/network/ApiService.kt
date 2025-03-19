@@ -1,6 +1,7 @@
 package com.example.campusbites.data.network
 
 import com.example.campusbites.data.dto.AlertDTO
+import com.example.campusbites.data.dto.CreateAlertDTO
 import com.example.campusbites.data.dto.DietaryTagDTO
 import com.example.campusbites.data.dto.FoodTagDTO
 import com.example.campusbites.data.dto.IngredientDTO
@@ -12,6 +13,7 @@ import com.example.campusbites.data.dto.UserDTO
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
+import retrofit2.http.POST
 import retrofit2.http.Path
 
 interface ApiService {
@@ -50,5 +52,8 @@ interface ApiService {
 
     @PATCH("alert/{id}")
     suspend fun updateAlertVotes(@Path("id") id: String,@Body updateAlertDto: UpdateAlertDTO): Boolean
+
+    @POST("alert")
+    suspend fun createAlert(@Body createAlertDTO: CreateAlertDTO): Boolean
 
 }

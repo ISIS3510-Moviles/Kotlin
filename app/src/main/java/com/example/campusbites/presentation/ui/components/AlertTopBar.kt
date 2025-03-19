@@ -1,7 +1,6 @@
 package com.example.campusbites.presentation.ui.components
 
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
@@ -16,7 +15,6 @@ fun AlertTopBar(onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .statusBarsPadding()    // Agrega espacio para la barra de estado/cámara
             .padding(16.dp),
         horizontalArrangement = Arrangement.Start
     ) {

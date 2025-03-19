@@ -1,6 +1,7 @@
 package com.example.campusbites.data.repository
 
 import com.example.campusbites.data.dto.AlertDTO
+import com.example.campusbites.data.dto.CreateAlertDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
@@ -127,10 +128,32 @@ class AlertRepositoryImpl @Inject constructor(
         return dtos.map { dto -> mapDtoToDomain(dto) }
     }
 
-    override suspend fun updateAlertVotes(alertId: String, newVotes: Int) {
+    override suspend fun getAlertById(id: String): AlertDomain? {
+        TODO("Not yet implemented")
+    }
+
+    override suspend fun updateAlertVotes(id: String, votes: Int): Boolean {
         // Se crea un DTO parcial para la actualización utilizando solo el campo votes.
-        val updateDto = UpdateAlertDTO(votes = newVotes)
+        val updateDto = UpdateAlertDTO(votes = votes)
         // Se invoca la función del ApiService para actualizar la alerta.
-        apiService.updateAlertVotes(alertId, updateDto)
+        return apiService.updateAlertVotes(id, updateDto)
+    }
+
+    override suspend fun createAlert(
+        datetime: String,
+        icon: String,
+        message: String,
+        publisherId: String,
+        restaurantId: String
+    ): Boolean {
+        val createAlertDTO = CreateAlertDTO(
+            datetime = datetime,
+            icon = icon,
+            message = message,
+            publisherId = publisherId,
+            restaurantId = restaurantId,
+            votes = 0
+        )
+        return apiService.createAlert(createAlertDTO)
     }
 }

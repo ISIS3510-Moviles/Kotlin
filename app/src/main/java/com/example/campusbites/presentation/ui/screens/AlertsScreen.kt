@@ -8,35 +8,34 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
 import com.example.campusbites.presentation.ui.components.AlertList
 import com.example.campusbites.presentation.ui.components.AlertTopBar
-import com.example.campusbites.presentation.ui.material.CampusBitesTheme
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 
 @Composable
 fun AlertsScreen(
+    navController: NavController,
     onBackClick: () -> Unit,
-    onAlertClick: (String) -> Unit,
-    onFabClick: () -> Unit,
     viewModel: AlertsViewModel = hiltViewModel()
 ) {
+
     val uiState = viewModel.uiState.collectAsState()
     val notifications = uiState.value.alerts
 
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = onFabClick,
+                onClick = { navController.navigate("alert_create") },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 elevation = FloatingActionButtonDefaults.elevation(defaultElevation = 6.dp)
@@ -64,7 +63,10 @@ fun AlertsScreen(
 
             AlertList(
                 notifications = notifications,
-                onAlertClick = onAlertClick,
+                onAlertClick = { alertId -> println("Alert clicked: $alertId")
+                    // Aqui se debe navegar al detalle del restaurante
+//                    navController.navigate("restaurant/$restaurant_id")
+                },
                 onUpvoteClick = { alert ->
                     viewModel.upvote(alert)
                 },
@@ -73,17 +75,5 @@ fun AlertsScreen(
                 }
             )
         }
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AlertsScreenPreview() {
-    CampusBitesTheme {
-        AlertsScreen(
-            onBackClick = { /* Acción de volver */ },
-            onAlertClick = { alertId -> /* Manejar click en alerta */ },
-            onFabClick = { /* Acción al pulsar el FAB */ }
-        )
     }
 }
