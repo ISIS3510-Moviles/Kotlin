@@ -6,12 +6,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.FoodSection
 import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.RestaurantHeader
 import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.RestaurantTabs
 import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
-
+import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.BookTableSection
+import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.ArriveSection
+import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.ReviewsSection
 @Composable
 fun RestaurantDetailScreen(
     restaurantId: String,
@@ -35,7 +36,10 @@ fun RestaurantDetailScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             when (selectedTabIndex) {
-                0 -> FoodSection()
+                0 -> FoodSection(popularProducts = uiState.popularProducts,
+                    affordableProducts = uiState.under20Products,
+                    onProductClick = { productId -> /* Acción al hacer clic en un producto */ }
+                )
                 1 -> BookTableSection()
                 2 -> ArriveSection()
                 3 -> ReviewsSection()
@@ -44,22 +48,3 @@ fun RestaurantDetailScreen(
     } ?: Text("Loading...", modifier = Modifier.fillMaxSize()) // Mensaje de carga
 }
 
-@Composable
-fun FoodSection() {
-    // TODO: Implementar
-}
-
-@Composable
-fun BookTableSection() {
-    // TODO: Implementar
-}
-
-@Composable
-fun ArriveSection() {
-    // TODO: Implementar
-}
-
-@Composable
-fun ReviewsSection() {
-    // TODO: Implementar
-}

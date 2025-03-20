@@ -1,6 +1,7 @@
 package com.example.campusbites.data.network
 
 import com.example.campusbites.data.dto.AlertDTO
+import com.example.campusbites.data.dto.CommentDTO
 import com.example.campusbites.data.dto.CreateAlertDTO
 import com.example.campusbites.data.dto.DietaryTagDTO
 import com.example.campusbites.data.dto.FoodTagDTO
@@ -58,5 +59,8 @@ interface ApiService {
 
     @POST("alert")
     suspend fun createAlert(@Body createAlertDTO: CreateAlertDTO): Boolean
+
+    @GET("comment")
+    suspend fun getComments(): List<CommentDTO>
 
 }

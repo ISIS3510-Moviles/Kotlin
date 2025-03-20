@@ -4,11 +4,16 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.IntentSenderRequest
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavController
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
@@ -50,10 +55,12 @@ fun SignInScreen(navController: NavController, authViewModel: AuthViewModel) {
                 firebaseAuth.signInWithCredential(firebaseCredential)
                     .addOnCompleteListener { authResult ->
                         if (authResult.isSuccessful) {
-                            Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Inicio de sesión exitoso", Toast.LENGTH_SHORT)
+                                .show()
                             navController.popBackStack()
                         } else {
-                            Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(context, "Error al iniciar sesión", Toast.LENGTH_SHORT)
+                                .show()
                         }
                     }
             }
@@ -64,21 +71,34 @@ fun SignInScreen(navController: NavController, authViewModel: AuthViewModel) {
 
     // Si el usuario ya está autenticado, navegar a la pantalla principal
     if (user != null) {
+        authViewModel.signOut()
         LaunchedEffect(Unit) {
             navController.navigate("home_screen")
         }
     }
 
-    Button(onClick = {
-        oneTapClient.beginSignIn(signInRequest)
-            .addOnSuccessListener { result ->
-                val intentSenderRequest = IntentSenderRequest.Builder(result.pendingIntent).build()
-                launcher.launch(intentSenderRequest)
-            }
-            .addOnFailureListener {
-                Toast.makeText(context, "No se pudo iniciar sesión con Google", Toast.LENGTH_SHORT).show()
-            }
-    }) {
-        Text("Iniciar sesión con Google")
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Button(onClick = {
+            oneTapClient.beginSignIn(signInRequest)
+                .addOnSuccessListener { result ->
+                    val intentSenderRequest =
+                        IntentSenderRequest.Builder(result.pendingIntent).build()
+                    launcher.launch(intentSenderRequest)
+                }
+                .addOnFailureListener {
+                    Toast.makeText(
+                        context,
+                        "No se pudo iniciar sesión con Google",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+        }) {
+            Text("Iniciar sesión con Google")
+        }
+
     }
 }

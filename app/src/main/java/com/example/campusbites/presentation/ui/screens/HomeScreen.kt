@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Surface
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -88,7 +87,7 @@ fun HomeScreen(
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
+                        IconButton(onClick = { navController.navigate(NavigationRoutes.PROFILE_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Person,
                                 contentDescription = stringResource(R.string.profile)
