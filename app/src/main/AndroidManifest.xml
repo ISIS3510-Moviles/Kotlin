@@ -22,7 +22,6 @@
         <activity
             android:name=".presentation.ui.MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.CampusBites">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -33,6 +32,10 @@
         <meta-data
             android:name="com.google.android.gms.auth.api.signin"
             android:value="@string/default_web_client_id" />
+
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyCsNWYNYxchBGbM2R38-ZrSxRui-xEUUDM"/>
     </application>
 
 </manifest>
