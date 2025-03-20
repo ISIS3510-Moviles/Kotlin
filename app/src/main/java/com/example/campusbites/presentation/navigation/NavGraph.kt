@@ -13,9 +13,11 @@ import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
-import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
 import com.example.campusbites.presentation.ui.screens.SearchingScreen
-import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
+
+import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
+import com.example.campusbites.presentation.ui.screens.SignInScreen
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 object NavigationRoutes {
     const val HOME_SCREEN = "home_screen"
@@ -23,7 +25,8 @@ object NavigationRoutes {
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
     const val SEARCHING_SCREEN = "searching_screen/{query}"
-    const val FOOD_DETAIL = "food_detail/{id}" // Asegurar consistencia con 'id'
+    const val SIGNIN_SCREEN = "sign_in"
+    const val FOOD_DETAIL = "food_detail/{id}"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
@@ -31,12 +34,20 @@ object NavigationRoutes {
 }
 
 @Composable
-fun NavGraph(navController: NavHostController) {
-    val alertsViewModel: AlertsViewModel = hiltViewModel()
+
+fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
+
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN
     ) {
+
+        composable(NavigationRoutes.SIGNIN_SCREEN){
+            SignInScreen(
+                navController = navController,
+                authViewModel = authViewModel
+            )
+        }
         // Home Screen
         composable(NavigationRoutes.HOME_SCREEN) {
             HomeScreen(
@@ -69,6 +80,7 @@ fun NavGraph(navController: NavHostController) {
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
                 onBackClick = { navController.popBackStack() },
+                onSignInClick = { navController.navigate("sign_in") }
             )
         }
 

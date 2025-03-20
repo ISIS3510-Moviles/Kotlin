@@ -13,7 +13,7 @@ import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
 
-private const val BASE_URL = "https://backendmobile.duckdns.org"
+private const val BASE_URL = "https://mobiledev.chickenkiller.com/"
 
 private val retrofit = Retrofit.Builder()
     .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))

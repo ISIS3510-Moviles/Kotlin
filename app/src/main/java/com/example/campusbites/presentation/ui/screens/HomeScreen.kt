@@ -88,7 +88,7 @@ fun HomeScreen(
                         }
                     },
                     navigationIcon = {
-                        IconButton(onClick = { navController.navigate(NavigationRoutes.PROFILE_SCREEN) }) {
+                        IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Person,
                                 contentDescription = stringResource(R.string.profile)
