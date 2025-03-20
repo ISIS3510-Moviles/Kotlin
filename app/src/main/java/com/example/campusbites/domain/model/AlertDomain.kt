@@ -6,7 +6,7 @@ import java.time.LocalDateTime
 data class AlertDomain(
     val id: String,
     val datetime: LocalDateTime,
-    val icon: PhotoDomain,
+    val icon: String,
     val message: String,
     val votes: Int,
     val publisher: UserDomain,

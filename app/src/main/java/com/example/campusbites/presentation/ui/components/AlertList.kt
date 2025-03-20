@@ -8,14 +8,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.campusbites.domain.model.AlertDomain
 
 @Composable
 fun AlertList(
     notifications: List<AlertDomain>,
-    onAlertClick: (String) -> Unit
+    onAlertClick: (String) -> Unit,
+    onUpvoteClick: (AlertDomain) -> Unit,
+    onDownvoteClick: (AlertDomain) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier
@@ -25,18 +26,11 @@ fun AlertList(
         items(notifications) { notification ->
             AlertCard(
                 notification = notification,
-                onAlertClick = onAlertClick
+                onAlertClick = onAlertClick,
+                onUpvoteClick = { onUpvoteClick(notification) },
+                onDownvoteClick = { onDownvoteClick(notification) }
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
     }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AlertListPreview() {
-    AlertList(
-        notifications = emptyList(),
-        onAlertClick = { /* Maneja el click, por ejemplo imprimir el id */ }
-    )
 }

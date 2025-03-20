@@ -12,7 +12,9 @@ class GetRestaurantByIdUseCase @Inject constructor(
     private val getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
 ) {
     suspend operator fun invoke(id: String): RestaurantDomain? {
+
         val restaurantDTO = repository.getRestaurant(id) ?: return null
+
         return RestaurantDomain(
             id = restaurantDTO.id,
             name = restaurantDTO.name,
@@ -32,8 +34,10 @@ class GetRestaurantByIdUseCase @Inject constructor(
             overviewPhoto = restaurantDTO.overviewPhoto,
             profilePhoto = restaurantDTO.profilePhoto,
             photos = restaurantDTO.photos,
+
             foodTags = restaurantDTO.foodTagsIds.map { getFoodTagByIdUseCase(it) },
             dietaryTags = restaurantDTO.dietaryTagsIds.map { getDietaryTagByIdUseCase(it) },
+
             alertsIds = restaurantDTO.alertsIds,
             reservationsIds = restaurantDTO.reservationsIds,
             suscribersIds = restaurantDTO.suscribersIds,
