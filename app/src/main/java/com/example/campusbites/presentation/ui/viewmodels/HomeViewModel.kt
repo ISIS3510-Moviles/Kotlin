@@ -8,8 +8,6 @@ import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
-import com.example.campusbites.domain.usecase.tag.GetDietaryTagByIdUseCase
-import com.example.campusbites.domain.usecase.tag.GetFoodTagByIdUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -121,6 +119,4 @@ data class HomeUiState(
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
     val selectedRestaurantDomain: RestaurantDomain? = null
-) {
-
-}
+)

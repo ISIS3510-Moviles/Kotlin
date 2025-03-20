@@ -13,4 +13,8 @@ class RestaurantRepositoryImpl @Inject constructor(
     override suspend fun getRestaurants(): List<RestaurantDTO> {
         return apiService.getRestaurants()
     }
+
+    override suspend fun getRestaurantById(id: String): RestaurantDTO? {
+        return getRestaurants().find { it.id == id }
+    }
 }

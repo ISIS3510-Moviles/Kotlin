@@ -1,17 +1,21 @@
 package com.example.campusbites.presentation.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
+import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
 import com.example.campusbites.presentation.ui.screens.SearchingScreen
+import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 
 object NavigationRoutes {
     const val HOME_SCREEN = "home_screen"
@@ -28,6 +32,7 @@ object NavigationRoutes {
 
 @Composable
 fun NavGraph(navController: NavHostController) {
+    val alertsViewModel: AlertsViewModel = hiltViewModel()
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN
@@ -70,10 +75,21 @@ fun NavGraph(navController: NavHostController) {
         // Alerts Screen
         composable(NavigationRoutes.ALERTS_SCREEN) {
             AlertsScreen(
+                navController = navController,
+                onBackClick = { navController.popBackStack() }
+            )
+        }
+
+        composable("alert_create") {
+            val restaurants = alertsViewModel.restaurants.collectAsState()
+            AlertCreateScreen(
                 onBackClick = { navController.popBackStack() },
-                onAlertClick = { alertId ->
-                    // Manejar el click en una alerta
-                }
+                onCreateClick = { description, restaurantId ->
+                    alertsViewModel.createAlert(description, restaurantId)
+
+                    navController.navigate(NavigationRoutes.HOME_SCREEN)
+                },
+                restaurants = restaurants.value
             )
         }
 
