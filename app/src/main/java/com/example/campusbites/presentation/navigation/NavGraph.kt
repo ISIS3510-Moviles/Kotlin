@@ -81,8 +81,7 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
-                onBackClick = { navController.popBackStack() },
-                onSignInClick = { navController.navigate("sign_in") }
+                navController = navController
             )
         }
 

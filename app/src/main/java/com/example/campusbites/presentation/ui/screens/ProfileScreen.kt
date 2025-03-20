@@ -1,46 +1,279 @@
 package com.example.campusbites.presentation.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Button
-import androidx.compose.material3.Text
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.tooling.preview.Preview
-import com.google.firebase.auth.FirebaseAuth
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import com.example.campusbites.presentation.ui.components.ProductListRow
+import com.example.campusbites.presentation.ui.viewmodels.ProfileViewModel
 
-
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(
-    onBackClick: () -> Unit,
-    onSignInClick: () -> Unit
+    navController: NavHostController,
+    onProductClick: (String) -> Unit = {}
 ) {
-    val user = FirebaseAuth.getInstance().currentUser
+    val viewModel: ProfileViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        if (user == null) {
-            Button(onClick = onSignInClick) {
-                Text(text = "Iniciar sesión con Google")
-            }
-        } else {
-            Text(text = "Bienvenido, ${user.displayName}")
-            Text(text = "Email: ${user.email}")
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(text = "Perfil") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = "Regresar"
+                        )
+                    }
+                },
+            )
+        },
+        content = { innerPadding ->
+            Surface(modifier = Modifier.padding(innerPadding)) {
+                if (uiState.isLoading) {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator()
+                    }
+                } else {
+                    uiState.user?.let { user ->
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            // Cabecera con nombre y rol
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surfaceVariant)
+                                    .padding(24.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Nombre del usuario
+                                Text(
+                                    text = user.name,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
 
-            Button(onClick = {
-                FirebaseAuth.getInstance().signOut()
-            }) {
-                Text("Cerrar sesión")
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                                // Rol del usuario
+                                Text(
+                                    text = user.role,
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+
+                                // Tipo de usuario (Premium/Estándar)
+                                if (user.isPremium) {
+                                    Row(
+                                        verticalAlignment = Alignment.CenterVertically,
+                                        modifier = Modifier.padding(top = 8.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Star,
+                                            contentDescription = "Usuario Premium",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            text = "Premium",
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                } else {
+                                    Text(
+                                        text = "Usuario Estándar",
+                                        style = MaterialTheme.typography.labelLarge,
+                                        modifier = Modifier.padding(top = 8.dp),
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+
+                            // Información de contacto
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Información de Contacto",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    HorizontalDivider()
+
+                                    // Email
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Email,
+                                            contentDescription = "Email",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(text = user.email)
+                                    }
+
+                                    // Teléfono
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.Phone,
+                                            contentDescription = "Teléfono",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(text = user.phone)
+                                    }
+
+                                    // Institución
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        Icon(
+                                            imageVector = Icons.Default.LocationOn,
+                                            contentDescription = "Institución",
+                                            tint = MaterialTheme.colorScheme.primary
+                                        )
+                                        Spacer(modifier = Modifier.width(12.dp))
+                                        Text(text = user.institution.name)
+                                    }
+                                }
+                            }
+
+                            // Preferencias dietarias
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                )
+                            ) {
+                                Column(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Text(
+                                        text = "Preferencias Dietarias",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    HorizontalDivider()
+
+                                    if (uiState.dietaryPreferenceNames.isNotEmpty()) {
+                                        FlowRow(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            uiState.dietaryPreferenceNames.forEach { preference ->
+                                                Surface(
+                                                    shape = RoundedCornerShape(16.dp),
+                                                    color = MaterialTheme.colorScheme.secondaryContainer
+                                                ) {
+                                                    Text(
+                                                        text = preference,
+                                                        style = MaterialTheme.typography.bodyMedium,
+                                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    } else {
+                                        Text(
+                                            text = "Sin preferencias dietarias especificadas",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            }
+
+                            // Productos guardados
+                            if (user.savedProducts.isNotEmpty()) {
+                                ProductListRow(
+                                    name = "Productos Guardados",
+                                    description = "Tus comidas favoritas",
+                                    products = user.savedProducts,
+                                    onProductClick = onProductClick,
+                                    modifier = Modifier.padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
+                                )
+                            } else {
+                                Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+                                    shape = RoundedCornerShape(16.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                                    )
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        horizontalAlignment = Alignment.CenterHorizontally
+                                    ) {
+                                        Text(
+                                            text = "No tienes productos guardados",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            textAlign = TextAlign.Center
+                                        )
+                                        Spacer(modifier = Modifier.height(8.dp))
+                                        Button(
+                                            onClick = { /* Navegar a descubrir productos */ }
+                                        ) {
+                                            Text("Descubrir productos")
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } ?: run {
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(text = "No se encontró información del usuario.")
+                        }
+                    }
+                }
             }
         }
-    }
+    )
 }
