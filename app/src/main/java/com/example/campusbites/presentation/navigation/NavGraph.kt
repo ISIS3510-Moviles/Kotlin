@@ -17,6 +17,7 @@ import com.example.campusbites.presentation.ui.screens.SearchingScreen
 
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
 import com.example.campusbites.presentation.ui.screens.SignInScreen
+import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 object NavigationRoutes {
@@ -36,6 +37,7 @@ object NavigationRoutes {
 @Composable
 
 fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
+    val alertsViewModel: AlertsViewModel = hiltViewModel()
 
     NavHost(
         navController = navController,
@@ -79,8 +81,7 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
-                onBackClick = { navController.popBackStack() },
-                onSignInClick = { navController.navigate("sign_in") }
+                navController = navController
             )
         }
 
