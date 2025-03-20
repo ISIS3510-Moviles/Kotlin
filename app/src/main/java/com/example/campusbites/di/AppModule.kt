@@ -3,6 +3,7 @@ package com.example.campusbites.di
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.repository.AlertRepositoryImpl
+import com.example.campusbites.data.repository.CommentRepositoryImpl
 import com.example.campusbites.data.repository.DietaryTagRepositoryImpl
 import com.example.campusbites.data.repository.FoodTagRepositoryImpl
 import com.example.campusbites.data.repository.IngredientRepositoryImpl
@@ -12,6 +13,7 @@ import com.example.campusbites.data.repository.ProductRepositoryImpl
 import com.example.campusbites.data.repository.RestaurantRepositoryImpl
 import com.example.campusbites.data.repository.UserRepositoryImpl
 import com.example.campusbites.domain.repository.AlertRepository
+import com.example.campusbites.domain.repository.CommentRepository
 import com.example.campusbites.domain.repository.DietaryTagRepository
 import com.example.campusbites.domain.repository.FoodTagRepository
 import com.example.campusbites.domain.repository.IngredientRepository
@@ -88,6 +90,12 @@ object AppModule {
     @Singleton
     fun provideIngredientRepository(apiService: ApiService): IngredientRepository {
         return IngredientRepositoryImpl(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideCommentRepository(apiService: ApiService): CommentRepository{
+        return CommentRepositoryImpl(apiService)
     }
 
     @Provides

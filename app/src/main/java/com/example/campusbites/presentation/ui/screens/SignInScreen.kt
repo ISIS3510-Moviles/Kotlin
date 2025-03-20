@@ -64,6 +64,7 @@ fun SignInScreen(navController: NavController, authViewModel: AuthViewModel) {
 
     // Si el usuario ya está autenticado, navegar a la pantalla principal
     if (user != null) {
+        authViewModel.signOut()
         LaunchedEffect(Unit) {
             navController.navigate("home_screen")
         }
