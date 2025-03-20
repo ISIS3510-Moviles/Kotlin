@@ -19,8 +19,11 @@ class ProductRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getProductsByRestaurant(id: String): List<ProductDTO> {
-        return apiService.getProducts().filter { it.restaurant_id == id }
+        val allProducts = apiService.getProducts()
+        val filteredProducts = allProducts.filter { it.restaurant_id == id }
+        return filteredProducts
     }
+
 
 
 }
