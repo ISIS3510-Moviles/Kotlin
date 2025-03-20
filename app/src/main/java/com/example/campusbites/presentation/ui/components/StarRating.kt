@@ -14,7 +14,7 @@ import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
 
-public val Star: ImageVector
+val Star: ImageVector
     get() {
         if (_Star != null) {
             return _Star!!
