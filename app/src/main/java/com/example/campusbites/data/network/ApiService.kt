@@ -19,6 +19,9 @@ interface ApiService {
     @GET("restaurant")
     suspend fun getRestaurants(): List<RestaurantDTO>
 
+    @GET("restaurant/{id}")
+    suspend fun getRestaurant(@Path("id") id: String): RestaurantDTO
+
     @GET("food-tag")
     suspend fun getFoodTags(): List<FoodTagDTO>
 
