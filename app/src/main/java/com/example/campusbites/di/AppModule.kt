@@ -1,5 +1,7 @@
 package com.example.campusbites.di
 
+import android.content.Context
+import androidx.credentials.CredentialManager
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.repository.AlertRepositoryImpl
@@ -27,6 +29,7 @@ import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
@@ -34,6 +37,11 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    fun provideCredentialManager(@ApplicationContext context: Context): CredentialManager {
+        return CredentialManager.create(context)
+    }
 
     @Provides
     @Singleton

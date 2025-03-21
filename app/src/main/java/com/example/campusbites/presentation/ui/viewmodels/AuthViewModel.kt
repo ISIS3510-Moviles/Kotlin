@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.UserDomain
@@ -7,6 +8,7 @@ import com.example.campusbites.domain.usecase.user.CreateUserUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.domain.usecase.user.GetUsersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -16,7 +18,7 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val createUserUseCase: CreateUserUseCase,
     private val getUsersUseCase: GetUsersUseCase,
-    private val getUserByIdUseCase: GetUserByIdUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<UserDomain?>(null)
@@ -33,11 +35,10 @@ class AuthViewModel @Inject constructor(
             _user.value = null
         }
     }
-    fun getUserById(userId: String): UserDomain? {
-        return getUserById(userId)
+
+    suspend fun getUserById(userId: String): UserDomain? {
+        return getUserByIdUseCase(userId) // 🔹 Corrección: Llamar correctamente el caso de uso
     }
-
-
 
     fun checkOrCreateUser(
         userId: String,
@@ -46,12 +47,14 @@ class AuthViewModel @Inject constructor(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {  // 🔹 Se ejecuta en un hilo de fondo
             try {
+                Log.d("API_CALL", "🔎 Buscando usuario con email: $userEmail")
+
                 val existingUser = getUsersUseCase().find { it.email == userEmail }
 
                 if (existingUser == null) {
-                    // Crear nuevo usuario si no existe
+                    Log.d("API_CALL", "🚀 Creando usuario nuevo...")
                     val newUser = UserDomain(
                         id = userId,
                         name = userName,
@@ -70,21 +73,19 @@ class AuthViewModel @Inject constructor(
                         publishedAlertsIds = emptyList(),
                         savedProducts = emptyList()
                     )
-                    createUserUseCase(newUser)
-                    setUser(newUser) // Guardar el usuario en el ViewModel
+
+                    createUserUseCase(newUser) // 🔹 Crear usuario en la base de datos
+                    setUser(newUser) // 🔹 Guardar en el ViewModel
+
+                    Log.d("API_CALL", "✅ Usuario creado y guardado en ViewModel")
                 } else {
-                    // Si ya existe, solo actualizar en caso de que haya cambios en el email
-                    if (existingUser.email != userEmail) {
-                        val updatedUser = existingUser.copy(email = userEmail)
-                        createUserUseCase(updatedUser)
-                        setUser(updatedUser) // Guardar el usuario actualizado en el ViewModel
-                    } else {
-                        setUser(existingUser) // Guardar el usuario existente
-                    }
+                    Log.d("API_CALL", "✅ Usuario existente encontrado: ${existingUser.id}")
+                    setUser(existingUser)
                 }
 
                 onSuccess()
             } catch (e: Exception) {
+                Log.e("API_CALL", "❌ Error en checkOrCreateUser: ${e.message}")
                 onFailure(e)
             }
         }
