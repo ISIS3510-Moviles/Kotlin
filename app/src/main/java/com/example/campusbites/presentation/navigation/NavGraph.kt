@@ -65,7 +65,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
                 },
                 onSearch = { query ->
                     navController.navigate(NavigationRoutes.createSearchingRoute(query))
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -81,7 +82,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
-                navController = navController
+                navController = navController,
+                authViewModel = authViewModel,
             )
         }
 

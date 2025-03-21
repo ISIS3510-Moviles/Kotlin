@@ -1,6 +1,7 @@
 package com.example.campusbites.presentation.ui.screens
 
 import android.Manifest
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -25,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -35,6 +37,7 @@ import com.example.campusbites.presentation.ui.components.IngredientGrid
 import com.example.campusbites.presentation.ui.components.ProductListRow
 import com.example.campusbites.presentation.ui.components.RestaurantListRow
 import com.example.campusbites.presentation.ui.components.SearchBar
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
@@ -44,15 +47,16 @@ import com.google.accompanist.permissions.rememberPermissionState
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    onRestaurantClick: (String) -> Unit, // Usado en el NavGraph
+    onRestaurantClick: (String) -> Unit,
     onIngredientClick: (String) -> Unit,
     onProductClick: (String) -> Unit,
     onSearch: (String) -> Unit,
+    authViewModel: AuthViewModel
 ) {
-    // Estado para el permiso de ubicación
+    Log.d("UI", "HomeScreen recomposed")
+
     val locationPermissionState = rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
 
-    // Si el permiso no está concedido, se muestra una UI para solicitarlo
     if (!locationPermissionState.status.isGranted) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -65,27 +69,28 @@ fun HomeScreen(
             }
         }
     } else {
-
         val viewModel: HomeViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsState()
+        val user by authViewModel.user.collectAsState()
 
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
                         Column {
-                            uiState.user?.let {
+                            Log.d("HomeScreen", "User: $user")
+                            Text(
+                                text = user?.name ?: "Bienvenido",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+
+                            user?.institution?.let {
                                 Text(
                                     text = it.name,
-                                    style = MaterialTheme.typography.titleMedium
+                                    style = MaterialTheme.typography.bodySmall
                                 )
-                                it.institution?.let { it1 ->
-                                    Text(
-                                        text = it1.name,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
-                                }
                             }
+
                         }
                     },
                     navigationIcon = {
@@ -97,7 +102,6 @@ fun HomeScreen(
                         }
                     },
                     actions = {
-                        // Botón de notificaciones
                         IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Notifications,
@@ -105,10 +109,9 @@ fun HomeScreen(
                             )
                         }
 
-                        // Botón de login
                         IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
                             Icon(
-                                imageVector = Icons.Filled.Email, // Puedes cambiarlo por otro ícono si prefieres
+                                imageVector = Icons.Filled.Email,
                                 contentDescription = stringResource(R.string.sign_in)
                             )
                         }
@@ -137,19 +140,14 @@ fun HomeScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxSize()
                             ) {
-                                CircularProgressIndicator(
-                                    modifier = Modifier.padding(16.dp)
-                                )
+                                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                             }
                         }
-
                         else -> {
-
                             IngredientGrid(
                                 ingredients = uiState.ingredients,
                                 onIngredientClick = onIngredientClick,
-                                modifier = Modifier
-                                    .padding(4.dp)
+                                modifier = Modifier.padding(4.dp)
                             )
 
                             RestaurantListRow(
@@ -162,17 +160,16 @@ fun HomeScreen(
                                 modifier = Modifier.padding(8.dp)
                             )
 
-                            uiState.user?.let { user ->
+                            user?.let {
                                 ProductListRow(
                                     name = "Saved foods",
                                     description = "The ones according to your preferences",
-                                    products = user.savedProducts,
+                                    products = it.savedProducts,
                                     onProductClick = { onProductClick(it) },
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
 
-                            // Botón para simular un crash y probar Crashlytics
                             Button(
                                 onClick = { throw RuntimeException("Crasheo intencional para Crashlytics") },
                                 modifier = Modifier.padding(16.dp)
@@ -181,10 +178,8 @@ fun HomeScreen(
                             }
                         }
                     }
-
                 }
             }
         )
     }
-
 }

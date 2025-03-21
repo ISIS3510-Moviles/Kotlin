@@ -11,33 +11,27 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val createUserUseCase: CreateUserUseCase,
-    private val getUsersUseCase: GetUsersUseCase,
-    private val getUserByIdUseCase: GetUserByIdUseCase
+    private val getUsersUseCase: GetUsersUseCase
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<UserDomain?>(null)
     val user: StateFlow<UserDomain?> = _user
 
     fun setUser(user: UserDomain?) {
-        viewModelScope.launch {
-            _user.value = user
-        }
+        _user.value = user?.copy()
     }
+
 
     fun signOut() {
-        viewModelScope.launch {
-            _user.value = null
-        }
-    }
-
-    suspend fun getUserById(userId: String): UserDomain? {
-        return getUserByIdUseCase(userId) // 🔹 Corrección: Llamar correctamente el caso de uso
+        _user.update { null }
     }
 
     fun checkOrCreateUser(
@@ -47,40 +41,38 @@ class AuthViewModel @Inject constructor(
         onSuccess: () -> Unit,
         onFailure: (Exception) -> Unit
     ) {
-        viewModelScope.launch(Dispatchers.IO) {  // 🔹 Se ejecuta en un hilo de fondo
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 Log.d("API_CALL", "🔎 Buscando usuario con email: $userEmail")
 
                 val existingUser = getUsersUseCase().find { it.email == userEmail }
 
-                if (existingUser == null) {
+                val userToSet = existingUser ?: UserDomain(
+                    id = userId,
+                    name = userName,
+                    email = userEmail,
+                    phone = "",
+                    role = "user",
+                    isPremium = false,
+                    badgesIds = emptyList(),
+                    schedulesIds = emptyList(),
+                    reservationsIds = emptyList(),
+                    institution = null,
+                    dietaryPreferencesTagIds = emptyList(),
+                    commentsIds = emptyList(),
+                    visitsIds = emptyList(),
+                    suscribedRestaurantIds = emptyList(),
+                    publishedAlertsIds = emptyList(),
+                    savedProducts = emptyList()
+                ).also {
                     Log.d("API_CALL", "🚀 Creando usuario nuevo...")
-                    val newUser = UserDomain(
-                        id = userId,
-                        name = userName,
-                        email = userEmail,
-                        phone = "",
-                        role = "user",
-                        isPremium = false,
-                        badgesIds = emptyList(),
-                        schedulesIds = emptyList(),
-                        reservationsIds = emptyList(),
-                        institution = null,
-                        dietaryPreferencesTagIds = emptyList(),
-                        commentsIds = emptyList(),
-                        visitsIds = emptyList(),
-                        suscribedRestaurantIds = emptyList(),
-                        publishedAlertsIds = emptyList(),
-                        savedProducts = emptyList()
-                    )
+                    createUserUseCase(it)
+                }
 
-                    createUserUseCase(newUser) // 🔹 Crear usuario en la base de datos
-                    setUser(newUser) // 🔹 Guardar en el ViewModel
-
-                    Log.d("API_CALL", "✅ Usuario creado y guardado en ViewModel")
-                } else {
-                    Log.d("API_CALL", "✅ Usuario existente encontrado: ${existingUser.id}")
-                    setUser(existingUser)
+                withContext(Dispatchers.Main) {
+                    _user.value = userToSet
+                    Log.d("API_CALL", "✅ Usuario guardado en ViewModel: ${userToSet.id}")
+                    Log.d("API_CALL", "✅ Usuario guardado en ViewModel: ${_user.value!!.name}")
                 }
 
                 onSuccess()
@@ -90,4 +82,5 @@ class AuthViewModel @Inject constructor(
             }
         }
     }
+
 }
