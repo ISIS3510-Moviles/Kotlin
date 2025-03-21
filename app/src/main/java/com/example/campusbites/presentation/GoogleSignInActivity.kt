@@ -147,12 +147,8 @@ class GoogleSignInActivity : AppCompatActivity() {
                     }
                 }
             )
-        } else {
-            Log.w(TAG, "⚠️ Usuario es null después de Firebase SignIn")
-            runOnUiThread {
-                Toast.makeText(this, "User null", Toast.LENGTH_SHORT).show()
-            }
         }
+
     }
 
 
