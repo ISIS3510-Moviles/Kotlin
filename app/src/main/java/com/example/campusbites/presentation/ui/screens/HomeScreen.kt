@@ -83,7 +83,6 @@ fun HomeScreen(
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
-
                         }
                     },
                     navigationIcon = {
@@ -160,6 +159,14 @@ fun HomeScreen(
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
+
+                            // Botón para simular un crash y probar Crashlytics
+                            Button(
+                                onClick = { throw RuntimeException("Crasheo intencional para Crashlytics") },
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                Text(text = "Forzar Crash")
+                            }
                         }
                     }
 
@@ -169,4 +176,3 @@ fun HomeScreen(
     }
 
 }
-
