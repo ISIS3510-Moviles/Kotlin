@@ -12,7 +12,7 @@ data class UserDomain(
     val badgesIds: List<String>,
     val schedulesIds: List<String>,
     val reservationsIds: List<String>,
-    val institution: InstitutionDomain,
+    val institution: InstitutionDomain?,
     val dietaryPreferencesTagIds: List<String>,
     val commentsIds: List<String>,
     val visitsIds: List<String>,

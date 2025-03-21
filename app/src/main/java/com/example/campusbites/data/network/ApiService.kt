@@ -11,6 +11,7 @@ import com.example.campusbites.data.dto.ProductDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
+import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PATCH
@@ -62,5 +63,11 @@ interface ApiService {
 
     @GET("comment")
     suspend fun getComments(): List<CommentDTO>
+
+    @POST("user")
+    suspend fun createUser(@Body userDTO: UserDTO): Response<Unit>
+
+    @GET("user")
+    suspend fun getUsers(): List<UserDTO>
 
 }

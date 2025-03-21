@@ -79,10 +79,12 @@ fun HomeScreen(
                                     text = it.name,
                                     style = MaterialTheme.typography.titleMedium
                                 )
-                                Text(
-                                    text = it.institution.name,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                it.institution?.let { it1 ->
+                                    Text(
+                                        text = it1.name,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                             }
                         }
                     },

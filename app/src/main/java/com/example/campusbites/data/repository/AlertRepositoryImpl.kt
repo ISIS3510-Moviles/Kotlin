@@ -48,7 +48,8 @@ class AlertRepositoryImpl @Inject constructor(
             visitsIds = userDTO.visitsIds,
             suscribedRestaurantIds = userDTO.suscribedRestaurantIds,
             publishedAlertsIds = userDTO.publishedAlertsIds,
-            savedProducts = emptyList()
+            savedProducts = emptyList(),
+
         )
 
         val restaurants: List<RestaurantDTO> = apiService.getRestaurants()
