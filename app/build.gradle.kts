@@ -76,6 +76,8 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.firebase.auth.ktx)
     implementation(libs.firebase.perf)
+    implementation(libs.firebase.perf.ktx)
+    implementation(libs.firebase.crashlytics.ktx)
     implementation(libs.firebase.crashlytics)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

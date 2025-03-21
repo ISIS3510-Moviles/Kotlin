@@ -13,19 +13,33 @@ import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewMo
 import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.BookTableSection
 import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.ArriveSection
 import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail.ReviewsSection
+import com.google.firebase.perf.ktx.performance
+import com.google.firebase.ktx.Firebase
+
 @Composable
 fun RestaurantDetailScreen(
     restaurantId: String,
     viewModel: RestaurantDetailViewModel = hiltViewModel()
 ) {
+    // Crear un trace personalizado para medir el tiempo de carga completo de la pantalla
+    val screenLoadTrace = remember {
+        Firebase.performance.newTrace("restaurant_detail_screen_load_time")
+    }
+
     val uiState by viewModel.uiState.collectAsState()
 
-    // Cargar los datos cuando se abre la pantalla
     LaunchedEffect(restaurantId) {
+        screenLoadTrace.start()
+        screenLoadTrace.putAttribute("restaurant_id", restaurantId)
+
         viewModel.loadRestaurantDetails(restaurantId)
     }
 
-    // Mostrar un indicador de carga mientras los datos llegan
+    LaunchedEffect(uiState.restaurant) {
+        if (uiState.restaurant != null) {
+        }
+    }
+
     uiState.restaurant?.let { restaurant ->
         var selectedTabIndex by remember { mutableStateOf(0) }
 
@@ -45,6 +59,10 @@ fun RestaurantDetailScreen(
                 3 -> ReviewsSection()
             }
         }
+
+        LaunchedEffect(Unit) {
+
+            screenLoadTrace.stop()
+        }
     } ?: Text("Loading...", modifier = Modifier.fillMaxSize()) // Mensaje de carga
 }
-
