@@ -1,61 +1,53 @@
 package com.example.campusbites.presentation
 
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import androidx.credentials.ClearCredentialStateRequest
-import androidx.credentials.Credential
-import androidx.credentials.CredentialManager
-import androidx.credentials.CustomCredential
-import androidx.credentials.GetCredentialRequest
+import androidx.credentials.*
 import androidx.credentials.exceptions.ClearCredentialException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.lifecycle.lifecycleScope
-import dagger.hilt.android.AndroidEntryPoint
-import com.example.campusbites.R
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.google.android.gms.auth.api.signin.*
+import com.google.android.gms.common.api.ApiException
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
-import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential.Companion.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import com.google.firebase.Firebase
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlin.math.sign
 
 @AndroidEntryPoint
 class GoogleSignInActivity : AppCompatActivity() {
     private val authViewModel: AuthViewModel by viewModels()
-
-    // [START declare_auth]
     private lateinit var auth: FirebaseAuth
-    // [END declare_auth]
 
-    // [START declare_credential_manager]
     @Inject
     lateinit var credentialManager: CredentialManager
-    // [END declare_credential_manager]
+
+    private lateinit var googleSignInClient: GoogleSignInClient
+
+    companion object {
+        private const val TAG = "GoogleActivity"
+        private const val RC_SIGN_IN = 9001
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // [START initialize_auth]
         auth = Firebase.auth
-        // [END initialize_auth]
 
-        launchCredentialManager()
-    }
-
-    override fun onStart() {
-        super.onStart()
-        val currentUser = auth.currentUser
-        updateUI(currentUser)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            launchCredentialManager()
+        } else {
+            launchGoogleSignInClient()
+        }
     }
 
     private fun launchCredentialManager() {
@@ -71,22 +63,51 @@ class GoogleSignInActivity : AppCompatActivity() {
         lifecycleScope.launch {
             try {
                 val result = credentialManager.getCredential(
-                    context = this@GoogleSignInActivity, // Se usa la Activity correcta
+                    context = this@GoogleSignInActivity,
                     request = request
                 )
                 handleSignIn(result.credential)
             } catch (e: GetCredentialException) {
-                Log.e(TAG, "Couldn't retrieve user's credentials: ${e.localizedMessage}")
+                Log.e(TAG, "❌ Couldn't retrieve user's credentials: ${e.localizedMessage}")
+                // Puedes hacer fallback aquí si quieres
+            }
+        }
+    }
+
+    private fun launchGoogleSignInClient() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken("119422410652-bha101ea66rinavdp34l9361fksgnqlp.apps.googleusercontent.com")
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        val signInIntent = googleSignInClient.signInIntent
+        startActivityForResult(signInIntent, RC_SIGN_IN)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                firebaseAuthWithGoogle(account.idToken!!)
+            } catch (e: ApiException) {
+                Log.w(TAG, "❌ Google sign in failed", e)
             }
         }
     }
 
     private fun handleSignIn(credential: Credential) {
-        if (credential is CustomCredential && credential.type == TYPE_GOOGLE_ID_TOKEN_CREDENTIAL) {
+        if (credential is CustomCredential &&
+            credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+        ) {
             val googleIdTokenCredential = GoogleIdTokenCredential.createFrom(credential.data)
             firebaseAuthWithGoogle(googleIdTokenCredential.idToken)
         } else {
-            Log.w(TAG, "Credential is not of type Google ID!")
+            Log.w(TAG, "⚠️ Credential is not of type Google ID!")
         }
     }
 
@@ -95,11 +116,11 @@ class GoogleSignInActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    Log.d(TAG, "signInWithCredential:success")
+                    Log.d(TAG, "✅ signInWithCredential:success")
                     val user = auth.currentUser
                     updateUI(user)
                 } else {
-                    Log.w(TAG, "signInWithCredential:failure", task.exception)
+                    Log.w(TAG, "❌ signInWithCredential:failure", task.exception)
                     updateUI(null)
                 }
             }
@@ -118,7 +139,7 @@ class GoogleSignInActivity : AppCompatActivity() {
         }
     }
 
-    private fun updateUI(user: FirebaseUser?) {
+    private fun updateUI(user: com.google.firebase.auth.FirebaseUser?) {
         if (user != null) {
             Log.d(TAG, "✅ Usuario autenticado con Firebase: ${user.email}")
 
@@ -136,7 +157,6 @@ class GoogleSignInActivity : AppCompatActivity() {
                         finish()
                     }
 
-                    // 🔹 Solo cerramos sesión después de que se haya completado la UI
                     signOut()
                 },
                 onFailure = { error ->
@@ -147,11 +167,5 @@ class GoogleSignInActivity : AppCompatActivity() {
                 }
             )
         }
-
-    }
-
-
-    companion object {
-        private const val TAG = "GoogleActivity"
     }
 }
