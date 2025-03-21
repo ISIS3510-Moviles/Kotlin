@@ -42,6 +42,7 @@ playServicesLocation = "21.3.0"
 firebaseAuthKtx = "23.2.0"
 appcompat = "1.7.0"
 googleid = "1.1.1"
+mediationTestSuite = "3.0.0"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }

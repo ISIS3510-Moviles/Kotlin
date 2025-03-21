@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.user.CreateUserUseCase
+import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.domain.usecase.user.GetUsersUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,7 +15,8 @@ import javax.inject.Inject
 @HiltViewModel
 class AuthViewModel @Inject constructor(
     private val createUserUseCase: CreateUserUseCase,
-    private val getUsersUseCase: GetUsersUseCase
+    private val getUsersUseCase: GetUsersUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase,
 ) : ViewModel() {
 
     private val _user = MutableStateFlow<UserDomain?>(null)
@@ -31,6 +33,11 @@ class AuthViewModel @Inject constructor(
             _user.value = null
         }
     }
+    fun getUserById(userId: String): UserDomain? {
+        return getUserById(userId)
+    }
+
+
 
     fun checkOrCreateUser(
         userId: String,

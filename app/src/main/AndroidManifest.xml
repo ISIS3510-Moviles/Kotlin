@@ -29,6 +29,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".presentation.GoogleSignInActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.DayNight.NoActionBar"/>
+
         <meta-data
             android:name="com.google.android.gms.auth.api.signin"
             android:value="@string/default_web_client_id" />
