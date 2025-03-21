@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.user.CreateUserUseCase
 import com.example.campusbites.domain.usecase.user.GetUsersUseCase
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,26 +17,16 @@ class AuthViewModel @Inject constructor(
     private val getUsersUseCase: GetUsersUseCase
 ) : ViewModel() {
 
-    private val firebaseAuth = FirebaseAuth.getInstance()
-    private val _user = MutableStateFlow<FirebaseUser?>(firebaseAuth.currentUser)
-    val user: StateFlow<FirebaseUser?> = _user
+    private val _user = MutableStateFlow<UserDomain?>(null)
+    val user: StateFlow<UserDomain?> = _user
 
-    init {
-        firebaseAuth.addAuthStateListener { auth ->
-            viewModelScope.launch {
-                _user.value = auth.currentUser
-            }
-        }
-    }
-
-    fun setUser(user: FirebaseUser?) {
+    fun setUser(user: UserDomain?) {
         viewModelScope.launch {
             _user.value = user
         }
     }
 
     fun signOut() {
-        firebaseAuth.signOut()
         viewModelScope.launch {
             _user.value = null
         }
@@ -76,10 +64,16 @@ class AuthViewModel @Inject constructor(
                         savedProducts = emptyList()
                     )
                     createUserUseCase(newUser)
-                } else if (existingUser.email != userEmail) {
-                    // Actualizar email si ha cambiado
-                    val updatedUser = existingUser.copy(email = userEmail)
-                    createUserUseCase(updatedUser)
+                    setUser(newUser) // Guardar el usuario en el ViewModel
+                } else {
+                    // Si ya existe, solo actualizar en caso de que haya cambios en el email
+                    if (existingUser.email != userEmail) {
+                        val updatedUser = existingUser.copy(email = userEmail)
+                        createUserUseCase(updatedUser)
+                        setUser(updatedUser) // Guardar el usuario actualizado en el ViewModel
+                    } else {
+                        setUser(existingUser) // Guardar el usuario existente
+                    }
                 }
 
                 onSuccess()

@@ -57,6 +57,11 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.credentials.vlatestversion)
+    implementation (libs.googleid.vlatestversion)
+    implementation(libs.androidx.credentials.play.services.auth.vlatestversion)
+    implementation (libs.credentials.play.services.auth.v130)
+    implementation (libs.firebase.auth.ktx.v2231)
     implementation(libs.maps.compose)
     implementation(libs.play.services.maps.v1820)
     implementation (libs.play.services.maps)
