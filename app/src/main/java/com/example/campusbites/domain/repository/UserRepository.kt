@@ -5,4 +5,6 @@ import com.example.campusbites.domain.model.UserDomain
 
 interface UserRepository {
     suspend fun getUserById(id: String): UserDTO
+    suspend fun createUser(user: UserDTO)
+    suspend fun getUsers(): List<UserDTO>
 }

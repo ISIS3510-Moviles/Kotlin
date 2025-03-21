@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
+import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
@@ -38,7 +39,6 @@ object NavigationRoutes {
 
 fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
     val alertsViewModel: AlertsViewModel = hiltViewModel()
-
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN

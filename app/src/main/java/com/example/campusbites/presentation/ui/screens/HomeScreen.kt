@@ -16,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.Button
@@ -78,10 +79,12 @@ fun HomeScreen(
                                     text = it.name,
                                     style = MaterialTheme.typography.titleMedium
                                 )
-                                Text(
-                                    text = it.institution.name,
-                                    style = MaterialTheme.typography.bodySmall
-                                )
+                                it.institution?.let { it1 ->
+                                    Text(
+                                        text = it1.name,
+                                        style = MaterialTheme.typography.bodySmall
+                                    )
+                                }
                             }
                         }
                     },
@@ -94,10 +97,19 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+                        // Botón de notificaciones
                         IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Notifications,
                                 contentDescription = stringResource(R.string.notifications)
+                            )
+                        }
+
+                        // Botón de login
+                        IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
+                            Icon(
+                                imageVector = Icons.Filled.Email, // Puedes cambiarlo por otro ícono si prefieres
+                                contentDescription = stringResource(R.string.sign_in)
                             )
                         }
                     }

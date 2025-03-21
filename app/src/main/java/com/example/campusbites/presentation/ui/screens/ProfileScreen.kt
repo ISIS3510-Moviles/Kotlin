@@ -167,7 +167,7 @@ fun ProfileScreen(
                                             tint = MaterialTheme.colorScheme.primary
                                         )
                                         Spacer(modifier = Modifier.width(12.dp))
-                                        Text(text = user.institution.name)
+                                        user.institution?.let { Text(text = it.name) }
                                     }
                                 }
                             }

@@ -59,6 +59,14 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.credentials.vlatestversion)
+    implementation (libs.googleid.vlatestversion)
+    implementation(libs.androidx.credentials.play.services.auth.vlatestversion)
+    implementation (libs.credentials.play.services.auth.v130)
+    implementation (libs.firebase.auth.ktx.v2231)
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps.v1820)
+    implementation (libs.play.services.maps)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
     implementation(libs.play.services.auth)
@@ -75,6 +83,7 @@ dependencies {
     implementation(libs.androidx.navigation.safe.args.generator)
     implementation(libs.play.services.location)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.appcompat)
     implementation(libs.firebase.perf)
     implementation(libs.firebase.perf.ktx)
     implementation(libs.firebase.crashlytics.ktx)

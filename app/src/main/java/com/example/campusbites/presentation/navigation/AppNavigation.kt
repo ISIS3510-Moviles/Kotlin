@@ -8,7 +8,7 @@ import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = hiltViewModel() // Se obtiene el ViewModel de autenticación
+    val authViewModel: AuthViewModel = hiltViewModel()
 
     NavGraph(
         navController = navController,
