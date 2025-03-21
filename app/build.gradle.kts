@@ -57,6 +57,8 @@ android {
 }
 
 dependencies {
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps.v1820)
     implementation (libs.play.services.maps)
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
@@ -74,6 +76,7 @@ dependencies {
     implementation(libs.androidx.navigation.safe.args.generator)
     implementation(libs.play.services.location)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.androidx.appcompat)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

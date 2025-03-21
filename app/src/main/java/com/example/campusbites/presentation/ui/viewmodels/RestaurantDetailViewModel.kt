@@ -8,6 +8,7 @@ import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
+import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -19,11 +20,15 @@ import javax.inject.Inject
 class RestaurantDetailViewModel @Inject constructor(
     private val getRestaurantByIdUseCase: GetRestaurantByIdUseCase,
     private val getProductsByRestaurantUseCase: GetProductsByRestaurantUseCase,
-    private val getReviewsByRestaurantUseCase: GetCommentsUseCase
+    private val getReviewsByRestaurantUseCase: GetCommentsUseCase,
+    private val getRestaurantsUseCase: GetRestaurantsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
     val uiState: StateFlow<RestaurantDetailUiState> = _uiState
+
+    private val _restaurants = MutableStateFlow<List<RestaurantDomain>>(emptyList())
+    val restaurants: StateFlow<List<RestaurantDomain>> = _restaurants
 
     fun loadRestaurantDetails(restaurantId: String) {
         viewModelScope.launch {
@@ -40,6 +45,13 @@ class RestaurantDetailViewModel @Inject constructor(
                     under20Products = products.filter { it.price <= 20000 }
                 )
             }
+        }
+    }
+
+    fun loadAllRestaurants() {
+        viewModelScope.launch {
+            val allRestaurants = getRestaurantsUseCase()
+            _restaurants.value = allRestaurants
         }
     }
 }
