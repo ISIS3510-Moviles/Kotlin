@@ -26,6 +26,7 @@ import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.domain.model.UserDomain
+
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
