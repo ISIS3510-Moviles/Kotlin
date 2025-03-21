@@ -9,6 +9,8 @@ import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUse
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
+import com.google.firebase.perf.ktx.performance
+import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -32,8 +34,11 @@ class RestaurantDetailViewModel @Inject constructor(
 
     fun loadRestaurantDetails(restaurantId: String) {
         viewModelScope.launch {
+
             val restaurant = getRestaurantByIdUseCase(restaurantId)
+
             val products = getProductsByRestaurantUseCase(restaurantId)
+
             val reviews = getReviewsByRestaurantUseCase(restaurantId)
 
             _uiState.update { currentState ->
