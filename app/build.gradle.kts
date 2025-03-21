@@ -7,6 +7,8 @@ plugins {
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
     id("com.google.gms.google-services")
+    alias(libs.plugins.google.firebase.firebase.perf)
+    alias(libs.plugins.google.firebase.crashlytics)
 }
 
 configurations.all {
@@ -73,6 +75,8 @@ dependencies {
     implementation(libs.androidx.navigation.safe.args.generator)
     implementation(libs.play.services.location)
     implementation(libs.firebase.auth.ktx)
+    implementation(libs.firebase.perf)
+    implementation(libs.firebase.crashlytics)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
