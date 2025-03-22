@@ -11,6 +11,7 @@ import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -48,6 +49,11 @@ class HomeViewModel @Inject constructor(
                 )
                 Log.d("API_TEXT", "Loaded restaurants: $restaurants")
             } catch (e: Exception) {
+                Log.e("Error", "Error loading restaurants")
+                // Registrar la excepción en Crashlytics
+                FirebaseCrashlytics.getInstance().recordException(e)
+                FirebaseCrashlytics.getInstance().setCustomKey("error_screen", "home_restaurants_loading")
+
                 _uiState.value = _uiState.value.copy(
                     errorMessage = e.message ?: "Error loading restaurants",
                     isLoading = false

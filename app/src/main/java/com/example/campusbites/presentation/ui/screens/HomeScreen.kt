@@ -184,12 +184,6 @@ fun HomeScreen(
                                 )
                             }
 
-                            Button(
-                                onClick = { throw RuntimeException("Crasheo intencional para Crashlytics") },
-                                modifier = Modifier.padding(16.dp)
-                            ) {
-                                Text(text = "Forzar Crash")
-                            }
                         }
                     }
                 }
