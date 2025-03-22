@@ -6,9 +6,10 @@ import androidx.navigation.compose.rememberNavController
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 @Composable
-fun AppNavigation() {
+fun AppNavigation(authViewModel: AuthViewModel) {
     val navController = rememberNavController()
-    val authViewModel: AuthViewModel = hiltViewModel()
+    // Se obtiene el AuthViewModel en el ámbito de MainActivity
+
 
     NavGraph(
         navController = navController,
