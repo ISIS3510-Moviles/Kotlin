@@ -1,3 +1,12 @@
 <resources>
     <string name="app_name">CampusBites</string>
+    <string name="near_to_you">Near to you</string>
+    <string name="notifications">Notifications</string>
+    <string name="profile">Profile</string>
+    <string name="the_nearest_restaurants_waiting_for_you">The nearest restaurants waiting for you!</string>
+    <string name="search">Search</string>
+    <string name="search_the_coolest_restaurants">Search the coolest restaurants</string>
+    <string name="la_arepa_so_ada">La Arepa Soñada</string>
+    <string name="sign_in"> Sign In</string>
+    <string name="sign_in_description">With Campus Bites, finding delicious\noptions near you and within your\nbudget has never been easier. Are you\nvegan, vegetarian, or looking for\nsomething gluten-free? We\'ve got you\ncovered! The app recommends the\nbest spots based on your tastes and\nlocation, so you can enjoy every bite\nwithout the hassle.</string>
 </resources>

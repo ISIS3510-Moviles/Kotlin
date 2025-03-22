@@ -1,0 +1,176 @@
+Index: app/src/main/java/com/example/campusbites/presentation/ui/screens/SignInScreen.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.campusbites.presentation.ui.screens\r\n\r\nimport android.content.Intent\r\nimport androidx.compose.foundation.layout.Arrangement\r\nimport androidx.compose.foundation.layout.Column\r\nimport androidx.compose.foundation.layout.fillMaxSize\r\nimport androidx.compose.material3.Button\r\nimport androidx.compose.material3.Text\r\nimport androidx.compose.runtime.Composable\r\nimport androidx.compose.ui.Alignment\r\nimport androidx.compose.ui.Modifier\r\nimport androidx.compose.ui.platform.LocalContext\r\n\r\nimport androidx.navigation.NavController\r\nimport com.example.campusbites.presentation.GoogleSignInActivity\r\nimport com.example.campusbites.presentation.ui.viewmodels.AuthViewModel\r\n\r\n@Composable\r\nfun SignInScreen(navController: NavController, authViewModel: AuthViewModel) {\r\n    val context = LocalContext.current\r\n\r\n    Column(\r\n        modifier = Modifier.fillMaxSize(),\r\n        verticalArrangement = Arrangement.Center,\r\n        horizontalAlignment = Alignment.CenterHorizontally\r\n    ) {\r\n        Button(onClick = {\r\n            val intent = Intent(context, GoogleSignInActivity::class.java)\r\n            context.startActivity(intent)\r\n        }) {\r\n            Text(\"Sign in with Google\")\r\n        }\r\n    }\r\n}\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/java/com/example/campusbites/presentation/ui/screens/SignInScreen.kt b/app/src/main/java/com/example/campusbites/presentation/ui/screens/SignInScreen.kt
+--- a/app/src/main/java/com/example/campusbites/presentation/ui/screens/SignInScreen.kt	(revision b4c90b14012881cab5e32486b5edcec5ee243ee1)
++++ b/app/src/main/java/com/example/campusbites/presentation/ui/screens/SignInScreen.kt	(date 1742597030174)
+@@ -1,17 +1,28 @@
+ package com.example.campusbites.presentation.ui.screens
+ 
+ import android.content.Intent
+-import androidx.compose.foundation.layout.Arrangement
+-import androidx.compose.foundation.layout.Column
+-import androidx.compose.foundation.layout.fillMaxSize
++import androidx.compose.foundation.Image
++import androidx.compose.foundation.background
++import androidx.compose.foundation.layout.*
++import androidx.compose.foundation.shape.RoundedCornerShape
++import androidx.compose.material.icons.Icons
++import androidx.compose.material.icons.filled.AccountCircle
+ import androidx.compose.material3.Button
++import androidx.compose.material3.ButtonDefaults
++import androidx.compose.material3.Icon
+ import androidx.compose.material3.Text
+ import androidx.compose.runtime.Composable
+ import androidx.compose.ui.Alignment
+ import androidx.compose.ui.Modifier
++import androidx.compose.ui.graphics.Color
+ import androidx.compose.ui.platform.LocalContext
+-
++import androidx.compose.ui.res.painterResource
++import androidx.compose.ui.res.stringResource
++import androidx.compose.ui.text.font.FontWeight
++import androidx.compose.ui.unit.dp
++import androidx.compose.ui.unit.sp
+ import androidx.navigation.NavController
++import com.example.campusbites.R
+ import com.example.campusbites.presentation.GoogleSignInActivity
+ import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+ 
+@@ -20,15 +31,71 @@
+     val context = LocalContext.current
+ 
+     Column(
+-        modifier = Modifier.fillMaxSize(),
++        modifier = Modifier
++            .fillMaxSize()
++            .background(Color.White),
+         verticalArrangement = Arrangement.Center,
+         horizontalAlignment = Alignment.CenterHorizontally
+     ) {
+-        Button(onClick = {
+-            val intent = Intent(context, GoogleSignInActivity::class.java)
+-            context.startActivity(intent)
+-        }) {
+-            Text("Sign in with Google")
++        // Barra superior naranja
++        Box(
++            modifier = Modifier
++                .fillMaxWidth()
++                .height(60.dp)
++                .background(Color(0xFFFFA000))
++        )
++
++        Spacer(modifier = Modifier.height(40.dp))
++
++        // Logo
++        /*Image(
++            painter = painterResource(id = R.drawable.logo), // Asegúrate de tener el recurso en res/drawable
++            contentDescription = "App Logo",
++            modifier = Modifier.size(120.dp)
++        )*/
++
++        Spacer(modifier = Modifier.height(16.dp))
++
++        // Nombre de la App
++        Text(
++            text = "CampusBites",
++            fontSize = 28.sp,
++            fontWeight = FontWeight.Bold,
++            color = Color.Black
++        )
++
++        Spacer(modifier = Modifier.height(16.dp))
++
++        // Descripción
++        Text(
++            text = stringResource(id = R.string.sign_in_description),
++            fontSize = 14.sp,
++            color = Color.DarkGray,
++            modifier = Modifier.padding(horizontal = 32.dp)
++        )
++
++        Spacer(modifier = Modifier.height(32.dp))
++
++        // Botón de Google Sign-In
++        Button(
++            onClick = {
++                val intent = Intent(context, GoogleSignInActivity::class.java)
++                context.startActivity(intent)
++            },
++            colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFFA000)),
++            shape = RoundedCornerShape(12.dp),
++            modifier = Modifier
++                .padding(16.dp)
++                .height(50.dp)
++        ) {
++            Icon(
++                imageVector = Icons.Filled.AccountCircle,
++                contentDescription = "Google Icon",
++                modifier = Modifier.size(20.dp),
++                tint = Color.Black
++            )
++            Spacer(modifier = Modifier.width(8.dp))
++            Text(text = "Log in with Google", fontSize = 16.sp, color = Color.Black)
+         }
+     }
+ }
+Index: .idea/compiler.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"CompilerConfiguration\">\r\n    <bytecodeTargetLevel target=\"17\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/compiler.xml b/.idea/compiler.xml
+--- a/.idea/compiler.xml	(revision b4c90b14012881cab5e32486b5edcec5ee243ee1)
++++ b/.idea/compiler.xml	(date 1742596082909)
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="CompilerConfiguration">
+-    <bytecodeTargetLevel target="17" />
++    <bytecodeTargetLevel target="21" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ExternalStorageConfigurationManager\" enabled=\"true\" />\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_17\" default=\"true\" project-jdk-name=\"17\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\r\n  </component>\r\n  <component name=\"ProjectType\">\r\n    <option name=\"id\" value=\"Android\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision b4c90b14012881cab5e32486b5edcec5ee243ee1)
++++ b/.idea/misc.xml	(date 1742596118414)
+@@ -1,7 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ExternalStorageConfigurationManager" enabled="true" />
+-  <component name="ProjectRootManager" version="2" languageLevel="JDK_17" default="true" project-jdk-name="17" project-jdk-type="JavaSDK">
++  <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="jbr-21" project-jdk-type="JavaSDK">
+     <output url="file://$PROJECT_DIR$/build/classes" />
+   </component>
+   <component name="ProjectType">
+Index: app/src/main/res/values/strings.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><resources>\r\n    <string name=\"app_name\">CampusBites</string>\r\n    <string name=\"near_to_you\">Near to you</string>\r\n    <string name=\"notifications\">Notifications</string>\r\n    <string name=\"profile\">Profile</string>\r\n    <string name=\"the_nearest_restaurants_waiting_for_you\">The nearest restaurants waiting for you!</string>\r\n    <string name=\"search\">Search</string>\r\n    <string name=\"search_the_coolest_restaurants\">Search the coolest restaurants</string>\r\n    <string name=\"la_arepa_so_ada\">La Arepa Soñada</string>\r\n    <string name=\"sign_in\"> Sign In</string>\r\n</resources>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/src/main/res/values/strings.xml b/app/src/main/res/values/strings.xml
+--- a/app/src/main/res/values/strings.xml	(revision b4c90b14012881cab5e32486b5edcec5ee243ee1)
++++ b/app/src/main/res/values/strings.xml	(date 1742596932104)
+@@ -8,4 +8,5 @@
+     <string name="search_the_coolest_restaurants">Search the coolest restaurants</string>
+     <string name="la_arepa_so_ada">La Arepa Soñada</string>
+     <string name="sign_in"> Sign In</string>
++    <string name="sign_in_description">With Campus Bites, finding delicious\noptions near you and within your\nbudget has never been easier. Are you\nvegan, vegetarian, or looking for\nsomething gluten-free? We\'ve got you\ncovered! The app recommends the\nbest spots based on your tastes and\nlocation, so you can enjoy every bite\nwithout the hassle.</string>
+ </resources>
+\ No newline at end of file

@@ -1,0 +1,130 @@
+{
+  "project_info": {
+    "project_number": "119422410652",
+    "project_id": "campusbites-72033",
+    "storage_bucket": "campusbites-72033.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:119422410652:android:3d892f8b42d74e7c973259",
+        "android_client_info": {
+          "package_name": "com.example.campus_bites"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "119422410652-cva6u4uc0a0pof20ruv59tec24jhfehm.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.campus_bites",
+            "certificate_hash": "f2c6f45e8872cb90d7cc0dec177a79a3dc5437be"
+          }
+        },
+        {
+          "client_id": "119422410652-i3dfuaaco6hssqu4ahse19tbeqn1av2d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.campus_bites",
+            "certificate_hash": "f22b1f44acb2c0838e47b4c96f6b8109b6deff48"
+          }
+        },
+        {
+          "client_id": "119422410652-pn8hnaa0e2lhba32r1d31iv5cuk5roo1.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.campus_bites",
+            "certificate_hash": "9e9bb9385aa46fca3fdab3a3398ee4c153188561"
+          }
+        },
+        {
+          "client_id": "119422410652-bha101ea66rinavdp34l9361fksgnqlp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa2eXn7-A0A6n8YHwz7FPMZbUcLu4oyFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "119422410652-bha101ea66rinavdp34l9361fksgnqlp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "119422410652-77fqqikb48cgqal9jnv8pjnqie0usp0c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wilmer.campusBites"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:119422410652:android:102ad2157844c0a6973259",
+        "android_client_info": {
+          "package_name": "com.example.campusbites"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "119422410652-0pmljrvbipcr3bheu8286vcc5k2innf3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.campusbites",
+            "certificate_hash": "f2c6f45e8872cb90d7cc0dec177a79a3dc5437be"
+          }
+        },
+        {
+          "client_id": "119422410652-godmsmkbhvk022clrb99g07n4lkjbdpp.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.campusbites",
+            "certificate_hash": "f22b1f44acb2c0838e47b4c96f6b8109b6deff48"
+          }
+        },
+        {
+          "client_id": "119422410652-ht9561j2dhemlqbjmlrd21te65r2bcc4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.campusbites",
+            "certificate_hash": "9e9bb9385aa46fca3fdab3a3398ee4c153188561"
+          }
+        },
+        {
+          "client_id": "119422410652-bha101ea66rinavdp34l9361fksgnqlp.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDa2eXn7-A0A6n8YHwz7FPMZbUcLu4oyFY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "119422410652-bha101ea66rinavdp34l9361fksgnqlp.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "119422410652-77fqqikb48cgqal9jnv8pjnqie0usp0c.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.wilmer.campusBites"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
