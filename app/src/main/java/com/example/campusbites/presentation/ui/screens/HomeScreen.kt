@@ -30,6 +30,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -75,6 +76,7 @@ fun HomeScreen(
         val viewModel: HomeViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsState()
         val user by authViewModel.user.collectAsState()
+        val uriHandler = LocalUriHandler.current
 
         Scaffold(
             topBar = {
@@ -113,12 +115,10 @@ fun HomeScreen(
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_google),
                                 contentDescription = stringResource(R.string.sign_in),
-                                tint = Color.Unspecified, // para usar los colores originales del ícono
-                                modifier = Modifier.size(24.dp) // ajusta el tamaño a 24.dp, o el que prefieras
+                                tint = Color.Unspecified,
+                                modifier = Modifier.size(24.dp)
                             )
                         }
-
-
                     }
                 )
             },
@@ -136,6 +136,17 @@ fun HomeScreen(
                         onSearch = onSearch,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
+
+                    // Si el usuario tiene rol "analyst", se muestra el botón Dashboard
+                    if (user?.role == "analyst") {
+                        Button(
+                            onClick = { uriHandler.openUri("https://lookerstudio.google.com/u/0/reporting/4ed6b728-d031-424c-b123-63044acdb870/page/WcSEF") },
+                            modifier = Modifier
+                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                        ) {
+                            Text("Dashboard")
+                        }
+                    }
 
                     when {
                         uiState.isLoading -> {
@@ -168,7 +179,7 @@ fun HomeScreen(
                             ProductListRow(
                                 name = "All Foods",
                                 description = "Discover all available foods",
-                                products = uiState.products, // Asegúrate de tener esta lista en uiState
+                                products = uiState.products,
                                 onProductClick = onProductClick,
                                 modifier = Modifier.padding(8.dp)
                             )
@@ -183,7 +194,6 @@ fun HomeScreen(
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
-
                         }
                     }
                 }
