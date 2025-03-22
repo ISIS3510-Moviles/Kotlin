@@ -55,7 +55,7 @@ fun AlertsScreen(
             AlertTopBar(onBackClick = onBackClick)
 
             Text(
-                text = "Alertas",
+                text = "Alerts",
                 fontSize = 24.sp,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 color = MaterialTheme.colorScheme.onBackground
