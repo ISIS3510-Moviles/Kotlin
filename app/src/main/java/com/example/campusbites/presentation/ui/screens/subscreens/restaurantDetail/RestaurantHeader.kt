@@ -31,35 +31,13 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
     val permissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
     val coroutineScope = rememberCoroutineScope()
 
-    // Pedir permiso si aún no se ha concedido
-    LaunchedEffect(Unit) {
-        permissionState.launchPermissionRequest()
-    }
-
-    if (permissionState.status.isGranted) {
-        LaunchedEffect(Unit) {
-            coroutineScope.launch {
-                Log.d("RestaurantHeader", "Checking last known location...")
-
-                fusedLocationProviderClient.lastLocation
-                    .addOnSuccessListener { location: Location? ->
-                        if (location != null) {
-                            Log.d("RestaurantHeader", "Last known location found: ${location.latitude}, ${location.longitude}")
-                            userDistance = calculateDistance(location, restaurant)
-                        } else {
-                            Log.d("RestaurantHeader", "Last known location is null, requesting update...")
-                            requestLocationUpdate(fusedLocationProviderClient) { updatedLocation ->
-                                userDistance = calculateDistance(updatedLocation, restaurant)
-                            }
-                        }
-                    }
-                    .addOnFailureListener { exception ->
-                        Log.e("RestaurantHeader", "Error getting last location: ${exception.localizedMessage}")
-                        requestLocationUpdate(fusedLocationProviderClient) { updatedLocation ->
-                            userDistance = calculateDistance(updatedLocation, restaurant)
-                        }
-                    }
+    LaunchedEffect(permissionState.status) {
+        if (permissionState.status.isGranted) {
+            requestLocationUpdates(fusedLocationProviderClient) { location ->
+                userDistance = calculateDistance(location, restaurant)
             }
+        } else {
+            permissionState.launchPermissionRequest()
         }
     }
 
@@ -97,23 +75,20 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
 }
 
 @SuppressLint("MissingPermission")
-fun requestLocationUpdate(
+fun requestLocationUpdates(
     fusedLocationProviderClient: FusedLocationProviderClient,
     onLocationReceived: (Location) -> Unit
 ) {
     val locationRequest = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 5000).build()
     val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            val lastLocation = locationResult.lastLocation
-            if (lastLocation != null) {
-                Log.d("RestaurantHeader", "Updated location received: ${lastLocation.latitude}, ${lastLocation.longitude}")
-                onLocationReceived(lastLocation)
-            } else {
-                Log.e("RestaurantHeader", "Failed to get updated location")
+            locationResult.lastLocation?.let {
+                Log.d("RestaurantHeader", "Updated location: ${it.latitude}, ${it.longitude}")
+                onLocationReceived(it)
             }
-            fusedLocationProviderClient.removeLocationUpdates(this) // Detener actualizaciones
         }
     }
+
     fusedLocationProviderClient.requestLocationUpdates(locationRequest, locationCallback, null)
 }
 
