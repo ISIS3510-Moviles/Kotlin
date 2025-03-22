@@ -82,7 +82,7 @@ fun ProfileScreen(
                             Spacer(modifier = Modifier.height(8.dp))
                             // Rol del usuario
                             Text(
-                                text = user!!.role,
+                                text = "Rol: " + user!!.role,
                                 style = MaterialTheme.typography.bodyLarge
                             )
                             // Tipo de usuario (Premium/Estándar)
@@ -128,11 +128,11 @@ fun ProfileScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = "Información de Contacto",
+                                    text = "Contact information",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Divider()
+                                HorizontalDivider()
                                 // Email
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -143,16 +143,7 @@ fun ProfileScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(text = user!!.email)
                                 }
-                                // Teléfono
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.Phone,
-                                        contentDescription = "Teléfono",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    Text(text = user!!.phone)
-                                }
+
                                 // Institución
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
@@ -181,11 +172,11 @@ fun ProfileScreen(
                                 verticalArrangement = Arrangement.spacedBy(12.dp)
                             ) {
                                 Text(
-                                    text = "Preferencias Dietarias",
+                                    text = "Dietary preferences",
                                     style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Bold
                                 )
-                                Divider()
+                                HorizontalDivider()
                                 if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
                                     FlowRow(
                                         modifier = Modifier.fillMaxWidth(),
@@ -208,7 +199,7 @@ fun ProfileScreen(
                                     }
                                 } else {
                                     Text(
-                                        text = "Sin preferencias dietarias especificadas",
+                                        text = "No dietary preferences specified",
                                         style = MaterialTheme.typography.bodyMedium,
                                         color = MaterialTheme.colorScheme.onSurfaceVariant
                                     )
@@ -219,8 +210,8 @@ fun ProfileScreen(
                         // Productos guardados
                         if (user!!.savedProducts.isNotEmpty()) {
                             ProductListRow(
-                                name = "Productos Guardados",
-                                description = "Tus comidas favoritas",
+                                name = "Saved Products",
+                                description = "Your favorite foods",
                                 products = user!!.savedProducts,
                                 onProductClick = onProductClick,
                                 modifier = Modifier.padding(bottom = 16.dp, start = 16.dp, end = 16.dp)
@@ -242,7 +233,7 @@ fun ProfileScreen(
                                     horizontalAlignment = Alignment.CenterHorizontally
                                 ) {
                                     Text(
-                                        text = "No tienes productos guardados",
+                                        text = "You have no saved products",
                                         style = MaterialTheme.typography.bodyMedium,
                                         textAlign = TextAlign.Center
                                     )
@@ -250,7 +241,7 @@ fun ProfileScreen(
                                     Button(
                                         onClick = { /* Navegar a descubrir productos */ }
                                     ) {
-                                        Text("Descubrir productos")
+                                        Text("Discover products")
                                     }
                                 }
                             }

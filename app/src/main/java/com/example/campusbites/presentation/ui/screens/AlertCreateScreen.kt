@@ -52,7 +52,7 @@ fun AlertCreateScreen(
             AlertTopBar(onBackClick = onBackClick)
 
             Text(
-                text = "Crear Nueva Alerta",
+                text = "Create New Alert",
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
@@ -60,7 +60,7 @@ fun AlertCreateScreen(
             OutlinedTextField(
                 value = description,
                 onValueChange = { description = it },
-                label = { Text("Descripción") },
+                label = { Text("Description") },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -79,7 +79,7 @@ fun AlertCreateScreen(
                     value = selectedRestaurantName,
                     onValueChange = {},
                     readOnly = true,
-                    label = { Text("Restaurante") },
+                    label = { Text("Restaurant") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = isRestaurantMenuExpanded) },
                     modifier = Modifier
                         .fillMaxWidth()
@@ -112,7 +112,7 @@ fun AlertCreateScreen(
                     .align(Alignment.CenterHorizontally)
                     .padding(vertical = 16.dp)
             ) {
-                Text("Crear Alerta")
+                Text("Create Alert")
             }
         }
     }

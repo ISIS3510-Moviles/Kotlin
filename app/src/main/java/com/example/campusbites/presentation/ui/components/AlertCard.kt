@@ -58,7 +58,7 @@ fun AlertCard(
 
                 // Añadimos el nombre del creador aquí
                 Text(
-                    text = "Por: ${notification.publisher.name}",
+                    text = "By: ${notification.publisher.name}",
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontStyle = FontStyle.Italic,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
