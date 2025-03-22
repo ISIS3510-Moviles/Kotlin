@@ -11,6 +11,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +29,8 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -83,14 +86,12 @@ fun HomeScreen(
                                 text = user?.name ?: "Bienvenido",
                                 style = MaterialTheme.typography.titleMedium
                             )
-
                             user?.institution?.let {
                                 Text(
                                     text = it.name,
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
-
                         }
                     },
                     navigationIcon = {
@@ -108,13 +109,16 @@ fun HomeScreen(
                                 contentDescription = stringResource(R.string.notifications)
                             )
                         }
-
                         IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
                             Icon(
-                                imageVector = Icons.Filled.Email,
-                                contentDescription = stringResource(R.string.sign_in)
+                                painter = painterResource(id = R.drawable.ic_google),
+                                contentDescription = stringResource(R.string.sign_in),
+                                tint = Color.Unspecified, // para usar los colores originales del ícono
+                                modifier = Modifier.size(24.dp) // ajusta el tamaño a 24.dp, o el que prefieras
                             )
                         }
+
+
                     }
                 )
             },
@@ -135,7 +139,7 @@ fun HomeScreen(
 
                     when {
                         uiState.isLoading -> {
-                            Column (
+                            Column(
                                 verticalArrangement = Arrangement.Center,
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 modifier = Modifier.fillMaxSize()
@@ -160,12 +164,22 @@ fun HomeScreen(
                                 modifier = Modifier.padding(8.dp)
                             )
 
+                            // Sección de "Todos los productos"
+                            ProductListRow(
+                                name = "All Foods",
+                                description = "Discover all available foods",
+                                products = uiState.products, // Asegúrate de tener esta lista en uiState
+                                onProductClick = onProductClick,
+                                modifier = Modifier.padding(8.dp)
+                            )
+
+                            // Sección de "Productos Guardados" (si el usuario existe)
                             user?.let {
                                 ProductListRow(
                                     name = "Saved foods",
                                     description = "The ones according to your preferences",
                                     products = it.savedProducts,
-                                    onProductClick = { onProductClick(it) },
+                                    onProductClick = onProductClick,
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }

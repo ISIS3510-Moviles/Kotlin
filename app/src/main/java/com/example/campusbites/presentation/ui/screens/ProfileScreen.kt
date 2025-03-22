@@ -22,11 +22,12 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.campusbites.presentation.ui.components.ProductListRow
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun ProfileScreen(
-    authViewModel: com.example.campusbites.presentation.ui.viewmodels.AuthViewModel,
+    authViewModel: AuthViewModel,
     navController: NavHostController,
     onProductClick: (String) -> Unit = {}
 ) {
@@ -185,7 +186,6 @@ fun ProfileScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 Divider()
-                                // Si tienes las preferencias dietarias en user, las muestras; si no, se muestra un mensaje
                                 if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
                                     FlowRow(
                                         modifier = Modifier.fillMaxWidth(),
@@ -255,9 +255,20 @@ fun ProfileScreen(
                                 }
                             }
                         }
+
+                        // Botón para cerrar sesión (ahora siempre visible, fuera del bloque de guardados)
+                        Button(
+                            onClick = { authViewModel.signOut() },
+                            modifier = Modifier
+                                .padding(16.dp)
+                                .fillMaxWidth()
+                        ) {
+                            Text(text = "Logout")
+                        }
                     }
                 }
             }
         }
     )
 }
+

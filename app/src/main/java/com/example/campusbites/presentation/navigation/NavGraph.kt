@@ -131,7 +131,7 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val foodId = it.arguments?.getString("id") ?: ""
-            FoodDetailScreen(foodId = foodId)
+            FoodDetailScreen(foodId = foodId, authViewModel = authViewModel)
         }
     }
 }

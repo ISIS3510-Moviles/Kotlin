@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
+import androidx.compose.runtime.saveable.autoSaver
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.UserDomain
@@ -19,7 +20,7 @@ import javax.inject.Inject
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
-    private val getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
+    private val getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -28,6 +29,7 @@ class ProfileViewModel @Inject constructor(
     init {
         loadUser()
     }
+
 
     private fun loadUser() {
         viewModelScope.launch {
