@@ -4,9 +4,11 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.IngredientDomain
+import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
+import com.example.campusbites.domain.usecase.product.GetProductsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.google.firebase.crashlytics.FirebaseCrashlytics
@@ -23,6 +25,7 @@ class HomeViewModel @Inject constructor(
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getIngredientsUseCase: GetIngredientsUseCase,
+    private val getProductsUseCase: GetProductsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -32,6 +35,7 @@ class HomeViewModel @Inject constructor(
         loadUser()
         loadRestaurants()
         loadIngredients()
+        loadProducts()
     }
 
     private fun loadRestaurants() {
@@ -99,6 +103,26 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    private fun loadProducts() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val products = getProductsUseCase()
+                _uiState.value = _uiState.value.copy(
+                    products = products,
+                    isLoading = false
+                )
+                Log.d("API_TEXT", "Loaded products: $products")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Error loading products",
+                    isLoading = false
+                )
+                Log.e("API_TEST", "Error: ${e.message}", e)
+            }
+        }
+    }
+
 
 
 
@@ -120,6 +144,7 @@ data class HomeUiState(
     val user: UserDomain? = null,
     val restaurants: List<RestaurantDomain> = emptyList(),
     val ingredients: List<IngredientDomain> = emptyList(),
+    val products: List<ProductDomain> = emptyList(),
     val filteredRestaurants: List<RestaurantDomain> = emptyList(),
     val searchQuery: String = "",
     val isLoading: Boolean = true,

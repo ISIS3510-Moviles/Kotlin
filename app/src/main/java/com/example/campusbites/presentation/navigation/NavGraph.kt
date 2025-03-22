@@ -65,7 +65,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
                 },
                 onSearch = { query ->
                     navController.navigate(NavigationRoutes.createSearchingRoute(query))
-                }
+                },
+                authViewModel = authViewModel
             )
         }
 
@@ -81,7 +82,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         // Profile Screen
         composable(NavigationRoutes.PROFILE_SCREEN) {
             ProfileScreen(
-                navController = navController
+                navController = navController,
+                authViewModel = authViewModel,
             )
         }
 
@@ -129,7 +131,7 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val foodId = it.arguments?.getString("id") ?: ""
-            FoodDetailScreen(foodId = foodId)
+            FoodDetailScreen(foodId = foodId, authViewModel = authViewModel)
         }
     }
 }
