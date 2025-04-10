@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -76,6 +77,7 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val restaurantId = it.arguments?.getString("id") ?: ""
+            Log.d("RestaurantIdDebug", "Restaurant ID: $restaurantId")
             RestaurantDetailScreen(restaurantId = restaurantId)
         }
 
@@ -91,7 +93,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         composable(NavigationRoutes.ALERTS_SCREEN) {
             AlertsScreen(
                 navController = navController,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                authViewModel = authViewModel
             )
         }
 
@@ -99,12 +102,13 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             val restaurants = alertsViewModel.restaurants.collectAsState()
             AlertCreateScreen(
                 onBackClick = { navController.popBackStack() },
-                onCreateClick = { description, restaurantId ->
+                onCreateClick = { description, restaurantId, userId ->
                     alertsViewModel.createAlert(description, restaurantId)
 
                     navController.navigate(NavigationRoutes.HOME_SCREEN)
                 },
-                restaurants = restaurants.value
+                restaurants = restaurants.value,
+                authViewModel = authViewModel
             )
         }
 

@@ -29,13 +29,15 @@ import androidx.compose.ui.unit.dp
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.presentation.ui.components.AlertTopBar
 import com.example.campusbites.presentation.ui.material.CampusBitesTheme
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertCreateScreen(
     onBackClick: () -> Unit,
-    onCreateClick: (String, String) -> Unit,
-    restaurants: List<RestaurantDomain> = getSampleRestaurants()
+    onCreateClick: (String, String, String) -> Unit,
+    restaurants: List<RestaurantDomain> = getSampleRestaurants(),
+    authViewModel: AuthViewModel
 ) {
     var description by remember { mutableStateOf("") }
     var selectedRestaurantId by remember { mutableStateOf("") }
@@ -106,7 +108,7 @@ fun AlertCreateScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { onCreateClick(description, selectedRestaurantId) },
+                onClick = { authViewModel.user.value?.let { onCreateClick(description, selectedRestaurantId, it.id) } },
                 enabled = description.isNotBlank() && selectedRestaurantId.isNotBlank(),
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
@@ -188,17 +190,4 @@ private fun getSampleRestaurants(): List<RestaurantDomain> {
             dietaryTags = emptyList(),
         )
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun AlertCreateScreenPreview() {
-    CampusBitesTheme {
-        AlertCreateScreen(
-            onBackClick = { /* Acción para volver atrás */ },
-            onCreateClick = { description, restaurantId ->
-                /* Acción al crear la alerta */
-            }
-        )
-    }
 }
