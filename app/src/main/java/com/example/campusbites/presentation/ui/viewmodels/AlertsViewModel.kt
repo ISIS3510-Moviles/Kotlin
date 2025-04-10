@@ -102,27 +102,6 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
-    fun loadUser() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val user = getUserByIdUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1")
-                _uiState.value = _uiState.value.copy(
-                    user = user,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded user: $user")
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading user",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
-            }
-
-        }
-
-    }
 }
 
 data class AlertsUiState(
