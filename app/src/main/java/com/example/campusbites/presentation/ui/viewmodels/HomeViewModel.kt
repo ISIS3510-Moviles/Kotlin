@@ -28,25 +28,29 @@ class HomeViewModel @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getIngredientsUseCase: GetIngredientsUseCase,
     private val getProductsUseCase: GetProductsUseCase,
-    private val getRecommendationRestaurantsUseCase: GetRecommendationsUseCase
+    private val getRecommendationRestaurantsUseCase: GetRecommendationsUseCase,
 ) : ViewModel() {
+    private var currentUser: UserDomain? = null
 
+    fun setUser(user: UserDomain) {
+        currentUser = user
+        // Ahora ya lo puedes usar para llamar a recomendaciones, etc.
+    }
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        loadUser()
+        currentUser?.let { loadUser(it) }
         loadRestaurants()
         loadIngredients()
         loadProducts()
-        loadRecommendationRestaurants()
+        currentUser?.let { loadRecommendationRestaurants(it) }
     }
 
-    private fun loadUser() {
+    private fun loadUser(user: UserDomain) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val user = getUserByIdUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1")
                 _uiState.value = _uiState.value.copy(
                     user = user,
                     isLoading = false
@@ -125,11 +129,11 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    private fun loadRecommendationRestaurants() {
+    fun loadRecommendationRestaurants(user: UserDomain) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val recommendations = getRecommendationRestaurantsUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1", 10)
+                val recommendations = getRecommendationRestaurantsUseCase(user.id, 10)
                 _uiState.value = _uiState.value.copy(
                     recommendationRestaurants = recommendations,
                     isLoading = false

@@ -5,6 +5,7 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import kotlinx.coroutines.delay
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -25,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -76,8 +78,14 @@ fun HomeScreen(
     } else {
         val viewModel: HomeViewModel = hiltViewModel()
         val uiState by viewModel.uiState.collectAsState()
-        val user by authViewModel.user.collectAsState()
         val uriHandler = LocalUriHandler.current
+        val user by authViewModel.user.collectAsState()
+
+        LaunchedEffect(user) {
+            user?.let {
+                viewModel.loadRecommendationRestaurants(user!!) // Cargar recomendaciones cuando cambia el usuario
+            }
+        }
 
         Scaffold(
             topBar = {
@@ -138,7 +146,6 @@ fun HomeScreen(
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
 
-                    // Si el usuario tiene rol "analyst", se muestra el botón Dashboard
                     if (user?.role == "analyst") {
                         Button(
                             onClick = { uriHandler.openUri("https://lookerstudio.google.com/u/0/reporting/4ed6b728-d031-424c-b123-63044acdb870/page/WcSEF") },
@@ -176,7 +183,6 @@ fun HomeScreen(
                                 modifier = Modifier.padding(8.dp)
                             )
 
-                            // Sección de "Todos los productos"
                             ProductListRow(
                                 name = "All Foods",
                                 description = "Discover all available foods",
@@ -185,7 +191,6 @@ fun HomeScreen(
                                 modifier = Modifier.padding(8.dp)
                             )
 
-                            // Sección de "Productos Guardados" (si el usuario existe)
                             user?.let {
                                 ProductListRow(
                                     name = "Saved foods",
@@ -196,22 +201,16 @@ fun HomeScreen(
                                 )
                             }
 
-
                             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                    Text(
-                                        text = "Recommended Restaurants",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(bottom = 8.dp)
-                                    )
-                                    uiState.recommendationRestaurants.forEach { recommendation ->
-                                        RecommendationRestaurantCard(restaurant = recommendation)
-                                    }
+                                Text(
+                                    text = "Recommended Restaurants",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    modifier = Modifier.padding(bottom = 8.dp)
+                                )
+                                uiState.recommendationRestaurants.forEach { recommendation ->
+                                    RecommendationRestaurantCard(restaurant = recommendation)
                                 }
-
-
-
-
-
+                            }
                         }
                     }
                 }
