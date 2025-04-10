@@ -18,6 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Notifications
@@ -105,6 +106,14 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+
+                        IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = stringResource(R.string.reservations)
+                            )
+                        }
+
                         IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Notifications,

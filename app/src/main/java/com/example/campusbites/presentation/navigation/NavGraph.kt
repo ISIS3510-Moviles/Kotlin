@@ -14,6 +14,7 @@ import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
+import com.example.campusbites.presentation.ui.screens.ReservationsScreen
 import com.example.campusbites.presentation.ui.screens.SearchingScreen
 
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
@@ -29,6 +30,7 @@ object NavigationRoutes {
     const val SEARCHING_SCREEN = "searching_screen/{query}"
     const val SIGNIN_SCREEN = "sign_in"
     const val FOOD_DETAIL = "food_detail/{id}"
+    const val RESERVATIONS_SCREEN = "reservations_screen"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
@@ -132,6 +134,13 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         ) {
             val foodId = it.arguments?.getString("id") ?: ""
             FoodDetailScreen(foodId = foodId, authViewModel = authViewModel)
+        }
+
+        // Reservations Screen
+        composable(
+            route = NavigationRoutes.RESERVATIONS_SCREEN
+        ) {
+            ReservationsScreen()
         }
     }
 }

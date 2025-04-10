@@ -7,6 +7,6 @@ data class ReservationDomain(
     val datetime: LocalDateTime,
     val numberCommensals: Int,
     val isCompleted: Boolean,
-    val userDomain: UserDomain,
-    val restaurantDomain: RestaurantDomain
+    val userDomain: UserDomain? = null,
+    val restaurantDomain: RestaurantDomain? = null
 )
