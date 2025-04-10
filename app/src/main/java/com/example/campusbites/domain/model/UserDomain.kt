@@ -11,7 +11,7 @@ data class UserDomain(
     val isPremium: Boolean,
     val badgesIds: List<String>,
     val schedulesIds: List<String>,
-    val reservationsIds: List<String>,
+    val reservationsDomain: List<ReservationDomain>,
     val institution: InstitutionDomain?,
     val dietaryPreferencesTagIds: List<String>,
     val commentsIds: List<String>,

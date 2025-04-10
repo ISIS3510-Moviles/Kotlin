@@ -8,6 +8,7 @@ import com.example.campusbites.data.dto.FoodTagDTO
 import com.example.campusbites.data.dto.IngredientDTO
 import com.example.campusbites.data.dto.InstitutionDTO
 import com.example.campusbites.data.dto.ProductDTO
+import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
@@ -69,5 +70,8 @@ interface ApiService {
 
     @GET("user")
     suspend fun getUsers(): List<UserDTO>
+
+    @GET("reservation/{id}")
+    suspend fun getReservationById(@Path("id") id: String): ReservationDTO
 
 }

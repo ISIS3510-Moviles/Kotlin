@@ -4,7 +4,7 @@ import java.time.LocalDateTime
 
 data class ReservationDomain(
     val id: String,
-    val datetime: LocalDateTime,
+    val datetime: String,
     val numberCommensals: Int,
     val isCompleted: Boolean,
     val userDomain: UserDomain? = null,

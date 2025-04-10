@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.IngredientDomain
 import com.example.campusbites.domain.model.ProductDomain
+import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
@@ -142,6 +143,7 @@ class HomeViewModel @Inject constructor(
 
 data class HomeUiState(
     val user: UserDomain? = null,
+    val reservations: List<ReservationDomain> = emptyList(),
     val restaurants: List<RestaurantDomain> = emptyList(),
     val ingredients: List<IngredientDomain> = emptyList(),
     val products: List<ProductDomain> = emptyList(),

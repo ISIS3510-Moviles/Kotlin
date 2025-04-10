@@ -12,6 +12,7 @@ import com.example.campusbites.data.repository.IngredientRepositoryImpl
 import com.example.campusbites.data.repository.InstitutionRepositoryImpl
 import com.example.campusbites.data.repository.LocationRepositoryImpl
 import com.example.campusbites.data.repository.ProductRepositoryImpl
+import com.example.campusbites.data.repository.ReservationRepositoryImpl
 import com.example.campusbites.data.repository.RestaurantRepositoryImpl
 import com.example.campusbites.data.repository.UserRepositoryImpl
 import com.example.campusbites.domain.repository.AlertRepository
@@ -22,6 +23,7 @@ import com.example.campusbites.domain.repository.IngredientRepository
 import com.example.campusbites.domain.repository.InstitutionRepository
 import com.example.campusbites.domain.repository.LocationRepository
 import com.example.campusbites.domain.repository.ProductRepository
+import com.example.campusbites.domain.repository.ReservationRepository
 import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.repository.UserRepository
 import com.google.android.gms.location.FusedLocationProviderClient
@@ -119,6 +121,12 @@ object AppModule {
         abstract fun bindAlertRepository(
             alertRepositoryImpl: AlertRepositoryImpl
         ): AlertRepository
+    }
+
+    @Provides
+    @Singleton
+    fun provideReservationsRepository(apiService: ApiService): ReservationRepository {
+        return ReservationRepositoryImpl(apiService)
     }
 
 

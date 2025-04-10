@@ -8,6 +8,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
+import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
@@ -138,9 +139,12 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
 
         // Reservations Screen
         composable(
-            route = NavigationRoutes.RESERVATIONS_SCREEN
+            route = NavigationRoutes.RESERVATIONS_SCREEN,
+            arguments = listOf(navArgument(name = "reservations") { type = ReservationDomain })
         ) {
-            ReservationsScreen()
+            ReservationsScreen(
+                reservations =
+            )
         }
     }
 }
