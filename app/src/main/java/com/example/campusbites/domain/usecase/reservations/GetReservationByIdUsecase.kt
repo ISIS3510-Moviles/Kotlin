@@ -8,7 +8,6 @@ import javax.inject.Inject
 
 class GetReservationByIdUseCase @Inject constructor(
     private val repository: ReservationRepository,
-    private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getRestaurantByIdUseCase: GetRestaurantByIdUseCase
 ) {
     suspend operator fun invoke(reservationId: String): ReservationDomain {
@@ -18,7 +17,7 @@ class GetReservationByIdUseCase @Inject constructor(
             datetime = reservation.date,
             numberCommensals = reservation.numberComensals,
             isCompleted = reservation.isCompleted,
-            userDomain = getUserByIdUseCase(reservationId),
+            userDomain = null,
             restaurantDomain = getRestaurantByIdUseCase(reservationId)
         )
     }

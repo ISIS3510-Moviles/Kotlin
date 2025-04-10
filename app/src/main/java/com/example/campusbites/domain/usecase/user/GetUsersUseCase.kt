@@ -6,12 +6,14 @@ import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.UserRepository
 import com.example.campusbites.domain.usecase.institution.GetInstitutionByIdUseCase
 import com.example.campusbites.domain.usecase.product.GetProductByIdUseCase
+import com.example.campusbites.domain.usecase.reservations.GetReservationByIdUseCase
 import javax.inject.Inject
 
 class GetUsersUseCase @Inject constructor(
     private val repository: UserRepository,
     private val getProductByIdUseCase: GetProductByIdUseCase,
-    private val getInstitutionByIdUseCase: GetInstitutionByIdUseCase
+    private val getInstitutionByIdUseCase: GetInstitutionByIdUseCase,
+    private val getReservationByIdUseCase: GetReservationByIdUseCase
 ) {
     suspend operator fun invoke(): List<UserDomain> {
         Log.d(TAG, "Fetching users from repository...")
@@ -39,7 +41,7 @@ class GetUsersUseCase @Inject constructor(
                     isPremium = userDTO.isPremium,
                     badgesIds = userDTO.badgesIds,
                     schedulesIds = userDTO.schedulesIds,
-                    reservationsIds = userDTO.reservationsIds,
+                    reservationsDomain = userDTO.reservationsIds.map { reservationId -> getReservationByIdUseCase(reservationId) },
                     institution = institution,
                     dietaryPreferencesTagIds = userDTO.dietaryPreferencesTagIds,
                     commentsIds = userDTO.commentsIds,

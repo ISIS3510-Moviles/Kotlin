@@ -140,11 +140,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         // Reservations Screen
         composable(
             route = NavigationRoutes.RESERVATIONS_SCREEN,
-            arguments = listOf(navArgument(name = "reservations") { type = ReservationDomain })
         ) {
-            ReservationsScreen(
-                reservations =
-            )
+            ReservationsScreen()
         }
     }
 }

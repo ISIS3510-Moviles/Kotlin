@@ -74,19 +74,19 @@ fun ReservationsScreenPreview() {
     val sampleReservations = listOf(
         ReservationDomain(
             id = "1",
-            datetime = LocalDateTime.now().plusDays(1),
+            datetime = LocalDateTime.now().plusDays(1).toString(),
             numberCommensals = 4,
             isCompleted = false
         ),
         ReservationDomain(
             id = "2",
-            datetime = LocalDateTime.now().plusDays(2),
+            datetime = LocalDateTime.now().plusDays(2).toString(),
             numberCommensals = 2,
             isCompleted = true,
         ),
         ReservationDomain(
             id = "3",
-            datetime = LocalDateTime.now().plusDays(3),
+            datetime = LocalDateTime.now().plusDays(3).toString(),
             numberCommensals = 3,
             isCompleted = false,
         )

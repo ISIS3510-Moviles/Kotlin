@@ -58,7 +58,7 @@ class AuthViewModel @Inject constructor(
                     isPremium = false,
                     badgesIds = emptyList(),
                     schedulesIds = emptyList(),
-                    reservationsIds = emptyList(),
+                    reservationsDomain = emptyList(),
                     institution = null,
                     dietaryPreferencesTagIds = emptyList(),
                     commentsIds = emptyList(),
