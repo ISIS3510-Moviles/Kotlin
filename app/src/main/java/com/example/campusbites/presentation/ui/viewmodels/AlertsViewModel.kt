@@ -106,7 +106,7 @@ class AlertsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val user = getUserByIdUseCase("ps8ntqSGvzgilhqlXKNP")
+                val user = getUserByIdUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1")
                 _uiState.value = _uiState.value.copy(
                     user = user,
                     isLoading = false

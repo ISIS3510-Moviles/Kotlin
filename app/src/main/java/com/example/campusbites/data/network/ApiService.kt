@@ -8,6 +8,8 @@ import com.example.campusbites.data.dto.FoodTagDTO
 import com.example.campusbites.data.dto.IngredientDTO
 import com.example.campusbites.data.dto.InstitutionDTO
 import com.example.campusbites.data.dto.ProductDTO
+import com.example.campusbites.data.dto.RecommendationDTO
+import com.example.campusbites.data.dto.RecommendationRestaurantDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
@@ -69,5 +71,9 @@ interface ApiService {
 
     @GET("user")
     suspend fun getUsers(): List<UserDTO>
+
+    @POST("user/recommend")
+    suspend fun getRecommendations(@Body recommendationDTO: RecommendationDTO ): Response<List<RecommendationRestaurantDTO>>
+
 
 }
