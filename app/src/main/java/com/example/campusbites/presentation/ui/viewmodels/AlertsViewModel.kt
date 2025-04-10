@@ -81,11 +81,16 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
-    fun createAlert(description: String, restaurantId: String) {
+    fun createAlert(description: String, restaurantId: String, authViewModel: AuthViewModel) {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val user = getUserByIdUseCase("ps8ntqSGvzgilhqlXKNP")
+                var userid = ""
+                if (authViewModel.user.value != null) {
+                    userid = authViewModel.user.value!!.id
+                }
+
+                val user = getUserByIdUseCase(userid)
                 createAlertUseCase(description, restaurantId, user)
                 fetchAlerts()
             } catch (e: Exception) {
@@ -101,7 +106,7 @@ class AlertsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                val user = getUserByIdUseCase("ps8ntqSGvzgilhqlXKNP")
+                val user = getUserByIdUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1")
                 _uiState.value = _uiState.value.copy(
                     user = user,
                     isLoading = false

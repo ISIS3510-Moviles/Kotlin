@@ -7,9 +7,11 @@ import com.example.campusbites.domain.model.IngredientDomain
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
+import com.example.campusbites.domain.model.RecommendationRestaurantDomain
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
+import com.example.campusbites.domain.usecase.GetRecommendationsUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -25,7 +27,8 @@ class HomeViewModel @Inject constructor(
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getIngredientsUseCase: GetIngredientsUseCase,
-    private val getProductsUseCase: GetProductsUseCase
+    private val getProductsUseCase: GetProductsUseCase,
+    private val getRecommendationRestaurantsUseCase: GetRecommendationsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -36,6 +39,27 @@ class HomeViewModel @Inject constructor(
         loadRestaurants()
         loadIngredients()
         loadProducts()
+        loadRecommendationRestaurants()
+    }
+
+    private fun loadUser() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val user = getUserByIdUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1")
+                _uiState.value = _uiState.value.copy(
+                    user = user,
+                    isLoading = false
+                )
+                Log.d("API_TEXT", "Loaded user: $user")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Error loading user",
+                    isLoading = false
+                )
+                Log.e("API_TEST", "Error: ${e.message}", e)
+            }
+        }
     }
 
     private fun loadRestaurants() {
@@ -49,33 +73,11 @@ class HomeViewModel @Inject constructor(
                 )
                 Log.d("API_TEXT", "Loaded restaurants: $restaurants")
             } catch (e: Exception) {
-                Log.e("Error", "Error loading restaurants")
-                // Registrar la excepción en Crashlytics
                 FirebaseCrashlytics.getInstance().recordException(e)
                 FirebaseCrashlytics.getInstance().setCustomKey("error_screen", "home_restaurants_loading")
 
                 _uiState.value = _uiState.value.copy(
                     errorMessage = e.message ?: "Error loading restaurants",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
-            }
-        }
-    }
-
-    private fun loadUser() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val user = getUserByIdUseCase("ps8ntqSGvzgilhqlXKNP")
-                _uiState.value = _uiState.value.copy(
-                    user = user,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded user: $user")
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading user",
                     isLoading = false
                 )
                 Log.e("API_TEST", "Error: ${e.message}", e)
@@ -123,8 +125,25 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-
-
+    private fun loadRecommendationRestaurants() {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
+            try {
+                val recommendations = getRecommendationRestaurantsUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1", 10)
+                _uiState.value = _uiState.value.copy(
+                    recommendationRestaurants = recommendations,
+                    isLoading = false
+                )
+                Log.d("API_TEXT", "Loaded recommendation restaurants: $recommendations")
+            } catch (e: Exception) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = e.message ?: "Error loading recommendation restaurants",
+                    isLoading = false
+                )
+                Log.e("API_TEST", "Error: ${e.message}", e)
+            }
+        }
+    }
 
     fun onSearchQueryChanged(query: String) {
         viewModelScope.launch {
@@ -135,10 +154,7 @@ class HomeViewModel @Inject constructor(
             }
         }
     }
-
 }
-
-
 
 data class HomeUiState(
     val user: UserDomain? = null,
@@ -149,5 +165,6 @@ data class HomeUiState(
     val searchQuery: String = "",
     val isLoading: Boolean = true,
     val errorMessage: String? = null,
-    val selectedRestaurantDomain: RestaurantDomain? = null
+    val selectedRestaurantDomain: RestaurantDomain? = null,
+    val recommendationRestaurants: List<RecommendationRestaurantDomain> = emptyList()
 )

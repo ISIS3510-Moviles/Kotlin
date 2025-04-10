@@ -39,6 +39,7 @@ import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.components.IngredientGrid
 import com.example.campusbites.presentation.ui.components.ProductListRow
+import com.example.campusbites.presentation.ui.components.RecommendationRestaurantCard
 import com.example.campusbites.presentation.ui.components.RestaurantListRow
 import com.example.campusbites.presentation.ui.components.SearchBar
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
@@ -194,6 +195,23 @@ fun HomeScreen(
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
+
+
+                            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                    Text(
+                                        text = "Recommended Restaurants",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                    uiState.recommendationRestaurants.forEach { recommendation ->
+                                        RecommendationRestaurantCard(restaurant = recommendation)
+                                    }
+                                }
+
+
+
+
+
                         }
                     }
                 }

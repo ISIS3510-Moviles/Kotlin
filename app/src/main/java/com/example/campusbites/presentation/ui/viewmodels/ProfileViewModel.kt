@@ -35,7 +35,7 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
             try {
-                val user: UserDomain = getUserByIdUseCase("ps8ntqSGvzgilhqlXKNP")
+                val user: UserDomain = getUserByIdUseCase("mhb5GrYjKYb52x7Cub5yT7LlPIo1")
                 val dietaryNames = coroutineScope {
                     user.dietaryPreferencesTagIds.map { tagId ->
                         async { getDietaryTagByIdUseCase(tagId).name }

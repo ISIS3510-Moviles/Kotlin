@@ -21,12 +21,14 @@ import androidx.navigation.NavController
 import com.example.campusbites.presentation.ui.components.AlertList
 import com.example.campusbites.presentation.ui.components.AlertTopBar
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 @Composable
 fun AlertsScreen(
     navController: NavController,
     onBackClick: () -> Unit,
-    viewModel: AlertsViewModel = hiltViewModel()
+    viewModel: AlertsViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel
 ) {
 
     val uiState = viewModel.uiState.collectAsState()
