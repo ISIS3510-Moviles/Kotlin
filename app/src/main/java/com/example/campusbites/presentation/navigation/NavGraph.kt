@@ -89,7 +89,7 @@ fun NavGraph(authViewModel: AuthViewModel) {
             AlertsScreen(
                 navController = navController,
                 onBackClick = { navController.popBackStack() },
-                authViewModel = authViewModel
+                viewModel = alertsViewModel
             )
         }
 

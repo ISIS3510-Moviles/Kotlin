@@ -42,7 +42,10 @@ class AlertsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true)
             try {
+                Log.d("AlertsViewModel", "🚀 Antes de getAlertsUseCase")
                 val alerts = getAlertsUseCase()
+                Log.d("AlertsViewModel", "✅ Después de getAlertsUseCase")
+
                 _uiState.value = _uiState.value.copy(alerts = alerts, isLoading = false)
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(

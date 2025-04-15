@@ -27,8 +27,7 @@ import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 fun AlertsScreen(
     navController: NavController,
     onBackClick: () -> Unit,
-    viewModel: AlertsViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel
+    viewModel: AlertsViewModel
 ) {
 
     val uiState = viewModel.uiState.collectAsState()

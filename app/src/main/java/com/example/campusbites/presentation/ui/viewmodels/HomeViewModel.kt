@@ -3,21 +3,23 @@ package com.example.campusbites.presentation.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusbites.data.repository.HomeDataRepository
 import com.example.campusbites.domain.model.IngredientDomain
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
-import com.example.campusbites.domain.model.RecommendationRestaurantDomain
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.GetRecommendationsUseCase
-import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -25,150 +27,129 @@ import javax.inject.Inject
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
-    private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getIngredientsUseCase: GetIngredientsUseCase,
     private val getProductsUseCase: GetProductsUseCase,
     private val getRecommendationRestaurantsUseCase: GetRecommendationsUseCase,
+    private val homeDataRepository: HomeDataRepository
 ) : ViewModel() {
-    private var currentUser: UserDomain? = null
 
-    fun setUser(user: UserDomain) {
-        currentUser = user
-        // Ahora ya lo puedes usar para llamar a recomendaciones, etc.
-    }
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        currentUser?.let { loadUser(it) }
-        loadRestaurants()
-        loadIngredients()
-        loadProducts()
-        currentUser?.let { loadRecommendationRestaurants(it) }
+        loadInitialCache()
+        triggerNetworkFetches()
     }
 
-    private fun loadUser(user: UserDomain) {
+    private fun loadInitialCache() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            combine(
+                homeDataRepository.nearbyRestaurantsFlow,
+                homeDataRepository.recommendedRestaurantsFlow,
+                homeDataRepository.allProductsFlow,
+                homeDataRepository.allIngredientsFlow
+            ) { nearby, recommended, products, ingredients ->
+                Log.d("HomeViewModel", "Cache loaded: Nearby=${nearby.size}, Recommended=${recommended.size}, Products=${products.size}, Ingredients=${ingredients.size}")
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        restaurants = nearby,
+                        recommendationRestaurants = recommended,
+                        products = products,
+                        ingredients = ingredients,
+                        isLoadingInitial = false
+                    )
+                }
+            }.catch { e ->
+                Log.e("HomeViewModel", "Error loading initial cache", e)
+                _uiState.update { it.copy(isLoadingInitial = false, errorMessage = "Failed to load cached data") }
+            }.collect()
+        }
+    }
+
+    private fun triggerNetworkFetches() {
+        _uiState.update { it.copy(isLoadingNetwork = true) }
+        viewModelScope.launch {
             try {
-                _uiState.value = _uiState.value.copy(
-                    user = user,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded user: $user")
+                fetchAndSaveRestaurants()
+                fetchAndSaveIngredients()
+                fetchAndSaveProducts()
+                Log.d("HomeViewModel", "Initial network fetches triggered (excluding recommendations).")
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading user",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
+                Log.e("HomeViewModel", "Error during initial network fetches", e)
+                _uiState.update { it.copy(errorMessage = "Failed to update data from network") }
+            } finally {
+                _uiState.update { it.copy(isLoadingNetwork = false) }
             }
         }
     }
 
-    private fun loadRestaurants() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val restaurants = getRestaurantsUseCase()
-                _uiState.value = _uiState.value.copy(
-                    restaurants = restaurants,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded restaurants: $restaurants")
-            } catch (e: Exception) {
-                FirebaseCrashlytics.getInstance().recordException(e)
-                FirebaseCrashlytics.getInstance().setCustomKey("error_screen", "home_restaurants_loading")
+    private suspend fun fetchAndSaveRestaurants() {
+        try {
+            val restaurants = getRestaurantsUseCase()
+            homeDataRepository.saveNearbyRestaurants(restaurants)
+            Log.d("HomeViewModel", "Fetched and saved ${restaurants.size} nearby restaurants.")
+        } catch (e: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(e)
+            FirebaseCrashlytics.getInstance().setCustomKey("error_screen", "home_restaurants_fetch_save")
+            Log.e("HomeViewModel", "Error fetching/saving restaurants: ${e.message}", e)
 
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading restaurants",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
-            }
         }
     }
 
-    private fun loadIngredients() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val ingredients = getIngredientsUseCase()
-                _uiState.value = _uiState.value.copy(
-                    ingredients = ingredients,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded ingredients: $ingredients")
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading ingredients",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
-            }
+    private suspend fun fetchAndSaveIngredients() {
+        try {
+            val ingredients = getIngredientsUseCase()
+            homeDataRepository.saveAllIngredients(ingredients)
+            Log.d("HomeViewModel", "Fetched and saved ${ingredients.size} ingredients.")
+        } catch (e: Exception) {
+            Log.e("HomeViewModel", "Error fetching/saving ingredients: ${e.message}", e)
+
         }
     }
 
-    private fun loadProducts() {
-        viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
-            try {
-                val products = getProductsUseCase()
-                _uiState.value = _uiState.value.copy(
-                    products = products,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded products: $products")
-            } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading products",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
-            }
+    private suspend fun fetchAndSaveProducts() {
+        try {
+            val products = getProductsUseCase()
+            homeDataRepository.saveAllProducts(products)
+            Log.d("HomeViewModel", "Fetched and saved ${products.size} products.")
+        } catch (e: Exception) {
+            Log.e("HomeViewModel", "Error fetching/saving products: ${e.message}", e)
+
         }
     }
 
     fun loadRecommendationRestaurants(user: UserDomain) {
+        if (_uiState.value.isLoadingNetwork) return
+
+        _uiState.update { it.copy(isLoadingNetwork = true) }
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
+                Log.d("HomeViewModel", "Fetching and saving recommendations for user: ${user.id}")
                 val recommendations = getRecommendationRestaurantsUseCase(user.id, 10)
-                _uiState.value = _uiState.value.copy(
-                    recommendationRestaurants = recommendations,
-                    isLoading = false
-                )
-                Log.d("API_TEXT", "Loaded recommendation restaurants: $recommendations")
+
+
+                Log.d("HomeViewModel", "Fetched and saved ${recommendations.size} recommendations.")
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(
-                    errorMessage = e.message ?: "Error loading recommendation restaurants",
-                    isLoading = false
-                )
-                Log.e("API_TEST", "Error: ${e.message}", e)
+                Log.e("HomeViewModel", "Error fetching/saving recommendations: ${e.message}", e)
+                _uiState.update { it.copy(errorMessage = "Failed to update recommendations") }
+            } finally {
+                _uiState.update { it.copy(isLoadingNetwork = false) }
             }
         }
     }
 
     fun onSearchQueryChanged(query: String) {
-        viewModelScope.launch {
-            _uiState.update { currentState ->
-                currentState.copy(
-                    searchQuery = query
-                )
-            }
-        }
+        _uiState.update { it.copy(searchQuery = query) }
     }
 }
 
 data class HomeUiState(
-    val user: UserDomain? = null,
     val restaurants: List<RestaurantDomain> = emptyList(),
     val ingredients: List<IngredientDomain> = emptyList(),
     val products: List<ProductDomain> = emptyList(),
-    val filteredRestaurants: List<RestaurantDomain> = emptyList(),
     val searchQuery: String = "",
-    val isLoading: Boolean = true,
+    val isLoadingInitial: Boolean = true,
+    val isLoadingNetwork: Boolean = false,
     val errorMessage: String? = null,
-    val selectedRestaurantDomain: RestaurantDomain? = null,
-    val recommendationRestaurants: List<RecommendationRestaurantDomain> = emptyList()
+    val recommendationRestaurants: List<RestaurantDomain> = emptyList()
 )

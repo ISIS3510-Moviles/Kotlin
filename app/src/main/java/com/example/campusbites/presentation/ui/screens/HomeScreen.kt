@@ -3,34 +3,36 @@ package com.example.campusbites.presentation.ui.screens
 import android.Manifest
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
 import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.components.IngredientGrid
@@ -77,7 +79,9 @@ fun HomeScreen(
 
         LaunchedEffect(user) {
             user?.let {
-                viewModel.loadRecommendationRestaurants(user!!) // Cargar recomendaciones cuando cambia el usuario
+                if (it.id.isNotEmpty()) {
+                    viewModel.loadRecommendationRestaurants(it)
+                }
             }
         }
 
@@ -86,7 +90,6 @@ fun HomeScreen(
                 TopAppBar(
                     title = {
                         Column {
-                            Log.d("HomeScreen", "User: $user")
                             Text(
                                 text = user?.name ?: "Bienvenido",
                                 style = MaterialTheme.typography.titleMedium
@@ -108,6 +111,12 @@ fun HomeScreen(
                         }
                     },
                     actions = {
+                        if (uiState.isLoadingNetwork) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                                strokeWidth = 2.dp
+                            )
+                        }
                         IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Notifications,
@@ -118,48 +127,47 @@ fun HomeScreen(
                 )
             },
             content = { innerPadding ->
-                Column(
-                    verticalArrangement = Arrangement.Top,
-                    modifier = Modifier
-                        .padding(innerPadding)
-                        .fillMaxSize()
-                        .verticalScroll(rememberScrollState())
-                ) {
-                    SearchBar(
-                        query = uiState.searchQuery,
-                        onQueryChange = viewModel::onSearchQueryChanged,
-                        onSearch = onSearch,
-                        modifier = Modifier.padding(horizontal = 16.dp)
-                    )
-
-                    if (user?.role == "analyst") {
-                        Button(
-                            onClick = { uriHandler.openUri("https://lookerstudio.google.com/u/0/reporting/4ed6b728-d031-424c-b123-63044acdb870/page/WcSEF") },
-                            modifier = Modifier
-                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                    if (uiState.isLoadingInitial) {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            modifier = Modifier.fillMaxSize()
                         ) {
-                            Text("Dashboard")
+                            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
                         }
-                    }
-
-                    when {
-                        uiState.isLoading -> {
-                            Column(
-                                verticalArrangement = Arrangement.Center,
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                modifier = Modifier.fillMaxSize()
-                            ) {
-                                CircularProgressIndicator(modifier = Modifier.padding(16.dp))
-                            }
-                        }
-                        else -> {
-                            IngredientGrid(
-                                ingredients = uiState.ingredients,
-                                onIngredientClick = onIngredientClick,
-                                modifier = Modifier.padding(4.dp)
+                    } else {
+                        Column(
+                            verticalArrangement = Arrangement.Top,
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState())
+                        ) {
+                            SearchBar(
+                                query = uiState.searchQuery,
+                                onQueryChange = viewModel::onSearchQueryChanged,
+                                onSearch = onSearch,
+                                modifier = Modifier.padding(horizontal = 16.dp)
                             )
 
-                            // Sección de restaurantes cercanos solo si hay datos
+                            if (user?.role == "analyst") {
+                                Button(
+                                    onClick = { uriHandler.openUri("https://lookerstudio.google.com/u/0/reporting/4ed6b728-d031-424c-b123-63044acdb870/page/WcSEF") },
+                                    modifier = Modifier
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                ) {
+                                    Text("Dashboard")
+                                }
+                            }
+
+                            if (uiState.ingredients.isNotEmpty()) {
+                                IngredientGrid(
+                                    ingredients = uiState.ingredients,
+                                    onIngredientClick = onIngredientClick,
+                                    modifier = Modifier.padding(4.dp)
+                                )
+                            }
+
                             if (uiState.restaurants.isNotEmpty()) {
                                 RestaurantListRow(
                                     name = stringResource(R.string.near_to_you),
@@ -172,7 +180,6 @@ fun HomeScreen(
                                 )
                             }
 
-                            // Sección de productos solo si hay datos
                             if (uiState.products.isNotEmpty()) {
                                 ProductListRow(
                                     name = "All Foods",
@@ -183,20 +190,18 @@ fun HomeScreen(
                                 )
                             }
 
-                            // Sección de productos guardados solo si el usuario tiene productos guardados
-                            user?.let {
-                                if (it.savedProducts.isNotEmpty()) {
+                            user?.let { currentUser ->
+                                if (currentUser.savedProducts.isNotEmpty()) {
                                     ProductListRow(
                                         name = "Saved foods",
                                         description = "The ones according to your preferences",
-                                        products = it.savedProducts,
+                                        products = currentUser.savedProducts,
                                         onProductClick = onProductClick,
                                         modifier = Modifier.padding(8.dp)
                                     )
                                 }
                             }
 
-                            // Sección de restaurantes recomendados solo si hay datos
                             if (uiState.recommendationRestaurants.isNotEmpty()) {
                                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
                                     Text(
@@ -204,10 +209,17 @@ fun HomeScreen(
                                         style = MaterialTheme.typography.titleMedium,
                                         modifier = Modifier.padding(bottom = 8.dp)
                                     )
-                                    uiState.recommendationRestaurants.forEach { recommendation ->
-                                        RecommendationRestaurantCard(restaurant = recommendation)
+                                    uiState.recommendationRestaurants.forEach {
                                     }
                                 }
+                            }
+
+                            if (uiState.errorMessage != null) {
+                                Text(
+                                    text = "Error: ${uiState.errorMessage}",
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(16.dp)
+                                )
                             }
                         }
                     }

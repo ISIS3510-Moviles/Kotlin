@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.campusbites.domain.repository.AuthRepository
+import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +23,8 @@ import kotlinx.coroutines.SupervisorJob
 class AuthRepositoryImpl @Inject constructor(
     private val createUserUseCase: CreateUserUseCase,
     private val getUsersUseCase: GetUsersUseCase,
-    private val userSessionRepository: UserSessionRepository
+    private val userSessionRepository: UserSessionRepository,
+    private val updateUserUseCase: UpdateUserUseCase
 ) : AuthRepository {
 
     private val _currentUser = MutableStateFlow<UserDomain?>(null)
@@ -94,11 +96,21 @@ class AuthRepositoryImpl @Inject constructor(
 
     override fun updateCurrentUser(updatedUser: UserDomain?) {
         Log.d("AuthRepository", "🔄 Updating currentUser in repository with: ${updatedUser?.id}")
+        val previousUser = _currentUser.value
         _currentUser.value = updatedUser?.copy()
+
         if (updatedUser != null) {
             repositoryScope.launch {
                 userSessionRepository.saveUserSession(updatedUser)
                 Log.d("AuthRepository", "🔄 User session updated in DataStore for ID: ${updatedUser.id}")
+
+                try {
+                    Log.d("AuthRepository", "🚀 Attempting to update user on server...")
+                    updateUserUseCase(updatedUser.id, updatedUser)
+                    Log.d("AuthRepository", "✅ User successfully updated on server.")
+                } catch (e: Exception) {
+                    Log.e("AuthRepository", "❌ Failed to update user on server: ${e.message}", e)
+                }
             }
         } else {
             repositoryScope.launch {
