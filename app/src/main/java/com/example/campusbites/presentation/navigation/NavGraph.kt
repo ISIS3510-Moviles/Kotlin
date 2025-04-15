@@ -98,7 +98,7 @@ fun NavGraph(authViewModel: AuthViewModel) {
             AlertCreateScreen(
                 onBackClick = { navController.popBackStack() },
                 onCreateClick = { description, restaurantId, userId ->
-                    alertsViewModel.createAlert(description, restaurantId, authViewModel)
+                    alertsViewModel.createAlert(description, restaurantId)
 
                     navController.navigate(NavigationRoutes.HOME_SCREEN)
                 },
