@@ -7,6 +7,7 @@ interface AuthRepository {
     val currentUser: StateFlow<UserDomain?>
     suspend fun performCheckOrCreateUser(userId: String, userName: String, userEmail: String): UserDomain
     suspend fun signOut()
+    suspend fun getCurrentUser(): UserDomain?
     fun updateCurrentUser(updatedUser: UserDomain?)
 
 }

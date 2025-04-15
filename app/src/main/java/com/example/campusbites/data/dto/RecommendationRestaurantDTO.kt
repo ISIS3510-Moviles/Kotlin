@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 data class RecommendationRestaurantDTO(
     val id: String,
     val name: String,
+    val profilePhoto: String = "",
     val tags: List<String>,
     val rating: Double? = null,
     val comments: List<CommentDTO>,

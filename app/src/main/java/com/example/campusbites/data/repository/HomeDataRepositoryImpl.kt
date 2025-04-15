@@ -1,11 +1,10 @@
-package com.example.campusbites.data.repository
+package com.example.campusbites.data.preferences
 
 import android.content.Context
 import android.util.Log
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
-import com.example.campusbites.data.preferences.homeDataStore
 import com.example.campusbites.domain.model.IngredientDomain
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain

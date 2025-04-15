@@ -45,6 +45,7 @@ import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import androidx.compose.ui.res.painterResource
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -77,13 +78,6 @@ fun HomeScreen(
         val uriHandler = LocalUriHandler.current
         val user by authViewModel.user.collectAsState()
 
-        LaunchedEffect(user) {
-            user?.let {
-                if (it.id.isNotEmpty()) {
-                    viewModel.loadRecommendationRestaurants(it)
-                }
-            }
-        }
 
         Scaffold(
             topBar = {
@@ -204,13 +198,7 @@ fun HomeScreen(
 
                             if (uiState.recommendationRestaurants.isNotEmpty()) {
                                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                    Text(
-                                        text = "Recommended Restaurants",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier.padding(bottom = 8.dp)
-                                    )
-                                    uiState.recommendationRestaurants.forEach {
-                                    }
+                                    RestaurantListRow("Recommended Restaurants", "The ones according to your preferences", uiState.recommendationRestaurants, onRestaurantClick)
                                 }
                             }
 

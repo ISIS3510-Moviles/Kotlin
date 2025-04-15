@@ -119,4 +119,11 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getCurrentUser(): UserDomain? {
+        return withContext(Dispatchers.IO) {
+            _currentUser.value
+        }
+
+    }
 }
