@@ -4,78 +4,58 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain
-import com.example.campusbites.domain.usecase.product.GetProductsUseCase
-import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
+import com.example.campusbites.domain.usecase.product.SearchProductsUseCase
+import com.example.campusbites.domain.usecase.restaurant.SearchRestaurantsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import android.util.Log
 
 @HiltViewModel
 class SearchingScreenViewModel @Inject constructor(
-    private val getProductsUseCase: GetProductsUseCase,
-    private val getRestaurantsUseCase: GetRestaurantsUseCase
+    private val searchProductsUseCase: SearchProductsUseCase,
+    private val searchRestaurantsUseCase: SearchRestaurantsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchingUiState())
-    val uiState: StateFlow<SearchingUiState> = _uiState
+    val uiState: StateFlow<SearchingUiState> = _uiState.asStateFlow()
 
-    fun onSearchQueryChanged(query: String) {
-        _uiState.update { currentState ->
-            val filteredProducts = currentState.products.filter {
-                it.name.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true)
-            }
-
-            val filteredRestaurants = currentState.restaurants.filter {
-                it.name.contains(query, ignoreCase = true) || it.description.contains(query, ignoreCase = true)
-            }
-
-            currentState.copy(
-                searchQuery = query,
-                filteredProducts = filteredProducts,
-                filteredRestaurants = filteredRestaurants
-            )
-        }
-    }
-
-    init {
-        fetchSearchData()
-    }
-
-    private fun fetchSearchData() {
+    fun performSearch(query: String) {
+        _uiState.update { it.copy(searchQuery = query, isLoading = true) }
         viewModelScope.launch {
-            val products = getProductsUseCase()
-            val restaurants = getRestaurantsUseCase()
-
-            _uiState.update { currentState ->
-                val filteredProducts = products.filter {
-                    it.name.contains(currentState.searchQuery, ignoreCase = true) ||
-                            it.description.contains(currentState.searchQuery, ignoreCase = true)
+            try {
+                val products = searchProductsUseCase(query)
+                val restaurants = searchRestaurantsUseCase(query)
+                _uiState.update {
+                    it.copy(
+                        filteredProducts = products,
+                        filteredRestaurants = restaurants,
+                        isLoading = false,
+                        errorMessage = null
+                    )
                 }
-
-                val filteredRestaurants = restaurants.filter {
-                    it.name.contains(currentState.searchQuery, ignoreCase = true) ||
-                            it.description.contains(currentState.searchQuery, ignoreCase = true)
+                Log.d("SearchingVM", "Search complete: ${products.size} products, ${restaurants.size} restaurants found for '$query'")
+            } catch (e: Exception) {
+                Log.e("SearchingVM", "Error during search for '$query'", e)
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "Error performing search: ${e.message}"
+                    )
                 }
-
-                currentState.copy(
-                    products = products,
-                    restaurants = restaurants,
-                    filteredProducts = filteredProducts,
-                    filteredRestaurants = filteredRestaurants
-                )
             }
         }
     }
-
 }
 
 data class SearchingUiState(
-    val products: List<ProductDomain> = emptyList(),
-    val restaurants: List<RestaurantDomain> = emptyList(),
     val filteredProducts: List<ProductDomain> = emptyList(),
     val filteredRestaurants: List<RestaurantDomain> = emptyList(),
-    val searchQuery: String = ""
+    val searchQuery: String = "",
+    val isLoading: Boolean = false,
+    val errorMessage: String? = null
 )

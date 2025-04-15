@@ -1,5 +1,8 @@
 package com.example.campusbites.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class IngredientDomain(
     val id: String,
     val name: String,

@@ -6,4 +6,6 @@ interface RestaurantRepository {
     suspend fun getRestaurants(): List<RestaurantDTO>
 
     suspend fun getRestaurant(id: String): RestaurantDTO
+
+    suspend fun searchRestaurants(query: String): List<RestaurantDTO>
 }

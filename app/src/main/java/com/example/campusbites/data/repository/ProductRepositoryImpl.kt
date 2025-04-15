@@ -1,5 +1,6 @@
 package com.example.campusbites.data.repository
 
+import android.util.Log
 import com.example.campusbites.data.dto.ProductDTO
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.repository.ProductRepository
@@ -20,9 +21,28 @@ class ProductRepositoryImpl @Inject constructor(
 
     override suspend fun getProductsByRestaurant(id: String): List<ProductDTO> {
         val allProducts = apiService.getProducts()
-        val filteredProducts = allProducts.filter { it.restaurant_id == id }
+        val filteredProducts = allProducts.filter { it.restaurant_id == id } // TODO usecase required
         return filteredProducts
     }
+
+    override suspend fun searchProducts(query: String): List<ProductDTO> {
+        return try {
+
+            val response = apiService.searchProducts(query)
+
+            if (response.isSuccessful) {
+                val products = response.body() ?: emptyList()
+                products
+            } else {
+                Log.e("ProductRepository", "❌ Error HTTP: ${response.code()} - ${response.message()}")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("ProductRepository", "💥 Excepción al buscar productos", e)
+            emptyList()
+        }
+    }
+
 
 
 

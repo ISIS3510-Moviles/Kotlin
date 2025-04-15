@@ -1,5 +1,6 @@
 package com.example.campusbites.data.repository
 
+import android.util.Log
 import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.CreateAlertDTO
 import com.example.campusbites.data.dto.RestaurantDTO
@@ -11,8 +12,8 @@ import com.example.campusbites.domain.model.InstitutionDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AlertRepository
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
+import java.time.Instant
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 class AlertRepositoryImpl @Inject constructor(
@@ -20,10 +21,12 @@ class AlertRepositoryImpl @Inject constructor(
 ) : AlertRepository {
 
     private suspend fun mapDtoToDomain(dto: AlertDTO): AlertDomain {
-        // Parsea la fecha usando ISO_OFFSET_DATE_TIME (por ejemplo, "2025-03-10T12:00:00Z")
-        val parsedDateTime = OffsetDateTime
-            .parse(dto.datetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        val parsedDateTime = Instant
+            .parse(dto.datetime)
+            .atZone(ZoneOffset.UTC)
             .toLocalDateTime()
+
+
 
         val userDTO: UserDTO = apiService.getUserById(dto.publisherId)
         val publisher = UserDomain(
@@ -53,6 +56,7 @@ class AlertRepositoryImpl @Inject constructor(
         )
 
         val restaurants: List<RestaurantDTO> = apiService.getRestaurants()
+
         val restaurantDTO: RestaurantDTO? = restaurants.firstOrNull { it.id == dto.restaurantId }
 
         val restaurant = restaurantDTO?.let {
@@ -126,7 +130,10 @@ class AlertRepositoryImpl @Inject constructor(
 
     override suspend fun getAlerts(): List<AlertDomain> {
         val dtos: List<AlertDTO> = apiService.getAlerts()
-        return dtos.map { dto -> mapDtoToDomain(dto) }
+        val ret = dtos.map { dto -> mapDtoToDomain(dto) }
+        Log.d("AlertRepositoryImpl", "DTOS: $dtos")
+        Log.d("AlertRepositoryImpl", "RET: $ret")
+        return ret
     }
 
     override suspend fun getAlertById(id: String): AlertDomain? {

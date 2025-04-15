@@ -1,5 +1,8 @@
 package com.example.campusbites.domain.model
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class InstitutionDomain(
     val id: String,
     val name: String,
