@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -18,6 +19,7 @@ import com.example.campusbites.presentation.ui.screens.subscreens.restaurantDeta
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.google.firebase.perf.ktx.performance
 import com.google.firebase.ktx.Firebase
+import kotlinx.coroutines.launch
 
 @Composable
 fun RestaurantDetailScreen(
@@ -31,7 +33,38 @@ fun RestaurantDetailScreen(
         Firebase.performance.newTrace("restaurant_detail_screen_load_time")
     }
 
+
+
     val uiState by viewModel.uiState.collectAsState()
+
+    val coroutineScope = rememberCoroutineScope()
+
+    val onSaveRestaurantClick: (String) -> Unit = { restaurantId ->
+        coroutineScope.launch {
+            val currentUser = authViewModel.user.value
+
+            if (currentUser == null) {
+                Log.e("RestaurantHeader", "❌ Usuario no disponible")
+                return@launch
+            }
+
+            val updatedIds = currentUser.suscribedRestaurantIds.toMutableList()
+            val alreadySaved = updatedIds.contains(restaurantId)
+
+            if (alreadySaved) {
+                updatedIds.remove(restaurantId)
+                Log.d("RestaurantHeader", "🗑️ Restaurante eliminado de favoritos")
+            } else {
+                updatedIds.add(restaurantId)
+                Log.d("RestaurantHeader", "✅ Restaurante agregado a favoritos")
+            }
+
+            val updatedUser = currentUser.copy(suscribedRestaurantIds = updatedIds)
+            authViewModel.setUser(updatedUser)
+            viewModel.onSaveClick(updatedUser)
+        }
+    }
+
 
     LaunchedEffect(restaurantId) {
         screenLoadTrace.start()
@@ -49,7 +82,9 @@ fun RestaurantDetailScreen(
         var selectedTabIndex by remember { mutableStateOf(0) }
 
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            RestaurantHeader(restaurant)
+            RestaurantHeader(restaurant,
+                onClick = onSaveRestaurantClick,
+                suscribedRestaurantIds = authViewModel.user.value?.suscribedRestaurantIds ?: emptyList() )
             Spacer(modifier = Modifier.height(16.dp))
             RestaurantTabs(selectedTabIndex) { index -> selectedTabIndex = index }
             Spacer(modifier = Modifier.height(16.dp))

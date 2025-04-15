@@ -1,11 +1,13 @@
 package com.example.campusbites.presentation.ui.screens
 
+import android.annotation.SuppressLint
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -20,6 +22,7 @@ import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.FoodDetailViewModel
 import kotlinx.coroutines.launch
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun FoodDetailScreen(
     foodId: String,
@@ -38,20 +41,26 @@ fun FoodDetailScreen(
                 return@launch
             }
 
-            val alreadySaved = currentUser.savedProducts.any { it.id == productId }
+            val currentSaved = currentUser.savedProducts ?: emptyList()
+            val updatedProducts = currentSaved.toMutableList()
+            val isFavorite = currentSaved.any { it.id == productId }
 
-            if (alreadySaved) {
-                Log.d("FoodDetailScreen", "✅ El producto ya está guardado")
+            if (isFavorite) {
+                updatedProducts.removeAll { it.id == productId }
+                Log.d("FoodDetailScreen", "✅ Producto removido de favoritos")
             } else {
-                val updatedProducts = currentUser.savedProducts.toMutableList()
-                viewModel.product.value?.let { updatedProducts.add(it) }
-
-                val updatedUser = currentUser.copy(savedProducts = updatedProducts)
-                authViewModel.setUser(updatedUser)
-                viewModel.onSaveClick(updatedUser)
+                viewModel.product.value?.let {
+                    updatedProducts.add(it)
+                    Log.d("FoodDetailScreen", "✅ Producto agregado a favoritos")
+                }
             }
+
+            val updatedUser = currentUser.copy(savedProducts = updatedProducts)
+            authViewModel.setUser(updatedUser)
+            viewModel.onSaveClick(updatedUser)
         }
     }
+
 
 
 
@@ -141,15 +150,46 @@ fun FoodDetailScreen(
             Divider()
             Spacer(modifier = Modifier.height(20.dp))
 
+            val currentUser by authViewModel.user.collectAsState()
+
+            val isFavorite by remember(currentUser, product) {
+                derivedStateOf {
+                    currentUser?.savedProducts?.any { it.id == product?.id } == true
+                }
+            }
+
             Button(
                 onClick = { onSaveClick(product!!.id) },
-                modifier = Modifier.align(Alignment.End),
-                shape = RoundedCornerShape(12.dp)
+                modifier = Modifier
+                    .align(Alignment.End)
+                    .padding(8.dp),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (isFavorite) MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                    else MaterialTheme.colorScheme.surface,
+                    contentColor = if (isFavorite) MaterialTheme.colorScheme.primary
+                    else MaterialTheme.colorScheme.onSurface
+                ),
+                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
             ) {
-                Icon(Icons.Default.FavoriteBorder, contentDescription = null)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("Add to Favorites")
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Icon(
+                        imageVector = if (isFavorite) Icons.Filled.Favorite else Icons.Default.FavoriteBorder,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (isFavorite) "Remove from Favorites" else "Add to Favorites",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
+
+
         }
     }
 }

@@ -21,6 +21,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.*
 import kotlinx.coroutines.launch
@@ -28,7 +29,9 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun RestaurantHeader(restaurant: RestaurantDomain) {
+fun RestaurantHeader(restaurant: RestaurantDomain,
+                     onClick: (String) -> Unit,
+                     suscribedRestaurantIds: List<String>) {
     val context = LocalContext.current
     var userDistance by remember { mutableStateOf<Double?>(null) }
     val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -75,18 +78,11 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
             )
         }
 
-        FilledTonalButton(
-            onClick = { /* TODO: Implement subscribe action */ },
-            modifier = Modifier.padding(top = 12.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Default.Star,
-                contentDescription = "Subscribe Icon",
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Subscribe")
-        }
+        SubscribeButton(
+            restaurantId = restaurant.id,
+            onClick = onClick,
+            suscribedRestaurantIds = suscribedRestaurantIds
+        )
 
     }
 }
@@ -115,4 +111,31 @@ fun calculateDistance(userLocation: Location, restaurant: RestaurantDomain): Dou
         longitude = restaurant.longitude
     }
     return userLocation.distanceTo(restaurantLocation).toDouble()
+}
+
+@Composable
+fun SubscribeButton(
+    restaurantId: String,
+    suscribedRestaurantIds: List<String>,
+    onClick: (String) -> Unit
+) {
+    var isSubscribed by remember {
+        mutableStateOf(suscribedRestaurantIds.contains(restaurantId))
+    }
+
+    FilledTonalButton(
+        onClick = {
+            onClick(restaurantId)
+            isSubscribed = !isSubscribed
+        },
+        modifier = Modifier.padding(top = 12.dp)
+    ) {
+        Icon(
+            imageVector = if (isSubscribed) Icons.Filled.Star else Icons.Default.Star,
+            contentDescription = if (isSubscribed) "Unsubscribe Icon" else "Subscribe Icon",
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(if (isSubscribed) "Unsubscribe" else "Subscribe")
+    }
 }
