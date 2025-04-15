@@ -69,6 +69,9 @@ interface ApiService {
     @POST("user")
     suspend fun createUser(@Body userDTO: UserDTO): Response<Unit>
 
+    @PATCH("user/{id}")
+    suspend fun updateUser(@Path("id") id: String,@Body userDTO: UserDTO): Boolean
+
     @GET("user")
     suspend fun getUsers(): List<UserDTO>
 

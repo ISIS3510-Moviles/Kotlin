@@ -120,14 +120,6 @@ fun HomeScreen(
                                 contentDescription = stringResource(R.string.notifications)
                             )
                         }
-                        IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_google),
-                                contentDescription = stringResource(R.string.sign_in),
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
                 )
             },
@@ -173,42 +165,54 @@ fun HomeScreen(
                                 modifier = Modifier.padding(4.dp)
                             )
 
-                            RestaurantListRow(
-                                name = stringResource(R.string.near_to_you),
-                                description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
-                                restaurants = uiState.restaurants,
-                                onRestaurantClick = { restaurantId ->
-                                    navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
-                                },
-                                modifier = Modifier.padding(8.dp)
-                            )
+                            // Sección de restaurantes cercanos solo si hay datos
+                            if (uiState.restaurants.isNotEmpty()) {
+                                RestaurantListRow(
+                                    name = stringResource(R.string.near_to_you),
+                                    description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
+                                    restaurants = uiState.restaurants,
+                                    onRestaurantClick = { restaurantId ->
+                                        navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
+                                    },
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
 
-                            ProductListRow(
-                                name = "All Foods",
-                                description = "Discover all available foods",
-                                products = uiState.products,
-                                onProductClick = onProductClick,
-                                modifier = Modifier.padding(8.dp)
-                            )
-
-                            user?.let {
+                            // Sección de productos solo si hay datos
+                            if (uiState.products.isNotEmpty()) {
                                 ProductListRow(
-                                    name = "Saved foods",
-                                    description = "The ones according to your preferences",
-                                    products = it.savedProducts,
+                                    name = "All Foods",
+                                    description = "Discover all available foods",
+                                    products = uiState.products,
                                     onProductClick = onProductClick,
                                     modifier = Modifier.padding(8.dp)
                                 )
                             }
 
-                            Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                Text(
-                                    text = "Recommended Restaurants",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
-                                )
-                                uiState.recommendationRestaurants.forEach { recommendation ->
-                                    RecommendationRestaurantCard(restaurant = recommendation)
+                            // Sección de productos guardados solo si el usuario tiene productos guardados
+                            user?.let {
+                                if (it.savedProducts.isNotEmpty()) {
+                                    ProductListRow(
+                                        name = "Saved foods",
+                                        description = "The ones according to your preferences",
+                                        products = it.savedProducts,
+                                        onProductClick = onProductClick,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                }
+                            }
+
+                            // Sección de restaurantes recomendados solo si hay datos
+                            if (uiState.recommendationRestaurants.isNotEmpty()) {
+                                Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                                    Text(
+                                        text = "Recommended Restaurants",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier.padding(bottom = 8.dp)
+                                    )
+                                    uiState.recommendationRestaurants.forEach { recommendation ->
+                                        RecommendationRestaurantCard(restaurant = recommendation)
+                                    }
                                 }
                             }
                         }

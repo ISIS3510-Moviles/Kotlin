@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.border
@@ -15,27 +16,45 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import java.util.*
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun BookTableSection() {
+fun BookTableSection(authViewModel: AuthViewModel) {
+    val isUserLoggedIn = authViewModel.user.value != null
+
     var selectedDate by remember { mutableStateOf("") }
     var selectedHour by remember { mutableStateOf("") }
     var showHourDropdown by remember { mutableStateOf(false) }
     var comensals by remember { mutableStateOf(1) }
 
+    var errorMessage by remember { mutableStateOf("") }
+
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+
+    val primaryBlue = Color(0xFF1565C0) // Azul consistente con el otro componente
 
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            selectedDate = "${month + 1}/$dayOfMonth/$year"
+            val picked = Calendar.getInstance().apply {
+                set(year, month, dayOfMonth)
+            }
+            if (picked.before(calendar)) {
+                errorMessage = "You can't select a past date"
+            } else {
+                selectedDate = "${month + 1}/$dayOfMonth/$year"
+                errorMessage = ""
+            }
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH)
-    )
+    ).apply {
+        datePicker.minDate = calendar.timeInMillis
+    }
 
     val availableHours = listOf("7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00")
 
@@ -50,12 +69,11 @@ fun BookTableSection() {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Date Picker
-            Text("Date:", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Date:", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
                     .clickable { datePickerDialog.show() },
                 contentAlignment = Alignment.CenterStart
@@ -63,14 +81,15 @@ fun BookTableSection() {
                 Text(text = if (selectedDate.isNotEmpty()) selectedDate else "MM/DD/YYYY")
             }
 
-            // Hour Picker
-            Text("Hour", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Hour", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
-                    .clickable { showHourDropdown = true }
+                    .clickable(enabled = selectedDate.isNotEmpty()) {
+                        showHourDropdown = true
+                    }
             ) {
                 Text(text = if (selectedHour.isNotEmpty()) selectedHour else "Select hour")
                 DropdownMenu(
@@ -89,35 +108,47 @@ fun BookTableSection() {
                 }
             }
 
-            // Comensals Selector
-            Text("Comensals", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Comensals", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { if (comensals > 1) comensals-- } // Evita que sea menor que 1
-                ) {
-                    Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                IconButton(onClick = { if (comensals > 1) comensals-- }) {
+                    Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
 
                 Text(text = comensals.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
-                IconButton(
-                    onClick = { comensals++ }
-                ) {
-                    Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                IconButton(onClick = { comensals++ }) {
+                    Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
             }
 
-            // Book Button
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Button(
-                onClick = { /* Acción de reserva */ },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+                onClick = {
+                    errorMessage = when {
+                        !isUserLoggedIn -> "You must be logged in to book"
+                        selectedDate.isEmpty() -> "Please select a date"
+                        selectedHour.isEmpty() -> "Please select an hour"
+                        else -> {
+                            // Ejecutar acción de reserva aquí
+                            ""
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Book", color = Color.White, fontWeight = FontWeight.Bold)
@@ -125,3 +156,4 @@ fun BookTableSection() {
         }
     }
 }
+

@@ -4,8 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.IngredientDomain
 import com.example.campusbites.domain.model.ProductDomain
+import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.product.GetProductByIdUseCase
+import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,7 +17,8 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class FoodDetailViewModel @Inject constructor(
     private val getProductByIdUseCase: GetProductByIdUseCase,
-    private val getIngredientsUseCase: GetIngredientsUseCase
+    private val getIngredientsUseCase: GetIngredientsUseCase,
+    private val updateUserUseCase: UpdateUserUseCase,
 ) : ViewModel() {
 
     private val _product = MutableStateFlow<ProductDomain?>(null)
@@ -37,4 +40,9 @@ class FoodDetailViewModel @Inject constructor(
             }
         }
     }
+
+    suspend fun onSaveClick(user: UserDomain) {
+        updateUserUseCase(user.id, user)
+    }
+
 }

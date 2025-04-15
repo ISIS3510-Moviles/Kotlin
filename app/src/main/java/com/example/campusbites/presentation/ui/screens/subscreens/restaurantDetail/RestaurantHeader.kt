@@ -6,7 +6,11 @@ import android.Manifest
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -17,14 +21,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
 import com.google.accompanist.permissions.*
 import com.google.android.gms.location.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
-@SuppressLint("MissingPermission") // Se maneja correctamente el permiso
+@SuppressLint("MissingPermission")
 @Composable
-fun RestaurantHeader(restaurant: RestaurantDomain) {
+fun RestaurantHeader(restaurant: RestaurantDomain,
+                     onClick: (String) -> Unit,
+                     suscribedRestaurantIds: List<String>) {
     val context = LocalContext.current
     var userDistance by remember { mutableStateOf<Double?>(null) }
     val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -45,7 +52,10 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
         Image(
             painter = rememberAsyncImagePainter(restaurant.profilePhoto),
             contentDescription = "Restaurant Image",
-            modifier = Modifier.size(100.dp).padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .padding(bottom = 8.dp)
         )
 
         Text(
@@ -68,9 +78,12 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
             )
         }
 
-        Button(onClick = { /* TODO: Implement subscribe action */ }) {
-            Text("Subscribe")
-        }
+        SubscribeButton(
+            restaurantId = restaurant.id,
+            onClick = onClick,
+            suscribedRestaurantIds = suscribedRestaurantIds
+        )
+
     }
 }
 
@@ -98,4 +111,31 @@ fun calculateDistance(userLocation: Location, restaurant: RestaurantDomain): Dou
         longitude = restaurant.longitude
     }
     return userLocation.distanceTo(restaurantLocation).toDouble()
+}
+
+@Composable
+fun SubscribeButton(
+    restaurantId: String,
+    suscribedRestaurantIds: List<String>,
+    onClick: (String) -> Unit
+) {
+    var isSubscribed by remember {
+        mutableStateOf(suscribedRestaurantIds.contains(restaurantId))
+    }
+
+    FilledTonalButton(
+        onClick = {
+            onClick(restaurantId)
+            isSubscribed = !isSubscribed
+        },
+        modifier = Modifier.padding(top = 12.dp)
+    ) {
+        Icon(
+            imageVector = if (isSubscribed) Icons.Filled.Star else Icons.Default.Star,
+            contentDescription = if (isSubscribed) "Unsubscribe Icon" else "Subscribe Icon",
+            modifier = Modifier.size(18.dp)
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(if (isSubscribed) "Unsubscribe" else "Subscribe")
+    }
 }

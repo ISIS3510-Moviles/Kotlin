@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
@@ -28,7 +29,6 @@ object NavigationRoutes {
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
     const val SEARCHING_SCREEN = "searching_screen/{query}"
-    const val SIGNIN_SCREEN = "sign_in"
     const val FOOD_DETAIL = "food_detail/{id}"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
@@ -38,19 +38,13 @@ object NavigationRoutes {
 
 @Composable
 
-fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
+fun NavGraph(authViewModel: AuthViewModel) {
+    val navController = rememberNavController()
     val alertsViewModel: AlertsViewModel = hiltViewModel()
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN
     ) {
-
-        composable(NavigationRoutes.SIGNIN_SCREEN){
-            SignInScreen(
-                navController = navController,
-                authViewModel = authViewModel
-            )
-        }
         // Home Screen
         composable(NavigationRoutes.HOME_SCREEN) {
             HomeScreen(
@@ -78,7 +72,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         ) {
             val restaurantId = it.arguments?.getString("id") ?: ""
             Log.d("RestaurantIdDebug", "Restaurant ID: $restaurantId")
-            RestaurantDetailScreen(restaurantId = restaurantId)
+            RestaurantDetailScreen(restaurantId = restaurantId, authViewModel = authViewModel,
+                onProductClick = { productId -> navController.navigate(NavigationRoutes.createFoodDetailRoute(productId)) })
         }
 
         // Profile Screen

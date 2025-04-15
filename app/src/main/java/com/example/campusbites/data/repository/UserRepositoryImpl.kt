@@ -46,4 +46,8 @@ class UserRepositoryImpl @Inject constructor(
         return apiService.getUsers()
     }
 
+    override suspend fun updateUser(id: String, user: UserDTO): Boolean {
+        return apiService.updateUser(id, user)
+    }
+
 }

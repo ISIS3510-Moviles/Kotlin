@@ -5,10 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.CommentDomain
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
+import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import com.google.firebase.perf.ktx.performance
 import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -23,7 +25,8 @@ class RestaurantDetailViewModel @Inject constructor(
     private val getRestaurantByIdUseCase: GetRestaurantByIdUseCase,
     private val getProductsByRestaurantUseCase: GetProductsByRestaurantUseCase,
     private val getReviewsByRestaurantUseCase: GetCommentsUseCase,
-    private val getRestaurantsUseCase: GetRestaurantsUseCase
+    private val getRestaurantsUseCase: GetRestaurantsUseCase,
+    private val updateUserUseCase: UpdateUserUseCase,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -51,6 +54,10 @@ class RestaurantDetailViewModel @Inject constructor(
                 )
             }
         }
+    }
+
+    suspend fun onSaveClick(user: UserDomain) {
+        updateUserUseCase(user.id, user)
     }
 
     fun loadAllRestaurants() {

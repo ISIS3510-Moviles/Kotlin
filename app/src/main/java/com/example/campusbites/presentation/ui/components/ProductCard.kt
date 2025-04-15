@@ -87,22 +87,6 @@ fun ProductCard(
                     )
                 }
 
-                /*
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Info,
-                        contentDescription = "Rating",
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(
-                        text = "${product.} min",
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-                */
-
                 Spacer(modifier = Modifier.height(2.dp))
 
                 TagChip(
