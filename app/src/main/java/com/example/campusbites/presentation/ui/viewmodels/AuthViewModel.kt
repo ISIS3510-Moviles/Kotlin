@@ -67,6 +67,5 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    // Ya no es necesario si no hay lógica extra
-    // fun updateUser(user: UserDomain) { ... }
+
 }

@@ -59,6 +59,7 @@ android {
 }
 
 dependencies {
+    implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.credentials.vlatestversion)
     implementation (libs.googleid.vlatestversion)
     implementation(libs.androidx.credentials.play.services.auth.vlatestversion)

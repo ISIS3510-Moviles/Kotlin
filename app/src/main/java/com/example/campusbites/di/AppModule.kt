@@ -45,6 +45,7 @@ object AppModule {
         return CredentialManager.create(context)
     }
 
+
     @Provides
     @Singleton
     fun provideApiService(): ApiService {
@@ -117,6 +118,7 @@ object AppModule {
     fun provideJson(): Json = Json {
         ignoreUnknownKeys = true
         isLenient = true
+        encodeDefaults = true
     }
 
 
