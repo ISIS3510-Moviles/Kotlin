@@ -54,9 +54,6 @@ fun SearchingScreen(
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* TODO: Open filter */ }) {
-                Icon(imageVector = CustomIcons.FilterList, contentDescription = "Filter")
-            }
             SearchBar(
                 query = uiState.searchQuery,
                 onQueryChange = viewModel::onSearchQueryChanged,

@@ -6,7 +6,11 @@ import android.Manifest
 import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
@@ -22,7 +26,7 @@ import com.google.android.gms.location.*
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPermissionsApi::class)
-@SuppressLint("MissingPermission") // Se maneja correctamente el permiso
+@SuppressLint("MissingPermission")
 @Composable
 fun RestaurantHeader(restaurant: RestaurantDomain) {
     val context = LocalContext.current
@@ -45,7 +49,10 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
         Image(
             painter = rememberAsyncImagePainter(restaurant.profilePhoto),
             contentDescription = "Restaurant Image",
-            modifier = Modifier.size(100.dp).padding(bottom = 8.dp)
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .padding(bottom = 8.dp)
         )
 
         Text(
@@ -68,9 +75,19 @@ fun RestaurantHeader(restaurant: RestaurantDomain) {
             )
         }
 
-        Button(onClick = { /* TODO: Implement subscribe action */ }) {
+        FilledTonalButton(
+            onClick = { /* TODO: Implement subscribe action */ },
+            modifier = Modifier.padding(top = 12.dp)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Star,
+                contentDescription = "Subscribe Icon",
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             Text("Subscribe")
         }
+
     }
 }
 

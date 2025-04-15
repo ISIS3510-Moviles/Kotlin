@@ -78,7 +78,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         ) {
             val restaurantId = it.arguments?.getString("id") ?: ""
             Log.d("RestaurantIdDebug", "Restaurant ID: $restaurantId")
-            RestaurantDetailScreen(restaurantId = restaurantId)
+            RestaurantDetailScreen(restaurantId = restaurantId, authViewModel = authViewModel,
+                onProductClick = { productId -> navController.navigate(NavigationRoutes.createFoodDetailRoute(productId)) })
         }
 
         // Profile Screen
