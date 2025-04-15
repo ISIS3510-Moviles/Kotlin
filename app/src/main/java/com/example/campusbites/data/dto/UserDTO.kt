@@ -13,7 +13,7 @@ data class UserDTO(
     val badgesIds: List<String> = emptyList(),
     val schedulesIds: List<String> = emptyList(),
     val reservationsIds: List<String> = emptyList(),
-    val institutionId: String,
+    var institutionId: String,
     val dietaryPreferencesTagIds: List<String> = emptyList(),
     val commentsIds: List<String> = emptyList(),
     val visitsIds: List<String> = emptyList(),

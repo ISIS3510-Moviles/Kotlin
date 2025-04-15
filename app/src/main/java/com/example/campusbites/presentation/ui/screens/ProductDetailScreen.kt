@@ -15,19 +15,45 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.AsyncImage
+import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.FoodDetailViewModel
+import kotlinx.coroutines.launch
 
 @Composable
 fun FoodDetailScreen(
     foodId: String,
     modifier: Modifier = Modifier,
     viewModel: FoodDetailViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel
+    authViewModel: AuthViewModel,
 ) {
+    val coroutineScope = rememberCoroutineScope()
+
     val onSaveClick: (String) -> Unit = { productId ->
-        viewModel
+        coroutineScope.launch {
+            val currentUser = authViewModel.user.value
+
+            if (currentUser == null) {
+                Log.e("FoodDetailScreen", "❌ Usuario no disponible")
+                return@launch
+            }
+
+            val alreadySaved = currentUser.savedProducts.any { it.id == productId }
+
+            if (alreadySaved) {
+                Log.d("FoodDetailScreen", "✅ El producto ya está guardado")
+            } else {
+                val updatedProducts = currentUser.savedProducts.toMutableList()
+                viewModel.product.value?.let { updatedProducts.add(it) }
+
+                val updatedUser = currentUser.copy(savedProducts = updatedProducts)
+                authViewModel.setUser(updatedUser)
+                viewModel.onSaveClick(updatedUser)
+            }
+        }
     }
+
+
 
     LaunchedEffect(key1 = foodId) {
         viewModel.loadFoodDetail(foodId)
