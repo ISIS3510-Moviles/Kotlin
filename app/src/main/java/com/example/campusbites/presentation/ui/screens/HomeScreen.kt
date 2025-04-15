@@ -120,14 +120,6 @@ fun HomeScreen(
                                 contentDescription = stringResource(R.string.notifications)
                             )
                         }
-                        IconButton(onClick = { navController.navigate(NavigationRoutes.SIGNIN_SCREEN) }) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.ic_google),
-                                contentDescription = stringResource(R.string.sign_in),
-                                tint = Color.Unspecified,
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
                     }
                 )
             },

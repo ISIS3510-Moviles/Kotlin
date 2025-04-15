@@ -4,89 +4,69 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.UserDomain
-import com.example.campusbites.domain.usecase.product.GetProductByIdUseCase
-import com.example.campusbites.domain.usecase.user.CreateUserUseCase
-import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
-import com.example.campusbites.domain.usecase.user.GetUsersUseCase
+import com.example.campusbites.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class AuthViewModel @Inject constructor(
-    private val createUserUseCase: CreateUserUseCase,
-    private val getUsersUseCase: GetUsersUseCase,
-    private val getProductByIdUseCase: GetProductByIdUseCase
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    private val _user = MutableStateFlow<UserDomain?>(null)
-    val user: StateFlow<UserDomain?> = _user
+    val user: StateFlow<UserDomain?> = authRepository.currentUser
 
-    fun setUser(user: UserDomain?) {
-        _user.value = user?.copy()
+    init {
+        Log.d("AuthViewModel_Instance", "ViewModel instance created/obtained: ${this.hashCode()} observing Repo: ${authRepository.hashCode()}")
+    }
+
+    fun updateUser(user: UserDomain?) {
+        Log.d("AuthViewModel", "[${this.hashCode()}] Calling repo updateCurrentUser")
+        authRepository.updateCurrentUser(user)
     }
 
 
-    fun signOut() {
-        _user.update { null }
+    fun signOut(onComplete: () -> Unit) { // Añadimos callback por si la UI necesita reaccionar
+        viewModelScope.launch {
+            try {
+                Log.d("AuthViewModel", "[${this.hashCode()}] Calling repo signOut")
+                authRepository.signOut() // Delega al repositorio
+                withContext(Dispatchers.Main) { onComplete() }
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "[${this.hashCode()}] Error during signOut: ${e.message}")
+                // Podrías tener un callback de error también
+                withContext(Dispatchers.Main) { onComplete() } // Llama igual para desbloquear UI? O manejar error.
+            }
+        }
     }
-
     fun checkOrCreateUser(
         userId: String,
         userName: String,
         userEmail: String,
-        onSuccess: () -> Unit,
+        onSuccess: (UserDomain) -> Unit, // Pasamos el usuario por si la Activity lo necesita
         onFailure: (Exception) -> Unit
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch {
             try {
-                Log.d("API_CALL", "🔎 Buscando usuario con email: $userEmail")
-
-                val existingUser = getUsersUseCase().find { it.email == userEmail }
-
-                val userToSet = existingUser ?: UserDomain(
-                    id = userId,
-                    name = userName,
-                    email = userEmail,
-                    phone = "",
-                    role = "user",
-                    isPremium = false,
-                    badgesIds = emptyList(),
-                    schedulesIds = emptyList(),
-                    reservationsIds = emptyList(),
-                    institution = null,
-                    dietaryPreferencesTagIds = emptyList(),
-                    commentsIds = emptyList(),
-                    visitsIds = emptyList(),
-                    suscribedRestaurantIds = emptyList(),
-                    publishedAlertsIds = emptyList(),
-                    savedProducts = emptyList()
-                ).also {
-                    Log.d("API_CALL", "🚀 Creando usuario nuevo...")
-                    createUserUseCase(it)
-                }
-
+                Log.d("AuthViewModel", "[${this.hashCode()}] Calling repo performCheckOrCreateUser")
+                val userResult = authRepository.performCheckOrCreateUser(userId, userName, userEmail)
+                Log.d("AuthViewModel", "[${this.hashCode()}] Repo checkOrCreateUser success.")
                 withContext(Dispatchers.Main) {
-                    _user.value = userToSet
-                    Log.d("API_CALL", "✅ Usuario guardado en ViewModel: ${userToSet.id}")
-                    Log.d("API_CALL", "✅ Usuario guardado en ViewModel: ${_user.value!!.name}")
+                    onSuccess(userResult)
                 }
-
-                onSuccess()
             } catch (e: Exception) {
-                Log.e("API_CALL", "❌ Error en checkOrCreateUser: ${e.message}")
-                onFailure(e)
+                Log.e("AuthViewModel", "[${this.hashCode()}] Repo checkOrCreateUser failed: ${e.message}")
+                // Llama al callback de fallo
+                withContext(Dispatchers.Main) {
+                    onFailure(e)
+                }
             }
         }
     }
 
-    fun updateUser(user: UserDomain) {
-
-    }
-
+    // Ya no es necesario si no hay lógica extra
+    // fun updateUser(user: UserDomain) { ... }
 }

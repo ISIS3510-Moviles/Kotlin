@@ -60,7 +60,7 @@ fun RestaurantDetailScreen(
             }
 
             val updatedUser = currentUser.copy(suscribedRestaurantIds = updatedIds)
-            authViewModel.setUser(updatedUser)
+            authViewModel.updateUser(updatedUser)
             viewModel.onSaveClick(updatedUser)
         }
     }

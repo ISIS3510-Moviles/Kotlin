@@ -27,7 +27,7 @@ import com.example.campusbites.presentation.GoogleSignInActivity
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 @Composable
-fun SignInScreen(navController: NavController, authViewModel: AuthViewModel) {
+fun SignInScreen() {
     val context = LocalContext.current
 
     Column(

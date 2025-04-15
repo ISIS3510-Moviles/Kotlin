@@ -56,7 +56,7 @@ fun FoodDetailScreen(
             }
 
             val updatedUser = currentUser.copy(savedProducts = updatedProducts)
-            authViewModel.setUser(updatedUser)
+            authViewModel.updateUser(updatedUser)
             viewModel.onSaveClick(updatedUser)
         }
     }
