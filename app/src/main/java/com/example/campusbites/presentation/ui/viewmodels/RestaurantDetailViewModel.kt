@@ -50,7 +50,7 @@ class RestaurantDetailViewModel @Inject constructor(
                     products = products,
                     reviews = reviews,
                     popularProducts = products.sortedByDescending { it.rating }.take(5),
-                    under20Products = products.filter { it.price <= 20000 }
+                    under20Products = products.filter { it.price <= 20000 } // TODO usecase required
                 )
             }
         }

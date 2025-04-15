@@ -21,7 +21,7 @@ class ProductRepositoryImpl @Inject constructor(
 
     override suspend fun getProductsByRestaurant(id: String): List<ProductDTO> {
         val allProducts = apiService.getProducts()
-        val filteredProducts = allProducts.filter { it.restaurant_id == id }
+        val filteredProducts = allProducts.filter { it.restaurant_id == id } // TODO usecase required
         return filteredProducts
     }
 

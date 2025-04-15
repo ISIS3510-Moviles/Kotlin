@@ -34,7 +34,7 @@ class FoodDetailViewModel @Inject constructor(
 
             loadedProduct.let { product ->
                 val allIngredients = getIngredientsUseCase()
-                _ingredients.value = allIngredients.filter { ingredient ->
+                _ingredients.value = allIngredients.filter { ingredient -> // TODO usecase required
                     product.ingredientsIds.contains(ingredient.id)
                 }
             }
