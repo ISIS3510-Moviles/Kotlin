@@ -19,6 +19,7 @@ import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
     @GET("restaurant")
@@ -78,5 +79,10 @@ interface ApiService {
     @POST("user/recommend")
     suspend fun getRecommendations(@Body recommendationDTO: RecommendationDTO ): Response<List<RecommendationRestaurantDTO>>
 
+    @GET("restaurant")
+    suspend fun searchRestaurants(@Query("nameMatch") searchTerm: String?): Response<List<RestaurantDTO>>
+
+    @GET("product")
+    suspend fun searchProducts(@Query("nameMatch") searchTerm: String?): Response<List<ProductDTO>>
 
 }

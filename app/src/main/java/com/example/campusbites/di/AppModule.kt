@@ -2,6 +2,7 @@ package com.example.campusbites.di
 
 import android.content.Context
 import androidx.credentials.CredentialManager
+import com.example.campusbites.data.cache.InMemoryAlertCache
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.repository.AlertRepositoryImpl
@@ -63,7 +64,6 @@ object AppModule {
     fun provideRecommendationRepository(apiService: ApiService): RecommendationRepository {
         return RecommendationRepositoryImpl(apiService)
     }
-
 
     @Provides
     @Singleton
@@ -130,6 +130,12 @@ object AppModule {
         abstract fun bindAlertRepository(
             alertRepositoryImpl: AlertRepositoryImpl
         ): AlertRepository
+    }
+
+    @Provides
+    @Singleton
+    fun provideInMemoryAlertCache(): InMemoryAlertCache {
+        return InMemoryAlertCache()
     }
 
 
