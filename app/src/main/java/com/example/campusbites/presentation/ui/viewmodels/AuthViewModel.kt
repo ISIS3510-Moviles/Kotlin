@@ -85,38 +85,8 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun addProductToUser(
-        productId: String,
-        onSuccess: () -> Unit,
-        onFailure: (Exception) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val currentUser = _user.value
-                    ?: throw Exception("No hay usuario autenticado para actualizar")
-                Log.d("API_CALL", "Añadiendo producto $productId al usuario ${currentUser.id}")
+    fun updateUser(user: UserDomain) {
 
-                // Obtener el objeto ProductDomain a partir del productId
-                val productToAdd = getProductByIdUseCase(productId)
-
-                // Crea una copia del usuario actual, añadiendo el nuevo producto a la lista
-                val updatedUser = currentUser.copy(
-                    savedProducts = currentUser.savedProducts + productToAdd
-                )
-
-                // Realiza la petición POST para actualizar (o crear) el usuario con el nuevo producto.
-                createUserUseCase(updatedUser)
-
-                withContext(Dispatchers.Main) {
-                    _user.value = updatedUser
-                    Log.d("API_CALL", "Usuario actualizado con el nuevo producto guardado")
-                    onSuccess()
-                }
-            } catch (e: Exception) {
-                Log.e("API_CALL", "Error al añadir producto: ${e.message}")
-                onFailure(e)
-            }
-        }
     }
 
 }

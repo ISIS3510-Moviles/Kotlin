@@ -27,7 +27,7 @@ fun ArriveSection() {
 
     if (permissionState.status.isGranted) {
         Column(modifier = Modifier.fillMaxSize()) {
-            Box(modifier = Modifier.weight(1f)) { // Map occupies only part of the screen
+            Box(modifier = Modifier.weight(1f)) {
                 MapView(viewModel)
             }
 
@@ -50,27 +50,25 @@ fun ArriveSection() {
 
 @Composable
 fun MapView(viewModel: RestaurantDetailViewModel) {
-    val restaurants by viewModel.restaurants.collectAsState()
+    val restaurant = viewModel.uiState.collectAsState().value.restaurant
 
-    val initialLocation = LatLng(4.603085, -74.065274) // Initial point
+    val defaultLocation = LatLng(4.603085, -74.065274)
+    val targetLocation = restaurant?.let { LatLng(it.latitude, it.longitude) } ?: defaultLocation
 
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(initialLocation, 14f)
-    }
-
-    // Load all restaurants when the map starts
-    LaunchedEffect(Unit) {
-        viewModel.loadAllRestaurants()
+        position = CameraPosition.fromLatLngZoom(targetLocation, 16f)
     }
 
     GoogleMap(
-        modifier = Modifier.fillMaxSize().padding(16.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(16.dp),
         cameraPositionState = cameraPositionState
     ) {
-        restaurants.forEach { restaurant ->
+        restaurant?.let {
             Marker(
-                state = rememberMarkerState(position = LatLng(restaurant.latitude, restaurant.longitude)),
-                title = restaurant.name,
+                state = rememberMarkerState(position = LatLng(it.latitude, it.longitude)),
+                title = it.name,
                 snippet = "Tap for more info"
             )
         }

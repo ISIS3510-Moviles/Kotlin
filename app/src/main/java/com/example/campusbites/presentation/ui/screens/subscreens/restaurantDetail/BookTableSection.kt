@@ -34,6 +34,8 @@ fun BookTableSection(authViewModel: AuthViewModel) {
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
 
+    val primaryBlue = Color(0xFF1565C0) // Azul consistente con el otro componente
+
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
@@ -67,11 +69,11 @@ fun BookTableSection(authViewModel: AuthViewModel) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Text("Date:", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Date:", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
                     .clickable { datePickerDialog.show() },
                 contentAlignment = Alignment.CenterStart
@@ -79,11 +81,11 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                 Text(text = if (selectedDate.isNotEmpty()) selectedDate else "MM/DD/YYYY")
             }
 
-            Text("Hour", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Hour", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
                     .clickable(enabled = selectedDate.isNotEmpty()) {
                         showHourDropdown = true
@@ -106,23 +108,23 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                 }
             }
 
-            Text("Comensals", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Comensals", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 IconButton(onClick = { if (comensals > 1) comensals-- }) {
-                    Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                    Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
 
                 Text(text = comensals.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
                 IconButton(onClick = { comensals++ }) {
-                    Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                    Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
             }
 
@@ -146,7 +148,7 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                         }
                     }
                 },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
+                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Book", color = Color.White, fontWeight = FontWeight.Bold)
@@ -154,3 +156,4 @@ fun BookTableSection(authViewModel: AuthViewModel) {
         }
     }
 }
+

@@ -53,7 +53,7 @@ fun RestaurantListRow(
 
         if (restaurants.isEmpty()) {
             Text(
-                "No hay restaurantes disponibles",
+                "There are no restaurants available at the moment",
                 style = MaterialTheme.typography.bodyMedium
             )
         } else {
