@@ -89,4 +89,7 @@ interface ApiService {
     @GET("reservation/{id}")
     suspend fun getReservationById(@Path("id") id: String): ReservationDTO
 
+    @POST("reservation")
+    suspend fun createReservation(@Body reservationDTO: ReservationDTO): Boolean
+
 }

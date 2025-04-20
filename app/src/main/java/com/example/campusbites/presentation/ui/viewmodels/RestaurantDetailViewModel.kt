@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.domain.model.CommentDomain
 import com.example.campusbites.domain.model.ProductDomain
+import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
+import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import com.google.firebase.perf.ktx.performance
@@ -27,6 +29,7 @@ class RestaurantDetailViewModel @Inject constructor(
     private val getReviewsByRestaurantUseCase: GetCommentsUseCase,
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
+    private val createReservationUseCase: CreateReservationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -64,6 +67,12 @@ class RestaurantDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val allRestaurants = getRestaurantsUseCase()
             _restaurants.value = allRestaurants
+        }
+    }
+
+    fun createReservation(reservation: ReservationDomain) {
+        viewModelScope.launch {
+            createReservationUseCase(reservation)
         }
     }
 }

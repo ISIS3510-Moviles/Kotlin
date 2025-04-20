@@ -7,6 +7,9 @@ import java.time.LocalDateTime
 data class ReservationDomain(
     val id: String,
     val datetime: String,
+    val time: String,
     val numberCommensals: Int,
     val isCompleted: Boolean,
+    val restaurantId: String,
+    val userId: String
 )

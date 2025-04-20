@@ -15,8 +15,11 @@ class GetReservationByIdUseCase @Inject constructor(
         return ReservationDomain(
             id = reservation.id,
             datetime = reservation.date,
+            time = reservation.time,
             numberCommensals = reservation.numberComensals,
             isCompleted = reservation.isCompleted,
+            restaurantId = reservation.restaurant_id,
+            userId = reservation.user_id
         )
     }
 }

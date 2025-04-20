@@ -4,4 +4,7 @@ import com.example.campusbites.data.dto.ReservationDTO
 
 interface ReservationRepository {
     suspend fun getReservationById(id: String): ReservationDTO
+
+    suspend fun createReservation(reservationDTO: ReservationDTO): Boolean
+
 }

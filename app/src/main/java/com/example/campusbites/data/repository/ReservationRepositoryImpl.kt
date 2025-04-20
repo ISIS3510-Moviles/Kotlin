@@ -11,4 +11,10 @@ class ReservationRepositoryImpl @Inject constructor(
     override suspend fun getReservationById(id: String): ReservationDTO {
         return apiService.getReservationById(id)
     }
+
+    override suspend fun createReservation(reservationDTO: ReservationDTO): Boolean {
+        return apiService.createReservation(reservationDTO)
+    }
+
+
 }

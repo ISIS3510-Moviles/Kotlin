@@ -16,7 +16,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.campusbites.domain.model.ReservationDomain
+import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
 import java.util.*
 
 import com.google.firebase.analytics.ktx.analytics
@@ -26,7 +29,8 @@ import com.google.firebase.ktx.Firebase
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun BookTableSection(authViewModel: AuthViewModel) {
+fun BookTableSection(authViewModel: AuthViewModel, restaurant: RestaurantDomain, restaurantDetailViewModel: RestaurantDetailViewModel) {
+    val user by authViewModel.user.collectAsState()
     val analytics = Firebase.analytics
     val isUserLoggedIn = authViewModel.user.value != null
 
@@ -144,20 +148,40 @@ fun BookTableSection(authViewModel: AuthViewModel) {
 
             Button(
                 onClick = {
-                    errorMessage = when {
-                        !isUserLoggedIn -> "You must be logged in to book"
-                        selectedDate.isEmpty() -> "Please select a date"
-                        selectedHour.isEmpty() -> "Please select an hour"
-                        else -> {
-                            analytics.logEvent("restaurant_reservation_used") {
-                                // Puedes añadir parámetros si lo deseas
-                                param("date", selectedDate)
-                                param("hour", selectedHour)
-                            }
-                            // Ejecutar acción de reserva aquí
-                            ""
-                        }
+                    // 1) Validación
+                    val validationError = when {
+                        !isUserLoggedIn     -> "You must be logged in to book"
+                        selectedDate.isEmpty()  -> "Please select a date"
+                        selectedHour.isEmpty()  -> "Please select an hour"
+                        else                     -> null
                     }
+
+                    if (validationError != null) {
+                        // Si hay error, lo muestro
+                        errorMessage = validationError
+                        return@Button
+                    }
+
+                    // 2) No hay error → limpio mensaje y ejecuto la reserva
+                    errorMessage = ""
+                    analytics.logEvent("restaurant_reservation_used") {
+                        param("date", selectedDate)
+                        param("hour", selectedHour)
+                    }
+
+                    // Combinas fecha y hora si quieres un solo campo datetime,
+                    // o los mantienes separados según tu modelo
+                    restaurantDetailViewModel.createReservation(
+                        ReservationDomain(
+                            id = "",
+                            restaurantId = restaurant.id,
+                            userId = user!!.id,
+                            datetime = "$selectedDate $selectedHour",
+                            time = selectedHour,
+                            numberCommensals = comensals,
+                            isCompleted = false
+                        )
+                    )
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 modifier = Modifier.fillMaxWidth()
