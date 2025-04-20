@@ -19,7 +19,7 @@ class UpdateUserUseCase @Inject constructor(
             isPremium = user.isPremium,
             badgesIds = user.badgesIds,
             schedulesIds = user.schedulesIds,
-            reservationsIds = user.reservationsIds,
+            reservationsIds = user.reservationsDomain.map { it.id },
             institutionId = "dnjV9tmwbciWZQipfI9D",
             dietaryPreferencesTagIds = user.dietaryPreferencesTagIds,
             commentsIds = user.commentsIds,

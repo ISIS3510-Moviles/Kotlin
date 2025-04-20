@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -107,10 +108,19 @@ fun HomeScreen(
                     actions = {
                         if (uiState.isLoadingNetwork) {
                             CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp).padding(end = 8.dp),
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .padding(end = 8.dp),
                                 strokeWidth = 2.dp
                             )
                         }
+                        IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = stringResource(R.string.reservations)
+                            )
+                        }
+
                         IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
                             Icon(
                                 imageVector = Icons.Filled.Notifications,
@@ -121,7 +131,9 @@ fun HomeScreen(
                 )
             },
             content = { innerPadding ->
-                Box(modifier = Modifier.padding(innerPadding).fillMaxSize()) {
+                Box(modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()) {
                     if (uiState.isLoadingInitial) {
                         Column(
                             verticalArrangement = Arrangement.Center,

@@ -13,6 +13,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.campusbites.domain.repository.AuthRepository
+import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -62,7 +63,7 @@ class AuthRepositoryImpl @Inject constructor(
                     isPremium = false,
                     badgesIds = emptyList(),
                     schedulesIds = emptyList(),
-                    reservationsIds = emptyList(),
+                    reservationsDomain = emptyList(),
                     institution = null,
                     dietaryPreferencesTagIds = emptyList(),
                     commentsIds = emptyList(),
