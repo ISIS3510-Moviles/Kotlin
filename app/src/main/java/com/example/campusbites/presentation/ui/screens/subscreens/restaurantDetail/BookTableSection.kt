@@ -19,9 +19,15 @@ import androidx.compose.ui.unit.sp
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import java.util.*
 
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
+
+
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
 fun BookTableSection(authViewModel: AuthViewModel) {
+    val analytics = Firebase.analytics
     val isUserLoggedIn = authViewModel.user.value != null
 
     var selectedDate by remember { mutableStateOf("") }
@@ -143,6 +149,11 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                         selectedDate.isEmpty() -> "Please select a date"
                         selectedHour.isEmpty() -> "Please select an hour"
                         else -> {
+                            analytics.logEvent("restaurant_reservation_used") {
+                                // Puedes añadir parámetros si lo deseas
+                                param("date", selectedDate)
+                                param("hour", selectedHour)
+                            }
                             // Ejecutar acción de reserva aquí
                             ""
                         }
