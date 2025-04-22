@@ -35,14 +35,14 @@ fun ReservationCard(
         val datePart = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
         val timePart = LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
         val reservationDateTime = LocalDateTime.of(datePart, timePart)
-        if (reservationDateTime.isBefore(LocalDateTime.now())) "Confirmed" else status
+        if (reservationDateTime.isBefore(LocalDateTime.now())) "Completed" else status
     } catch (e: Exception) {
         status
     }
 
     val statusColor = when (resolvedStatus) {
         "Pending" -> Color.Red
-        "Confirmed" -> Color.Green
+        "Completed" -> Color.Black
         else -> MaterialTheme.colorScheme.primary
     }
 
@@ -106,7 +106,7 @@ fun ReservationCard(
             // Estado de la reservación
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = if (resolvedStatus == "Confirmed") androidx.compose.material.icons.Icons.Filled.CheckCircle else androidx.compose.material.icons.Icons.Filled.Warning,
+                    imageVector = if (resolvedStatus == "Completed") androidx.compose.material.icons.Icons.Filled.CheckCircle else androidx.compose.material.icons.Icons.Filled.Warning,
                     contentDescription = "Estado de la reservación",
                     tint = statusColor
                 )

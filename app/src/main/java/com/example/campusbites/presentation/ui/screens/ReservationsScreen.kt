@@ -111,7 +111,7 @@ fun ReservationsScreen(
                             date = dt.format(displayDateFormatter),
                             time = dt.format(displayTimeFormatter),
                             guests = res.numberCommensals,
-                            status = if (res.isCompleted) "Completed" else "Pending",
+                            status = "Completed",
                             modifier = Modifier.fillMaxWidth()
                         )
                     }
