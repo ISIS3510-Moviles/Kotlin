@@ -11,4 +11,6 @@
     <string name="sign_in_description">With Campus Bites, finding delicious\noptions near you and within your\nbudget has never been easier. Are you\nvegan, vegetarian, or looking for\nsomething gluten-free? We\'ve got you\ncovered! The app recommends the\nbest spots based on your tastes and\nlocation, so you can enjoy every bite\nwithout the hassle.</string>
     <string name="reservations">Reservations</string>
     <string name="there_are_not_reservations">There are not reservations</string>
+    <string name="upcoming_reservations">Upcoming reservations</string>
+    <string name="past_reservations">Past reservations</string>
 </resources>

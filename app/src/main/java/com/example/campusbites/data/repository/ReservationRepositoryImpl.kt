@@ -1,5 +1,6 @@
 package com.example.campusbites.data.repository
 
+import com.example.campusbites.data.dto.CreateReservationDTO
 import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.repository.ReservationRepository
@@ -12,8 +13,8 @@ class ReservationRepositoryImpl @Inject constructor(
         return apiService.getReservationById(id)
     }
 
-    override suspend fun createReservation(reservationDTO: ReservationDTO): Boolean {
-        return apiService.createReservation(reservationDTO)
+    override suspend fun createReservation(createRreservationDTO: CreateReservationDTO): ReservationDTO {
+        return apiService.createReservation(createRreservationDTO)
     }
 
 

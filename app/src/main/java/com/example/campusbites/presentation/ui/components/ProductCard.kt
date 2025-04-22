@@ -34,12 +34,9 @@ fun ProductCard(
     Card(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-        ),
         modifier = modifier
             .width(310.dp)
-            .height(140.dp)
+            .height(240.dp)
             .padding(8.dp)
             .clickable { onProductClick(product.id) }
     ) {
@@ -59,10 +56,12 @@ fun ProductCard(
             Spacer(modifier = Modifier.width(12.dp))
 
             Column(
+                verticalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
                     .padding(2.dp)
+                    .fillMaxHeight()
             ) {
                 Text(
                     text = product.name,
@@ -70,7 +69,7 @@ fun ProductCard(
                     overflow = TextOverflow.Ellipsis
                 )
 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
@@ -81,26 +80,30 @@ fun ProductCard(
                     )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = product.rating.toString() +
-                                " (" +product.commentsIds.size.toString() + " comments)",
+                        text = product.rating.toString(),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
 
-                Spacer(modifier = Modifier.height(2.dp))
+                Spacer(modifier = Modifier.height(8.dp))
 
-                TagChip(
-                    product.foodTags.first().name,
-                    modifier = Modifier.padding(top = 2.dp)
+                Text(
+                    text = " (" +product.commentsIds.size.toString() + " comments)",
+                    style = MaterialTheme.typography.bodySmall
                 )
+
+                Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
                     text = "$$formattedPrice",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.tertiary,
-                    modifier = Modifier
-                        .align(Alignment.End)
-                        .padding(end=4.dp)
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                TagChip(
+                    product.foodTags.first().name,
+                    modifier = Modifier.padding(top = 2.dp)
                 )
             }
         }

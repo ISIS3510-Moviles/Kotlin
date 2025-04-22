@@ -3,6 +3,7 @@ package com.example.campusbites.data.network
 import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.CommentDTO
 import com.example.campusbites.data.dto.CreateAlertDTO
+import com.example.campusbites.data.dto.CreateReservationDTO
 import com.example.campusbites.data.dto.DietaryTagDTO
 import com.example.campusbites.data.dto.FoodTagDTO
 import com.example.campusbites.data.dto.IngredientDTO
@@ -90,6 +91,6 @@ interface ApiService {
     suspend fun getReservationById(@Path("id") id: String): ReservationDTO
 
     @POST("reservation")
-    suspend fun createReservation(@Body reservationDTO: ReservationDTO): Boolean
+    suspend fun createReservation(@Body reservationDTO: CreateReservationDTO): ReservationDTO
 
 }

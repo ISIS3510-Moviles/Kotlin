@@ -1,11 +1,9 @@
 package com.example.campusbites.data.dto
 
-import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class ReservationDTO (
-    val id: String,
+data class CreateReservationDTO (
     val date: String,
     val time: String,
     val numberComensals: Int,

@@ -70,9 +70,9 @@ class RestaurantDetailViewModel @Inject constructor(
         }
     }
 
-    fun createReservation(reservation: ReservationDomain) {
+    fun createReservation(reservation: ReservationDomain, authViewModel: AuthViewModel) {
         viewModelScope.launch {
-            createReservationUseCase(reservation)
+            createReservationUseCase(reservation, authViewModel)
         }
     }
 }
