@@ -3,6 +3,7 @@ package com.example.campusbites.presentation.ui.screens.subscreens.restaurantDet
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.widget.DatePicker
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -16,17 +17,26 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.campusbites.domain.model.ReservationDomain
+import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
-import java.util.*
-
+import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.ktx.logEvent
 import com.google.firebase.ktx.Firebase
-
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.*
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun BookTableSection(authViewModel: AuthViewModel) {
+fun BookTableSection(
+    authViewModel: AuthViewModel,
+    restaurant: RestaurantDomain,
+    restaurantDetailViewModel: RestaurantDetailViewModel
+) {
+    val user by authViewModel.user.collectAsState()
     val analytics = Firebase.analytics
     val isUserLoggedIn = authViewModel.user.value != null
 
@@ -34,35 +44,53 @@ fun BookTableSection(authViewModel: AuthViewModel) {
     var selectedHour by remember { mutableStateOf("") }
     var showHourDropdown by remember { mutableStateOf(false) }
     var comensals by remember { mutableStateOf(1) }
-
     var errorMessage by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+    val primaryBlue = Color(0xFF1565C0)
 
-    val primaryBlue = Color(0xFF1565C0) // Azul consistente con el otro componente
+    // Formateadores:
+    val displayDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val jsonDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE             // yyyy-MM-dd
+    val displayTimeFormatter = DateTimeFormatter.ofPattern("H:mm")
+    val jsonTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")       // 24h with leading zero
 
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            val picked = Calendar.getInstance().apply {
-                set(year, month, dayOfMonth)
-            }
+            val picked = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
             if (picked.before(calendar)) {
                 errorMessage = "You can't select a past date"
             } else {
-                selectedDate = "${month + 1}/$dayOfMonth/$year"
+                selectedDate = displayDateFormatter.format(
+                    LocalDate.of(year, month + 1, dayOfMonth)
+                )
                 errorMessage = ""
+                // reset hour when date changes
+                selectedHour = ""
             }
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH)
-    ).apply {
-        datePicker.minDate = calendar.timeInMillis
-    }
+    ).apply { datePicker.minDate = calendar.timeInMillis }
 
-    val availableHours = listOf("7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00")
+    // Horas disponibles, filtradas si la fecha es hoy
+    val availableHours = (7..23).map { it.toString() + ":00" }
+    val filteredHours by remember(selectedDate) {
+        derivedStateOf {
+            if (selectedDate.isNotEmpty()) {
+                val pickedDate = LocalDate.parse(selectedDate, displayDateFormatter)
+                if (pickedDate.isEqual(LocalDate.now())) {
+                    availableHours.filter { hour ->
+                        val time = LocalTime.parse(hour, displayTimeFormatter)
+                        time.isAfter(LocalTime.now())
+                    }
+                } else availableHours
+            } else emptyList()
+        }
+    }
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -75,6 +103,7 @@ fun BookTableSection(authViewModel: AuthViewModel) {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
+            // Date picker
             Text("Date:", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
@@ -87,22 +116,21 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                 Text(text = if (selectedDate.isNotEmpty()) selectedDate else "MM/DD/YYYY")
             }
 
+            // Hour dropdown
             Text("Hour", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
-                    .clickable(enabled = selectedDate.isNotEmpty()) {
-                        showHourDropdown = true
-                    }
+                    .clickable(enabled = selectedDate.isNotEmpty()) { showHourDropdown = true }
             ) {
                 Text(text = if (selectedHour.isNotEmpty()) selectedHour else "Select hour")
                 DropdownMenu(
                     expanded = showHourDropdown,
                     onDismissRequest = { showHourDropdown = false }
                 ) {
-                    availableHours.forEach { hour ->
+                    filteredHours.forEach { hour ->
                         DropdownMenuItem(
                             text = { Text(hour) },
                             onClick = {
@@ -114,6 +142,7 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                 }
             }
 
+            // Comensales
             Text("Comensals", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Row(
                 modifier = Modifier
@@ -126,9 +155,7 @@ fun BookTableSection(authViewModel: AuthViewModel) {
                 IconButton(onClick = { if (comensals > 1) comensals-- }) {
                     Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
-
-                Text(text = comensals.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
+                Text(comensals.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
                 IconButton(onClick = { comensals++ }) {
                     Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
@@ -144,20 +171,48 @@ fun BookTableSection(authViewModel: AuthViewModel) {
 
             Button(
                 onClick = {
-                    errorMessage = when {
-                        !isUserLoggedIn -> "You must be logged in to book"
-                        selectedDate.isEmpty() -> "Please select a date"
-                        selectedHour.isEmpty() -> "Please select an hour"
-                        else -> {
-                            analytics.logEvent("restaurant_reservation_used") {
-                                // Puedes añadir parámetros si lo deseas
-                                param("date", selectedDate)
-                                param("hour", selectedHour)
-                            }
-                            // Ejecutar acción de reserva aquí
-                            ""
-                        }
+                    // Validación
+                    val validationError = when {
+                        !isUserLoggedIn       -> "You must be logged in to book"
+                        selectedDate.isEmpty()  -> "Please select a date"
+                        selectedHour.isEmpty()  -> "Please select an hour"
+                        else                     -> null
                     }
+                    if (validationError != null) {
+                        errorMessage = validationError
+                        return@Button
+                    }
+
+                    // Preparar formatos para JSON
+                    val jsonDate = LocalDate.parse(selectedDate, displayDateFormatter)
+                        .format(jsonDateFormatter)
+                    val jsonTime = LocalTime.parse(selectedHour, displayTimeFormatter)
+                        .format(jsonTimeFormatter)
+
+                    // Ejecutar reserva
+                    errorMessage = ""
+                    analytics.logEvent("restaurant_reservation_used") {
+                        param("date", jsonDate)
+                        param("time", jsonTime)
+                    }
+                    restaurantDetailViewModel.createReservation(
+                        ReservationDomain(
+                            id = "",
+                            restaurantId = restaurant.id,
+                            userId = user!!.id,
+                            datetime = jsonDate,
+                            time = jsonTime,
+                            numberCommensals = comensals,
+                            isCompleted = false
+                        ),
+                        authViewModel
+                    )
+
+                    // Mostrar confirmación y resetear campos
+                    Toast.makeText(context, "Reservation confirmed!", Toast.LENGTH_SHORT).show()
+                    selectedDate = ""
+                    selectedHour = ""
+                    comensals = 1
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
                 modifier = Modifier.fillMaxWidth()
@@ -167,4 +222,3 @@ fun BookTableSection(authViewModel: AuthViewModel) {
         }
     }
 }
-

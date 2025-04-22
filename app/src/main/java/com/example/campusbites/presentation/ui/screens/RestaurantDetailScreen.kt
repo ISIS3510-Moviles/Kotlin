@@ -94,7 +94,7 @@ fun RestaurantDetailScreen(
                     affordableProducts = uiState.under20Products,
                     onProductClick =  onProductClick
                 )
-                1 -> BookTableSection(authViewModel = authViewModel)
+                1 -> BookTableSection(authViewModel = authViewModel, restaurant = restaurant, restaurantDetailViewModel = viewModel)
                 2 -> ArriveSection()
                 3 -> ReviewsSection()
             }

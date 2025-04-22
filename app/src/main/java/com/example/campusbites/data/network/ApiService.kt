@@ -3,6 +3,7 @@ package com.example.campusbites.data.network
 import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.CommentDTO
 import com.example.campusbites.data.dto.CreateAlertDTO
+import com.example.campusbites.data.dto.CreateReservationDTO
 import com.example.campusbites.data.dto.DietaryTagDTO
 import com.example.campusbites.data.dto.FoodTagDTO
 import com.example.campusbites.data.dto.IngredientDTO
@@ -10,6 +11,7 @@ import com.example.campusbites.data.dto.InstitutionDTO
 import com.example.campusbites.data.dto.ProductDTO
 import com.example.campusbites.data.dto.RecommendationDTO
 import com.example.campusbites.data.dto.RecommendationRestaurantDTO
+import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UserDTO
@@ -84,5 +86,11 @@ interface ApiService {
 
     @GET("product")
     suspend fun searchProducts(@Query("nameMatch") searchTerm: String?): Response<List<ProductDTO>>
+
+    @GET("reservation/{id}")
+    suspend fun getReservationById(@Path("id") id: String): ReservationDTO
+
+    @POST("reservation")
+    suspend fun createReservation(@Body reservationDTO: CreateReservationDTO): ReservationDTO
 
 }

@@ -12,12 +12,14 @@ import com.example.campusbites.domain.model.InstitutionDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AlertRepository
+import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
 import java.time.Instant
 import java.time.ZoneOffset
 import javax.inject.Inject
 
 class AlertRepositoryImpl @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val GetReservationByIdUseCase: GetReservationByIdUseCase
 ) : AlertRepository {
 
     private suspend fun mapDtoToDomain(dto: AlertDTO): AlertDomain {
@@ -38,7 +40,7 @@ class AlertRepositoryImpl @Inject constructor(
             isPremium = userDTO.isPremium,
             badgesIds = userDTO.badgesIds,
             schedulesIds = userDTO.schedulesIds,
-            reservationsIds = userDTO.reservationsIds,
+            reservationsDomain = userDTO.reservationsIds.map { reservationId -> GetReservationByIdUseCase(reservationId) },
             institution = InstitutionDomain(
                 id = userDTO.institutionId,
                 name = "Institución desconocida",
