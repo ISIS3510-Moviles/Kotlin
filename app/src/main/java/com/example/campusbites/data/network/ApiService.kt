@@ -78,6 +78,9 @@ interface ApiService {
     @GET("user")
     suspend fun getUsers(): List<UserDTO>
 
+    @GET("user/email/{email}")
+    suspend fun getUserByEmail(@Path("email") email: String): UserDTO
+
     @POST("user/recommend")
     suspend fun getRecommendations(@Body recommendationDTO: RecommendationDTO ): Response<List<RecommendationRestaurantDTO>>
 

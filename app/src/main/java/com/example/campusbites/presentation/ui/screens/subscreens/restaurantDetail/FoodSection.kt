@@ -1,6 +1,8 @@
 package com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -16,10 +18,12 @@ fun FoodSection(
     affordableProducts: List<ProductDomain>,
     onProductClick: (String) -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .verticalScroll(scrollState)
     ) {
         if (popularProducts.isNotEmpty()) {
             ProductListRow(
@@ -31,7 +35,7 @@ fun FoodSection(
             )
         } else {
             Text(
-                text = "No restaurants available",
+                text = "No Products Available",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .fillMaxWidth()

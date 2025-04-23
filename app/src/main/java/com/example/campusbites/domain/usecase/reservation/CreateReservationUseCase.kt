@@ -1,5 +1,6 @@
 package com.example.campusbites.domain.usecase.reservation
 
+import android.util.Log
 import com.example.campusbites.data.dto.CreateReservationDTO
 import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.domain.model.ReservationDomain
@@ -29,6 +30,7 @@ class CreateReservationUseCase @Inject constructor(
         val createdReservationDomain = getReservationByIdUseCase(reservation.id)
         val user = getUserByIdUseCase(reservationDomain.userId)
         val updatedUser = user.copy(reservationsDomain = user.reservationsDomain + createdReservationDomain)
+        Log.d("CreateReservationUseCase", "User reservations updated: ${updatedUser.reservationsDomain}")
         updateUserUseCase(updatedUser.id, updatedUser)
         authViewModel.updateUser(updatedUser)
         return reservation

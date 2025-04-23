@@ -9,11 +9,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -29,9 +31,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun RestaurantHeader(restaurant: RestaurantDomain,
-                     onClick: (String) -> Unit,
-                     suscribedRestaurantIds: List<String>) {
+fun RestaurantHeader(
+    restaurant: RestaurantDomain?,
+    onClick: (String) -> Unit,
+    suscribedRestaurantIds: List<String>,
+    isLoading: Boolean
+) {
     val context = LocalContext.current
     var userDistance by remember { mutableStateOf<Double?>(null) }
     val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -41,49 +46,69 @@ fun RestaurantHeader(restaurant: RestaurantDomain,
     LaunchedEffect(permissionState.status) {
         if (permissionState.status.isGranted) {
             requestLocationUpdates(fusedLocationProviderClient) { location ->
-                userDistance = calculateDistance(location, restaurant)
+                restaurant?.let {
+                    userDistance = calculateDistance(location, it)
+                }
             }
         } else {
             permissionState.launchPermissionRequest()
         }
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Image(
-            painter = rememberAsyncImagePainter(restaurant.profilePhoto),
-            contentDescription = "Restaurant Image",
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(16f / 9f)
-                .padding(bottom = 8.dp)
-        )
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        if (isLoading) {
+            CircularProgressIndicator(modifier = Modifier.padding(16.dp))
+        } else if (restaurant != null) {
+            Image(
+                painter = rememberAsyncImagePainter(restaurant.profilePhoto),
+                contentDescription = "Restaurant Image",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(16f / 9f)
+                    .padding(bottom = 8.dp)
+            )
 
-        Text(
-            text = restaurant.name,
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold
-        )
-
-        if (permissionState.status.isGranted) {
             Text(
-                text = userDistance?.let { "${"%.2f".format(it)} m" } ?: "Calculating distance...",
+                text = restaurant.name,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = Color.Blue
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+
+            if (permissionState.status.isGranted) {
+                Text(
+                    text = userDistance?.let { "${"%.2f".format(it)} m" } ?: "Calculating distance...",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            } else {
+                Text(
+                    text = "Location permission required to show distance",
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+            }
+
+            SubscribeButton(
+                restaurantId = restaurant.id,
+                onClick = onClick,
+                suscribedRestaurantIds = suscribedRestaurantIds
             )
         } else {
             Text(
-                text = "Location permission required to show distance",
-                fontWeight = FontWeight.Bold,
-                color = Color.Red
+                text = "Restaurant not found",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(16.dp)
             )
         }
-
-        SubscribeButton(
-            restaurantId = restaurant.id,
-            onClick = onClick,
-            suscribedRestaurantIds = suscribedRestaurantIds
-        )
-
     }
 }
 

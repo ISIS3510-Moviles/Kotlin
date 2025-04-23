@@ -50,4 +50,8 @@ class UserRepositoryImpl @Inject constructor(
         return apiService.updateUser(id, user)
     }
 
+    override suspend fun getUserByEmail(email: String): UserDTO {
+        return apiService.getUserByEmail(email)
+    }
+
 }

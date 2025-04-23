@@ -14,6 +14,8 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
+import com.example.campusbites.domain.usecase.user.GetUserByEmailUseCase
+import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -23,9 +25,10 @@ import kotlinx.coroutines.SupervisorJob
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val createUserUseCase: CreateUserUseCase,
-    private val getUsersUseCase: GetUsersUseCase,
+    private val getUserByEmailUseCase: GetUserByEmailUseCase,
     private val userSessionRepository: UserSessionRepository,
-    private val updateUserUseCase: UpdateUserUseCase
+    private val updateUserUseCase: UpdateUserUseCase,
+    private val getUserByIdUseCase: GetUserByIdUseCase
 ) : AuthRepository {
 
     private val _currentUser = MutableStateFlow<UserDomain?>(null)
@@ -48,13 +51,22 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun performCheckOrCreateUser(userId: String, userName: String, userEmail: String): UserDomain =
-        withContext(Dispatchers.IO) {
-            try {
-                Log.d("AuthRepository", "🔎 Buscando usuario con email: $userEmail")
-                val existingUser = getUsersUseCase().find { it.email == userEmail }
+    override suspend fun performCheckOrCreateUser(
+        userId: String,
+        userName: String,
+        userEmail: String
+    ): UserDomain = withContext(Dispatchers.IO) {
 
-                val userToSet = existingUser ?: UserDomain(
+        try {
+            Log.d("AuthRepository", "🔎 Buscando usuario con email: $userEmail")
+
+            val existingUser = getUserByEmailUseCase(userEmail)
+            Log.d("AuthRepository", "🔍 Usuario encontrado? ${existingUser != null}")
+
+            val userToSet: UserDomain = if (existingUser != null) {
+                getUserByIdUseCase(existingUser.id)
+            } else {
+                UserDomain(
                     id = userId,
                     name = userName,
                     email = userEmail,
@@ -72,20 +84,21 @@ class AuthRepositoryImpl @Inject constructor(
                     publishedAlertsIds = emptyList(),
                     savedProducts = emptyList()
                 ).also { newUser ->
-                    Log.d("AuthRepository", "🚀 Creando usuario nuevo...")
+                    Log.d("AuthRepository", "🚀 Creando usuario nuevo…")
                     createUserUseCase(newUser)
                 }
-
-                Log.d("AuthRepository", "✅ User obtained/created: ${userToSet.id}. Updating StateFlow and saving session.")
-                _currentUser.value = userToSet
-                userSessionRepository.saveUserSession(userToSet)
-
-                userToSet
-            } catch (e: Exception) {
-                Log.e("AuthRepository", "❌ Error en performCheckOrCreateUser: ${e.message}", e)
-                throw e
             }
+
+            Log.d("AuthRepository", "✅ Usuario listo: ${userToSet.id}. Guardando sesión.")
+            _currentUser.value = userToSet
+            userSessionRepository.saveUserSession(userToSet)
+
+            userToSet
+        } catch (e: Exception) {
+            Log.e("AuthRepository", "❌ Error en performCheckOrCreateUser: ${e.message}", e)
+            throw e
         }
+    }
 
     override suspend fun signOut() {
         withContext(Dispatchers.IO) {
@@ -97,7 +110,6 @@ class AuthRepositoryImpl @Inject constructor(
 
     override fun updateCurrentUser(updatedUser: UserDomain?) {
         Log.d("AuthRepository", "🔄 Updating currentUser in repository with: ${updatedUser?.id}")
-        val previousUser = _currentUser.value
         _currentUser.value = updatedUser?.copy()
 
         if (updatedUser != null) {

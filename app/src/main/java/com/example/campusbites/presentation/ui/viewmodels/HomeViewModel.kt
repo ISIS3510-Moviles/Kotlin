@@ -1,5 +1,8 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -31,7 +34,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.channels.awaitClose
 
 fun RecommendationRestaurantDomain.toRestaurantDomain(): RestaurantDomain {
     return RestaurantDomain(
@@ -72,15 +76,39 @@ class HomeViewModel @Inject constructor(
     private val getProductsUseCase: GetProductsUseCase,
     private val getRecommendationRestaurantsUseCase: GetRecommendationsUseCase,
     private val homeDataRepository: HomeDataRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val connectivityManager: ConnectivityManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    private val isOnline = callbackFlow {
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                trySend(true)
+            }
+
+            override fun onLost(network: android.net.Network) {
+                trySend(false)
+            }
+        }
+        connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val isConnected = capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+        trySend(isConnected)
+        awaitClose { connectivityManager.unregisterNetworkCallback(networkCallback) }
+    }.distinctUntilChanged()
+
     init {
         observeCache()
-        triggerNetworkFetches()
+        viewModelScope.launch {
+            isOnline.collect { online ->
+                if (online) {
+                    triggerNetworkFetches()
+                }
+            }
+        }
     }
 
     private fun observeCache() {

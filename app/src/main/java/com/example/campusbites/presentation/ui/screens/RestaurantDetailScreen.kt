@@ -81,9 +81,12 @@ fun RestaurantDetailScreen(
         var selectedTabIndex by remember { mutableStateOf(0) }
 
         Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
-            RestaurantHeader(restaurant,
+            RestaurantHeader(
+                restaurant = restaurant,
                 onClick = onSaveRestaurantClick,
-                suscribedRestaurantIds = authViewModel.user.value?.suscribedRestaurantIds ?: emptyList() )
+                suscribedRestaurantIds = authViewModel.user.value?.suscribedRestaurantIds ?: emptyList(),
+                isLoading = uiState.isLoadingNetwork
+            )
             Spacer(modifier = Modifier.height(16.dp))
             RestaurantTabs(selectedTabIndex) { index -> selectedTabIndex = index }
             Spacer(modifier = Modifier.height(16.dp))
