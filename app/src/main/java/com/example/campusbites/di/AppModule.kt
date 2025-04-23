@@ -1,6 +1,7 @@
 package com.example.campusbites.di
 
 import android.content.Context
+import android.net.ConnectivityManager
 import androidx.credentials.CredentialManager
 import com.example.campusbites.data.cache.InMemoryAlertCache
 import com.example.campusbites.data.network.ApiService
@@ -96,6 +97,12 @@ object AppModule {
     @Singleton
     fun provideProductRepository(apiService: ApiService): ProductRepository {
         return ProductRepositoryImpl(apiService)
+    }
+
+    @Provides
+    @Singleton
+    fun provideConnectivityManager(@ApplicationContext context: Context): ConnectivityManager {
+        return context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 
     @Provides

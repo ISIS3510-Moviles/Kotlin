@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilledTonalButton
@@ -34,9 +35,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalPermissionsApi::class)
 @SuppressLint("MissingPermission")
 @Composable
-fun RestaurantHeader(restaurant: RestaurantDomain,
-                     onClick: (String) -> Unit,
-                     suscribedRestaurantIds: List<String>) {
+fun RestaurantHeader(
+    restaurant: RestaurantDomain?,
+    onClick: (String) -> Unit,
+    suscribedRestaurantIds: List<String>,
+    isLoading: Boolean
+) {
     val context = LocalContext.current
     var userDistance by remember { mutableStateOf<Double?>(null) }
     val fusedLocationProviderClient = remember { LocationServices.getFusedLocationProviderClient(context) }
@@ -46,7 +50,9 @@ fun RestaurantHeader(restaurant: RestaurantDomain,
     LaunchedEffect(permissionState.status) {
         if (permissionState.status.isGranted) {
             requestLocationUpdates(fusedLocationProviderClient) { location ->
-                userDistance = calculateDistance(location, restaurant)
+                restaurant?.let {
+                    userDistance = calculateDistance(location, it)
+                }
             }
         } else {
             permissionState.launchPermissionRequest()

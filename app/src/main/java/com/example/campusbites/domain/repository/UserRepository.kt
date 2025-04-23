@@ -8,4 +8,5 @@ interface UserRepository {
     suspend fun createUser(user: UserDTO)
     suspend fun getUsers(): List<UserDTO>
     suspend fun updateUser(id: String, user: UserDTO): Boolean
+    suspend fun getUserByEmail(email: String): UserDTO
 }

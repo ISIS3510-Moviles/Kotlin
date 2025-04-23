@@ -18,11 +18,12 @@ fun FoodSection(
     affordableProducts: List<ProductDomain>,
     onProductClick: (String) -> Unit
 ) {
+    val scrollState = rememberScrollState()
     Column(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
-            .verticalScroll(rememberScrollState())
+            .verticalScroll(scrollState)
     ) {
         if (popularProducts.isNotEmpty()) {
             ProductListRow(
@@ -33,7 +34,7 @@ fun FoodSection(
             )
         } else {
             Text(
-                text = "No restaurants available",
+                text = "No Products Available",
                 style = MaterialTheme.typography.bodyMedium,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -46,7 +47,7 @@ fun FoodSection(
                 name = "Under $20.000",
                 description = "Because saving money is important",
                 products = affordableProducts,
-                onProductClick = onProductClick,
+                onProductClick = onProductClick
             )
         }
     }

@@ -1,7 +1,11 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusbites.data.preferences.HomeDataRepository
 import com.example.campusbites.domain.model.CommentDomain
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.ReservationDomain
@@ -15,12 +19,13 @@ import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCa
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class RestaurantDetailViewModel @Inject constructor(
     private val getRestaurantByIdUseCase: GetRestaurantByIdUseCase,
@@ -29,7 +34,9 @@ class RestaurantDetailViewModel @Inject constructor(
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
     private val createReservationUseCase: CreateReservationUseCase,
-    private val createCommentUseCase: CreateCommentUseCase
+    private val createCommentUseCase: CreateCommentUseCase,
+    private val homeDataRepository: HomeDataRepository,
+    private val connectivityManager: ConnectivityManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -38,13 +45,54 @@ class RestaurantDetailViewModel @Inject constructor(
     private val _restaurants = MutableStateFlow<List<RestaurantDomain>>(emptyList())
     val restaurants: StateFlow<List<RestaurantDomain>> = _restaurants
 
-    fun loadRestaurantDetails(restaurantId: String) {
+    private val _restaurantId = MutableStateFlow<String?>(null)
+
+    private val isOnline = callbackFlow {
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: android.net.Network) {
+                trySend(true)
+            }
+
+            override fun onLost(network: android.net.Network) {
+                trySend(false)
+            }
+        }
+        connectivityManager.registerDefaultNetworkCallback(networkCallback)
+        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+        val isConnected = capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
+        trySend(isConnected)
+        awaitClose { connectivityManager.unregisterNetworkCallback(networkCallback) }
+    }.distinctUntilChanged()
+
+    init {
         viewModelScope.launch {
+            combine(_restaurantId, isOnline) { restaurantId, online ->
+                Pair(restaurantId, online)
+            }.collectLatest { (restaurantId, online) ->
+                if (restaurantId != null && online) {
+                    fetchRestaurantDetails(restaurantId)
+                }
+            }
+        }
+    }
 
+    fun loadRestaurantDetails(restaurantId: String) {
+        _restaurantId.value = restaurantId
+        viewModelScope.launch {
+            val cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
+            if (cachedRestaurant != null) {
+                _uiState.update { currentState ->
+                    currentState.copy(restaurant = cachedRestaurant)
+                }
+            }
+        }
+    }
+
+    private suspend fun fetchRestaurantDetails(restaurantId: String) {
+        _uiState.update { it.copy(isLoadingNetwork = true) }
+        try {
             val restaurant = getRestaurantByIdUseCase(restaurantId)
-
             val products = getProductsByRestaurantUseCase(restaurantId)
-
             val reviews = getReviewsByRestaurantUseCase(restaurantId)
 
             _uiState.update { currentState ->
@@ -53,9 +101,13 @@ class RestaurantDetailViewModel @Inject constructor(
                     products = products,
                     reviews = reviews,
                     popularProducts = products.sortedByDescending { it.rating }.take(5),
-                    under20Products = products.filter { it.price <= 20000 } // TODO usecase required
+                    under20Products = products.filter { it.price <= 20000 }
                 )
             }
+        } catch (e: Exception) {
+
+        } finally {
+            _uiState.update { it.copy(isLoadingNetwork = false) }
         }
     }
 
@@ -92,5 +144,6 @@ data class RestaurantDetailUiState(
     val products: List<ProductDomain> = emptyList(),
     val reviews: List<CommentDomain> = emptyList(),
     val popularProducts: List<ProductDomain> = emptyList(),
-    val under20Products: List<ProductDomain> = emptyList()
+    val under20Products: List<ProductDomain> = emptyList(),
+    val isLoadingNetwork: Boolean = false
 )
