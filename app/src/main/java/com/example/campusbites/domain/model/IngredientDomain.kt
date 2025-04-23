@@ -8,5 +8,6 @@ data class IngredientDomain(
     val name: String,
     val description: String,
     val products: List<ProductDomain>  = emptyList(),
-    val image: String
+    val image: String,
+    val clicks: Int = 0
 )

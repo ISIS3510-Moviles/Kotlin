@@ -57,6 +57,9 @@ interface ApiService {
     @GET("ingredient")
     suspend fun getIngredients(): List<IngredientDTO>
 
+    @PATCH("ingredient/{id}/increment-clicks")
+    suspend fun incrementIngredientClicks(@Path("id") id: String): Response<IngredientDTO>
+
     @GET("alert")
     suspend fun getAlerts(): List<AlertDTO>
 

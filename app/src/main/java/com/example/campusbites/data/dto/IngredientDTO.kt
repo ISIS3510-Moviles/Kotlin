@@ -8,5 +8,6 @@ data class IngredientDTO (
     val name: String,
     val description: String,
     val productsIds: List<String> = emptyList(),
-    val image: String
+    val image: String,
+    val clicks: Int = 0
 )

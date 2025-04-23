@@ -27,7 +27,7 @@ import com.example.campusbites.domain.model.IngredientDomain
 @Composable
 fun IngredientCard(
     ingredient: IngredientDomain,
-    onIngredientClick: (String) -> Unit,
+    onIngredientClick: (IngredientDomain) -> Unit,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -39,7 +39,7 @@ fun IngredientCard(
         modifier = modifier
             .wrapContentSize()
             .size(100.dp)
-            .clickable { onIngredientClick(ingredient.name) }
+            .clickable { onIngredientClick(ingredient) }
     ) {
         Column (
             verticalArrangement = Arrangement.SpaceBetween,

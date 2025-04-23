@@ -20,7 +20,7 @@ import com.example.campusbites.domain.model.IngredientDomain
 @Composable
 fun IngredientGrid(
     ingredients: List<IngredientDomain>,
-    onIngredientClick: (String) -> Unit,
+    onIngredientClick: (IngredientDomain) -> Unit,
     modifier: Modifier = Modifier,
     rowCount: Int = 2
 ) {
