@@ -28,12 +28,13 @@ fun ProductListRow(
             text = name,
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.primary
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp)
         )
         Text(
             text = description,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
         )
 
         if (products.isEmpty()) {

@@ -80,7 +80,7 @@ fun RestaurantDetailScreen(
     uiState.restaurant?.let { restaurant ->
         var selectedTabIndex by remember { mutableStateOf(0) }
 
-        Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+        Column(modifier = Modifier.fillMaxSize().padding(top= 30.dp, start = 16.dp, end = 16.dp)) {
             RestaurantHeader(restaurant,
                 onClick = onSaveRestaurantClick,
                 suscribedRestaurantIds = authViewModel.user.value?.suscribedRestaurantIds ?: emptyList() )

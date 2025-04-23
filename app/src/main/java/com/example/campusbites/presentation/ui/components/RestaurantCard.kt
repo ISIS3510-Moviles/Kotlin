@@ -49,7 +49,7 @@ fun RestaurantCard(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = modifier
-            .width(390.dp)  // full screen width
+            .width(379.dp)  // full screen width
             .height(320.dp)
             .padding(8.dp)
             .clickable { onRestaurantClick(restaurant.id) }
@@ -77,7 +77,6 @@ fun RestaurantCard(
                 Profile(
                     profilePhoto = restaurant.profilePhoto,
                     name = restaurant.name,
-                    distance = restaurant.latitude,
                     rating = restaurant.rating,
                     comments = restaurant.commentsIds
                 )
@@ -140,7 +139,6 @@ fun RestaurantCard(
 fun Profile(
     profilePhoto: String,
     name: String,
-    distance: Double,
     rating: Double,
     comments: List<String>
 ) {
@@ -160,10 +158,6 @@ fun Profile(
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = "Distance: ${String.format(Locale.US, "%.1f", distance)} mts",
-                style = MaterialTheme.typography.bodySmall
-            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Filled.Star,
@@ -174,11 +168,14 @@ fun Profile(
                         .padding(end = 4.dp)
                 )
                 Text(
-                    text = String.format(Locale.US, "%.1f", rating) +
-                            " (+${if (comments.size >= 100) "+99" else comments.size} opinions)",
+                    text = String.format(Locale.US, "%.1f", rating),
                     style = MaterialTheme.typography.bodySmall
                 )
             }
+            Text(
+                text = "(${if (comments.size >= 100) "+99" else comments.size} reviews)",
+                style = MaterialTheme.typography.bodySmall
+            )
         }
     }
 }
