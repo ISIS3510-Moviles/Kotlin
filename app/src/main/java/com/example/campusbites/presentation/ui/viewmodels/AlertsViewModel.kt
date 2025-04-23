@@ -6,7 +6,6 @@ import androidx.lifecycle.viewModelScope
 import com.example.campusbites.data.cache.InMemoryAlertCache
 import com.example.campusbites.domain.model.AlertDomain
 import com.example.campusbites.domain.model.RestaurantDomain
-import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.usecase.alert.CreateAlertUseCase
 import com.example.campusbites.domain.usecase.alert.GetAlertsUseCase
@@ -18,7 +17,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -72,7 +70,8 @@ class AlertsViewModel @Inject constructor(
         refreshAlerts()
     }
 
-    private fun refreshAlerts() {
+    // Cambiado de private a public para permitir el pull-to-refresh
+    fun refreshAlerts() {
         _uiState.update { it.copy(isLoading = true) }
         viewModelScope.launch {
             fetchAndCacheAlerts()
@@ -80,6 +79,10 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
+    // Nueva función para ser llamada desde el pull-to-refresh
+    fun refreshAlertsManually() {
+        refreshAlerts()
+    }
 
     private suspend fun fetchAndCacheAlerts(): List<AlertDomain>? {
         val currentUser = authRepository.currentUser.first()
@@ -100,7 +103,6 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
-
     private fun fetchRestaurants() {
         viewModelScope.launch {
             try {
@@ -109,7 +111,6 @@ class AlertsViewModel @Inject constructor(
             } catch (e: Exception) {
                 _uiState.update { it.copy(
                     errorMessage = e.localizedMessage ?: "Error al cargar restaurantes"
-
                 )}
             }
         }
@@ -126,14 +127,11 @@ class AlertsViewModel @Inject constructor(
         }
         alertCache.updateAlerts(newAlertList)
 
-
         viewModelScope.launch {
             try {
                 updateAlertUseCase(alert.id, alert.votes + 1)
-
             } catch (e: Exception) {
                 Log.e("AlertsViewModel", "Error upvoting alert ${alert.id} on server", e)
-
                 alertCache.updateAlerts(originalAlerts)
                 _uiState.update { it.copy(errorMessage = "Failed to sync upvote") }
             }
@@ -151,14 +149,11 @@ class AlertsViewModel @Inject constructor(
         }
         alertCache.updateAlerts(newAlertList)
 
-
         viewModelScope.launch {
             try {
                 updateAlertUseCase(alert.id, alert.votes - 1)
-
             } catch (e: Exception) {
                 Log.e("AlertsViewModel", "Error downvoting alert ${alert.id} on server", e)
-
                 alertCache.updateAlerts(originalAlerts)
                 _uiState.update { it.copy(errorMessage = "Failed to sync downvote") }
             }
@@ -176,7 +171,6 @@ class AlertsViewModel @Inject constructor(
 
             try {
                 createAlertUseCase(description, restaurantId, currentUser)
-
                 fetchAndCacheAlerts()
             } catch (e: Exception) {
                 Log.e("AlertsViewModel", "Error creating alert", e)
@@ -188,7 +182,6 @@ class AlertsViewModel @Inject constructor(
             }
         }
     }
-
 }
 
 data class AlertsUiState(
