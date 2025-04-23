@@ -28,10 +28,9 @@ fun FoodSection(
         if (popularProducts.isNotEmpty()) {
             ProductListRow(
                 name = "Popular",
-                description = "",
+                description = "The people's favorite ones",
                 products = popularProducts,
                 onProductClick = onProductClick,
-                modifier = Modifier.padding(bottom = 16.dp)
             )
         } else {
             Text(
@@ -46,7 +45,7 @@ fun FoodSection(
         if (affordableProducts.isNotEmpty()) {
             ProductListRow(
                 name = "Under $20.000",
-                description = "",
+                description = "Because saving money is important",
                 products = affordableProducts,
                 onProductClick = onProductClick
             )

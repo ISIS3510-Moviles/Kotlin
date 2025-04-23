@@ -12,6 +12,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -116,7 +117,7 @@ fun HomeScreen(
                         }
                         IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
                             Icon(
-                                imageVector = Icons.Filled.CheckCircle,
+                                imageVector = Icons.Filled.DateRange,
                                 contentDescription = stringResource(R.string.reservations)
                             )
                         }
@@ -182,7 +183,7 @@ fun HomeScreen(
                                     onRestaurantClick = { restaurantId ->
                                         navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
                                     },
-                                    modifier = Modifier.padding(8.dp)
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical= 8.dp)
                                 )
                             }
 
@@ -192,7 +193,7 @@ fun HomeScreen(
                                     description = "Discover all available foods",
                                     products = uiState.products,
                                     onProductClick = onProductClick,
-                                    modifier = Modifier.padding(8.dp)
+                                    modifier = Modifier.padding(horizontal = 16.dp, vertical= 8.dp)
                                 )
                             }
 
@@ -203,14 +204,14 @@ fun HomeScreen(
                                         description = "The ones according to your preferences",
                                         products = currentUser.savedProducts,
                                         onProductClick = onProductClick,
-                                        modifier = Modifier.padding(8.dp)
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                     )
                                 }
                             }
 
                             if (uiState.recommendationRestaurants.isNotEmpty()) {
                                 Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                    RestaurantListRow("Recommended Restaurants", "The ones according to your preferences", uiState.recommendationRestaurants, onRestaurantClick)
+                                    RestaurantListRow("Suggested", "The ones according to your preferences", uiState.recommendationRestaurants, onRestaurantClick)
                                 }
                             }
 
