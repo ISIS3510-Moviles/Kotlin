@@ -23,6 +23,7 @@ import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
 import com.example.campusbites.presentation.ui.screens.SignInScreen
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
 
 object NavigationRoutes {
     const val HOME_SCREEN = "home_screen"
@@ -43,6 +44,7 @@ object NavigationRoutes {
 fun NavGraph(authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val alertsViewModel: AlertsViewModel = hiltViewModel()
+    val homeViewModel: HomeViewModel = hiltViewModel()
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN
@@ -55,7 +57,9 @@ fun NavGraph(authViewModel: AuthViewModel) {
                     navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
                 },
                 onIngredientClick = { ingredient ->
-                    navController.navigate(NavigationRoutes.createSearchingRoute(ingredient))
+                    navController.navigate(NavigationRoutes.createSearchingRoute(ingredient.name))
+                    homeViewModel.incrementIngredientClicks(ingredient.id)
+
                 },
                 onProductClick = { productId ->
                     navController.navigate(NavigationRoutes.createFoodDetailRoute(productId))

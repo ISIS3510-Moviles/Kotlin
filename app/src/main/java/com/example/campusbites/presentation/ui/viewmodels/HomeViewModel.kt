@@ -14,6 +14,7 @@ import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.usecase.GetRecommendationsUseCase
+import com.example.campusbites.domain.usecase.ingredient.IncrementIngredientClicksUseCase
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
@@ -77,7 +78,8 @@ class HomeViewModel @Inject constructor(
     private val getRecommendationRestaurantsUseCase: GetRecommendationsUseCase,
     private val homeDataRepository: HomeDataRepository,
     private val authRepository: AuthRepository,
-    private val connectivityManager: ConnectivityManager
+    private val connectivityManager: ConnectivityManager,
+    private val incrementIngredientClicksUseCase: IncrementIngredientClicksUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -243,6 +245,12 @@ class HomeViewModel @Inject constructor(
 
     fun onSearchQueryChanged(query: String) {
         _uiState.update { it.copy(searchQuery = query) }
+    }
+
+    fun incrementIngredientClicks(ingredientId: String) {
+        viewModelScope.launch {
+            incrementIngredientClicksUseCase(ingredientId)
+        }
     }
 }
 

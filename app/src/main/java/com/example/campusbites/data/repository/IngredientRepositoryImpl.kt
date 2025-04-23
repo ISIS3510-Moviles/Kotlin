@@ -13,4 +13,8 @@ class IngredientRepositoryImpl @Inject constructor(
         return apiService.getIngredients()
     }
 
+    override suspend fun incrementIngredientClicks(ingredientId: String) {
+        apiService.incrementIngredientClicks(ingredientId)
+    }
+
 }

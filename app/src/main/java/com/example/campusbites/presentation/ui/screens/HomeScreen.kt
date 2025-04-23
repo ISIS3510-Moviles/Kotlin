@@ -48,13 +48,14 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import androidx.compose.ui.res.painterResource
+import com.example.campusbites.domain.model.IngredientDomain
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(
     navController: NavHostController,
     onRestaurantClick: (String) -> Unit,
-    onIngredientClick: (String) -> Unit,
+    onIngredientClick: (IngredientDomain) -> Unit,
     onProductClick: (String) -> Unit,
     onSearch: (String) -> Unit,
     authViewModel: AuthViewModel
