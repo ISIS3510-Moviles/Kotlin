@@ -29,6 +29,7 @@ import com.example.campusbites.domain.repository.RecommendationRepository
 import com.example.campusbites.domain.repository.ReservationRepository
 import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.repository.UserRepository
+import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
 import dagger.Binds
 import dagger.Module
@@ -114,6 +115,12 @@ object AppModule {
     fun provideCommentRepository(apiService: ApiService): CommentRepository{
         return CommentRepositoryImpl(apiService)
     }
+
+    @Provides
+    @Singleton
+    fun provideCreateCommentUseCase(
+        repository: CommentRepository
+    ) = CreateCommentUseCase(repository)
 
     @Provides
     @Singleton

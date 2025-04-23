@@ -3,7 +3,6 @@ package com.example.campusbites.presentation.ui.screens
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -96,7 +95,10 @@ fun RestaurantDetailScreen(
                 )
                 1 -> BookTableSection(authViewModel = authViewModel, restaurant = restaurant, restaurantDetailViewModel = viewModel)
                 2 -> ArriveSection()
-                3 -> ReviewsSection()
+                3 -> ReviewsSection(
+                    restaurantDetailViewModel = viewModel,
+                    authViewModel = authViewModel
+                )
             }
         }
 
