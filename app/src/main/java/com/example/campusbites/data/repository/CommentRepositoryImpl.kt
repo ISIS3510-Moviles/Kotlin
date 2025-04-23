@@ -16,4 +16,7 @@ class CommentRepositoryImpl @Inject constructor(
     override suspend fun getAllComments(): List<CommentDTO> {
         return apiService.getComments()
     }
+
+    override suspend fun createComment(commentDTO: CommentDTO): CommentDTO =
+        apiService.createComment(commentDTO)
 }

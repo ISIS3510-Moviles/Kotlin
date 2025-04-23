@@ -5,8 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -30,12 +30,15 @@ fun CommentCard(comment: CommentDomain) {
             .padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // Header: Nombre + Fecha
+            // Header: Solo el nombre
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
+                    modifier = Modifier.weight(1f),
                     text = comment.author.name,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 16.sp,
@@ -43,23 +46,6 @@ fun CommentCard(comment: CommentDomain) {
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis
                 )
-
-                comment.datetime?.let {
-                    val parsedDate = try {
-                        ZonedDateTime.parse(it)
-                    } catch (e: Exception) {
-                        null
-                    }
-                    val formattedDate = parsedDate?.format(
-                        DateTimeFormatter.ofPattern("MMM dd, yyyy • hh:mm a")
-                    ) ?: it
-
-                    Text(
-                        text = formattedDate,
-                        fontSize = 13.sp,
-                        color = secondaryTextColor
-                    )
-                }
             }
 
             Spacer(modifier = Modifier.height(6.dp))
@@ -73,6 +59,30 @@ fun CommentCard(comment: CommentDomain) {
                 fontSize = 15.sp,
                 color = textColor
             )
+
+            // Fecha en la parte inferior derecha
+            comment.datetime?.let {
+                Spacer(modifier = Modifier.height(12.dp))
+                val parsedDate = try {
+                    ZonedDateTime.parse(it)
+                } catch (e: Exception) {
+                    null
+                }
+                val formattedDate = parsedDate?.format(
+                    DateTimeFormatter.ofPattern("MMM dd, yyyy • hh:mm a")
+                ) ?: it
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    Text(
+                        text = formattedDate,
+                        fontSize = 13.sp,
+                        color = secondaryTextColor
+                    )
+                }
+            }
         }
     }
 }

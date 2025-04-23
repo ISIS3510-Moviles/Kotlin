@@ -93,4 +93,7 @@ interface ApiService {
     @POST("reservation")
     suspend fun createReservation(@Body reservationDTO: CreateReservationDTO): ReservationDTO
 
+    @POST("comment")
+    suspend fun createComment(@Body comment: CommentDTO): CommentDTO
+
 }

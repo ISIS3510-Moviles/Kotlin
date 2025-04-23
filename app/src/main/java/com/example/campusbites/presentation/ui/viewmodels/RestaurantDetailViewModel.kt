@@ -7,14 +7,13 @@ import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
+import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
 import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
-import com.google.firebase.perf.ktx.performance
-import com.google.firebase.ktx.Firebase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,7 +28,8 @@ class RestaurantDetailViewModel @Inject constructor(
     private val getReviewsByRestaurantUseCase: GetCommentsUseCase,
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
     private val updateUserUseCase: UpdateUserUseCase,
-    private val createReservationUseCase: CreateReservationUseCase
+    private val createReservationUseCase: CreateReservationUseCase,
+    private val createCommentUseCase: CreateCommentUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -75,6 +75,16 @@ class RestaurantDetailViewModel @Inject constructor(
             createReservationUseCase(reservation, authViewModel)
         }
     }
+
+    fun createReview(comment: CommentDomain) {
+        viewModelScope.launch {
+            val created = createCommentUseCase(comment)
+            _uiState.update { state ->
+                state.copy(reviews = state.reviews + created)
+            }
+        }
+    }
+
 }
 
 data class RestaurantDetailUiState(
