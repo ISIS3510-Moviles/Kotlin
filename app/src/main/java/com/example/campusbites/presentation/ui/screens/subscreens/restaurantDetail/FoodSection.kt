@@ -1,6 +1,8 @@
 package com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -20,14 +22,14 @@ fun FoodSection(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp)
+            .verticalScroll(rememberScrollState())
     ) {
         if (popularProducts.isNotEmpty()) {
             ProductListRow(
                 name = "Popular",
-                description = "",
+                description = "The people's favorite ones",
                 products = popularProducts,
                 onProductClick = onProductClick,
-                modifier = Modifier.padding(bottom = 16.dp)
             )
         } else {
             Text(
@@ -42,9 +44,9 @@ fun FoodSection(
         if (affordableProducts.isNotEmpty()) {
             ProductListRow(
                 name = "Under $20.000",
-                description = "",
+                description = "Because saving money is important",
                 products = affordableProducts,
-                onProductClick = onProductClick
+                onProductClick = onProductClick,
             )
         }
     }
