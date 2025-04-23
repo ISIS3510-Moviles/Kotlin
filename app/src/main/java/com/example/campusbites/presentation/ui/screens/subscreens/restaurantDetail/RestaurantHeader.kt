@@ -71,7 +71,7 @@ fun RestaurantHeader(
                 .padding(bottom = 8.dp)
         ) {
             Image(
-                painter = rememberAsyncImagePainter(restaurant.profilePhoto),
+                painter = rememberAsyncImagePainter(restaurant?.profilePhoto),
                 contentDescription = "Restaurant Image",
                 modifier = Modifier
                     .fillMaxSize()
@@ -83,7 +83,7 @@ fun RestaurantHeader(
 
         Column {
             Text(
-                text = restaurant.name,
+                text = restaurant?.name.toString()  ,
                 style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold
             )
@@ -104,7 +104,7 @@ fun RestaurantHeader(
             }
 
             SubscribeButton(
-                restaurantId = restaurant.id,
+                restaurantId = restaurant?.id.toString(),
                 onClick = onClick,
                 suscribedRestaurantIds = suscribedRestaurantIds
             )
