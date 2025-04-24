@@ -148,54 +148,54 @@ fun ProfileScreen(
                         }
 
                         // Preferencias dietarias
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Text(
-                                    text = "Dietary preferences",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                HorizontalDivider()
-                                if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        user!!.dietaryPreferencesTagIds.forEach { preference ->
-                                            Surface(
-                                                shape = RoundedCornerShape(16.dp),
-                                                color = MaterialTheme.colorScheme.secondaryContainer
-                                            ) {
-                                                Text(
-                                                    text = preference,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                )
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    Text(
-                                        text = "No dietary preferences specified",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
+//                        Card(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+//                            shape = RoundedCornerShape(16.dp),
+//                            colors = CardDefaults.cardColors(
+//                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+//                            )
+//                        ) {
+//                            Column(
+//                                modifier = Modifier.padding(16.dp),
+//                                verticalArrangement = Arrangement.spacedBy(12.dp)
+//                            ) {
+//                                Text(
+//                                    text = "Dietary preferences",
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    fontWeight = FontWeight.Bold
+//                                )
+//                                HorizontalDivider()
+//                                if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
+//                                    FlowRow(
+//                                        modifier = Modifier.fillMaxWidth(),
+//                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+//                                    ) {
+//                                        user!!.dietaryPreferencesTagIds.forEach { preference ->
+//                                            Surface(
+//                                                shape = RoundedCornerShape(16.dp),
+//                                                color = MaterialTheme.colorScheme.secondaryContainer
+//                                            ) {
+//                                                Text(
+//                                                    text = preference,
+//                                                    style = MaterialTheme.typography.bodyMedium,
+//                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+//                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+//                                } else {
+//                                    Text(
+//                                        text = "No dietary preferences specified",
+//                                        style = MaterialTheme.typography.bodyMedium,
+//                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+//                                    )
+//                                }
+//                            }
+//                        }
 
                         // Productos guardados
                         if (user!!.savedProducts.isNotEmpty()) {
