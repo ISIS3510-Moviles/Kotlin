@@ -237,7 +237,6 @@ class HomeViewModel @Inject constructor(
             validRecommendations
         } catch (e: Exception) {
             Log.e("HomeViewModel", "Error fetching/saving recommendations: ${e.message}", e)
-            _uiState.update { it.copy(errorMessage = "Failed to update recommendations") }
             null
         }
     }
