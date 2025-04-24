@@ -3,6 +3,7 @@ package com.example.campusbites.presentation.ui.viewmodels
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.data.preferences.HomeDataRepository
@@ -24,6 +25,8 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlin.collections.filter
+import kotlin.collections.take
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -81,9 +84,25 @@ class RestaurantDetailViewModel @Inject constructor(
         viewModelScope.launch {
             val cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
             if (cachedRestaurant != null) {
+                val cachedProducts = homeDataRepository.allProductsFlow.firstOrNull()?.filter { product ->
+                    cachedRestaurant.id.contains(product.restaurantId)
+                } ?: emptyList()
+                Log.d("RestaurantDetailViewModel", "Restaurant and products loaded from cache")
+                Log.d("RestaurantDetailViewModel", "Restaurant: $cachedRestaurant")
+                Log.d("RestaurantDetailViewModel", "Products: $cachedProducts")
                 _uiState.update { currentState ->
-                    currentState.copy(restaurant = cachedRestaurant)
+                    currentState.copy(
+                        restaurant = cachedRestaurant,
+                        products = cachedProducts,
+                        reviews = emptyList(),
+                        popularProducts = cachedProducts.sortedByDescending { it.rating }.take(5),
+                        under20Products = cachedProducts.filter { it.price <= 20000 }
+                    )
                 }
+            }
+
+            if (isOnline.first()) {
+                fetchRestaurantDetails(restaurantId)
             }
         }
     }
@@ -105,7 +124,6 @@ class RestaurantDetailViewModel @Inject constructor(
                 )
             }
         } catch (e: Exception) {
-
         } finally {
             _uiState.update { it.copy(isLoadingNetwork = false) }
         }

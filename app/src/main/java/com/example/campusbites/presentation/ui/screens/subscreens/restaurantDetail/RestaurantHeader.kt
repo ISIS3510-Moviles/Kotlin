@@ -59,57 +59,70 @@ fun RestaurantHeader(
         }
     }
 
-    Row (
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Card(
-            shape = CircleShape,
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+    Box(modifier = Modifier.fillMaxWidth()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier
-                .size(150.dp)
-                .padding(bottom = 8.dp)
+                .padding(16.dp)
+                .fillMaxWidth()
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(restaurant?.profilePhoto),
-                contentDescription = "Restaurant Image",
+            Card(
+                shape = CircleShape,
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
                 modifier = Modifier
-                    .fillMaxSize()
-                    .clip(CircleShape)
-            )
-        }
-
-        Spacer(modifier = Modifier.width(16.dp))
-
-        Column {
-            Text(
-                text = restaurant?.name.toString()  ,
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = FontWeight.Bold
-            )
-
-            if (permissionState.status.isGranted) {
-                Text(
-                    text = userDistance?.let { "${"%.2f".format(it)} m" }
-                        ?: "Calculating distance...",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Blue
-                )
-            } else {
-                Text(
-                    text = "Location permission required to show distance",
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Red
+                    .size(150.dp)
+                    .padding(bottom = 8.dp)
+            ) {
+                Image(
+                    painter = rememberAsyncImagePainter(restaurant?.profilePhoto),
+                    contentDescription = "Restaurant Image",
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
                 )
             }
 
-            SubscribeButton(
-                restaurantId = restaurant?.id.toString(),
-                onClick = onClick,
-                suscribedRestaurantIds = suscribedRestaurantIds
-            )
+            Spacer(modifier = Modifier.width(16.dp))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = restaurant?.name.toString(),
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
+
+                if (permissionState.status.isGranted) {
+                    Text(
+                        text = userDistance?.let { "${"%.2f".format(it)} m" }
+                            ?: "Calculating distance...",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Blue
+                    )
+                } else {
+                    Text(
+                        text = "Location permission required to show distance",
+                        fontWeight = FontWeight.Bold,
+                        color = Color.Red
+                    )
+                }
+
+                SubscribeButton(
+                    restaurantId = restaurant?.id.toString(),
+                    onClick = onClick,
+                    suscribedRestaurantIds = suscribedRestaurantIds
+                )
+            }
         }
 
+        if (isLoading) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(15.dp),
+                strokeWidth = 2.dp
+            )
+        }
     }
 }
 
