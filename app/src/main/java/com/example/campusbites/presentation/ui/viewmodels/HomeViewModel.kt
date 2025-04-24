@@ -1,6 +1,5 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
-import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
@@ -22,7 +21,6 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +31,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
-import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.channels.awaitClose
@@ -122,14 +119,20 @@ class HomeViewModel @Inject constructor(
                 homeDataRepository.allIngredientsFlow
             ) { nearby, recommended, products, ingredients ->
                 _uiState.update { currentState ->
+                    // Get top 5 ingredients by click count
+                    val topIngredients = ingredients
+                        .sortedByDescending { it.clicks }
+                        .take(5)
+
                     val newState = currentState.copy(
                         restaurants = nearby,
                         recommendationRestaurants = recommended,
                         products = products,
                         ingredients = ingredients,
+                        popularIngredients = topIngredients,
                         isLoadingInitial = false
                     )
-                    Log.d("HomeViewModel", "Cache observed and UI updated: Nearby=${newState.restaurants.size}, Recommended=${newState.recommendationRestaurants.size}, Products=${newState.products.size}, Ingredients=${newState.ingredients.size}")
+                    Log.d("HomeViewModel", "Cache observed and UI updated: Nearby=${newState.restaurants.size}, Recommended=${newState.recommendationRestaurants.size}, Products=${newState.products.size}, Ingredients=${newState.ingredients.size}, PopularIngredients=${newState.popularIngredients.size}")
                     newState
                 }
             }.catch { e ->
@@ -256,6 +259,7 @@ class HomeViewModel @Inject constructor(
 data class HomeUiState(
     val restaurants: List<RestaurantDomain> = emptyList(),
     val ingredients: List<IngredientDomain> = emptyList(),
+    val popularIngredients: List<IngredientDomain> = emptyList(),
     val products: List<ProductDomain> = emptyList(),
     val searchQuery: String = "",
     val isLoadingInitial: Boolean = true,
