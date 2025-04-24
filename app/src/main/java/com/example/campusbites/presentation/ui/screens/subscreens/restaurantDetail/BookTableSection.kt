@@ -203,7 +203,8 @@ fun BookTableSection(
                             datetime = jsonDate,
                             time = jsonTime,
                             numberCommensals = comensals,
-                            isCompleted = false
+                            isCompleted = false,
+                            hasBeenCancelled = false
                         ),
                         authViewModel
                     )

@@ -16,6 +16,7 @@ import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
+import com.example.campusbites.domain.usecase.reservation.CancelReservationUseCase
 import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
@@ -39,7 +40,8 @@ class RestaurantDetailViewModel @Inject constructor(
     private val createReservationUseCase: CreateReservationUseCase,
     private val createCommentUseCase: CreateCommentUseCase,
     private val homeDataRepository: HomeDataRepository,
-    private val connectivityManager: ConnectivityManager
+    private val connectivityManager: ConnectivityManager,
+    private val cancelReservationUseCase: CancelReservationUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -143,6 +145,12 @@ class RestaurantDetailViewModel @Inject constructor(
     fun createReservation(reservation: ReservationDomain, authViewModel: AuthViewModel) {
         viewModelScope.launch {
             createReservationUseCase(reservation, authViewModel)
+        }
+    }
+
+    fun cancelReservation(reservationId: String, authViewModel: AuthViewModel) {
+        viewModelScope.launch {
+            cancelReservationUseCase(reservationId, authViewModel = authViewModel)
         }
     }
 

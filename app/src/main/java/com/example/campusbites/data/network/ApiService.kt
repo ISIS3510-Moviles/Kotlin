@@ -99,6 +99,9 @@ interface ApiService {
     @POST("reservation")
     suspend fun createReservation(@Body reservationDTO: CreateReservationDTO): ReservationDTO
 
+    @PATCH("reservation/{id}/cancel")
+    suspend fun cancelReservation(@Path("id") id: String): ReservationDTO
+
     @POST("comment")
     suspend fun createComment(@Body comment: CommentDTO): CommentDTO
 

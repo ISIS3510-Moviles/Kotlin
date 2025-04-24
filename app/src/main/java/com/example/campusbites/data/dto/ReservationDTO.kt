@@ -12,4 +12,5 @@ data class ReservationDTO (
     val isCompleted: Boolean,
     val restaurant_id: String,
     val user_id: String,
+    val hasBeenCancelled: Boolean = false
 )

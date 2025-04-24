@@ -3,27 +3,28 @@ package com.example.campusbites.presentation.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.example.campusbites.R
 import com.example.campusbites.domain.model.ReservationDomain
-import com.example.campusbites.presentation.ui.components.ReservationCard
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -31,11 +32,11 @@ fun ReservationsScreen(
     authViewModel: AuthViewModel,
     navController: NavHostController,
 ) {
-    // Formateadores para display
     val displayDateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
     val displayTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-
+    val viewModel: RestaurantDetailViewModel = hiltViewModel()
     val user by authViewModel.user.collectAsState()
+    val coroutineScope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -50,7 +51,6 @@ fun ReservationsScreen(
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         val reservations = user?.reservationsDomain.orEmpty().map { res ->
-            // parse datetime + time
             val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
             val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
             val dateTime = LocalDateTime.of(date, time)
@@ -89,12 +89,17 @@ fun ReservationsScreen(
                         )
                     }
                     items(sortedUpcoming) { (res, dt) ->
-                        ReservationCard(
+                        ReservationCardWithCancel(
                             date = dt.format(displayDateFormatter),
                             time = dt.format(displayTimeFormatter),
                             guests = res.numberCommensals,
                             status = if (res.isCompleted) "Completed" else "Pending",
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            onCancelClick = {
+                                coroutineScope.launch {
+                                    viewModel.cancelReservation(res.id, authViewModel)
+                                }
+                            }
                         )
                     }
                 }
@@ -107,14 +112,52 @@ fun ReservationsScreen(
                         )
                     }
                     items(past) { (res, dt) ->
-                        ReservationCard(
+                        ReservationCardWithCancel(
                             date = dt.format(displayDateFormatter),
                             time = dt.format(displayTimeFormatter),
                             guests = res.numberCommensals,
                             status = "Completed",
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            onCancelClick = null
                         )
                     }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ReservationCardWithCancel(
+    date: String,
+    time: String,
+    guests: Int,
+    status: String,
+    modifier: Modifier = Modifier,
+    onCancelClick: (() -> Unit)? = null
+) {
+    Card(modifier = modifier) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(text = "Fecha: $date", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Hora: $time", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Comensales: $guests", style = MaterialTheme.typography.bodyMedium)
+                Text(text = "Estado: $status", style = MaterialTheme.typography.bodyMedium)
+            }
+
+            if (onCancelClick != null) {
+                IconButton(onClick = onCancelClick) {
+                    Icon(
+                        imageVector = Icons.Default.Close,
+                        contentDescription = "Cancelar reserva",
+                        tint = MaterialTheme.colorScheme.error
+                    )
                 }
             }
         }

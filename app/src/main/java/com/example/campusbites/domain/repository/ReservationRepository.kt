@@ -7,5 +7,6 @@ interface ReservationRepository {
     suspend fun getReservationById(id: String): ReservationDTO
 
     suspend fun createReservation(createReservationDTO: CreateReservationDTO): ReservationDTO
+    suspend fun cancelReservation(id: String): ReservationDTO
 
 }

@@ -19,7 +19,8 @@ class GetReservationByIdUseCase @Inject constructor(
             numberCommensals = reservation.numberComensals,
             isCompleted = reservation.isCompleted,
             restaurantId = reservation.restaurant_id,
-            userId = reservation.user_id
+            userId = reservation.user_id,
+            hasBeenCancelled = reservation.hasBeenCancelled
         )
     }
 }

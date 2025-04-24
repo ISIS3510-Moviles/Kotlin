@@ -17,5 +17,9 @@ class ReservationRepositoryImpl @Inject constructor(
         return apiService.createReservation(createRreservationDTO)
     }
 
+    override suspend fun cancelReservation(id: String): ReservationDTO {
+        return apiService.cancelReservation(id)
+    }
+
 
 }
