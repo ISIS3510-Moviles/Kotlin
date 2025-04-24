@@ -5,13 +5,14 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -25,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,7 +39,6 @@ import com.example.campusbites.R
 import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.components.IngredientGrid
 import com.example.campusbites.presentation.ui.components.ProductListRow
-import com.example.campusbites.presentation.ui.components.RecommendationRestaurantCard
 import com.example.campusbites.presentation.ui.components.RestaurantListRow
 import com.example.campusbites.presentation.ui.components.SearchBar
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
@@ -47,8 +46,9 @@ import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import com.example.campusbites.domain.model.IngredientDomain
+import com.example.campusbites.presentation.ui.components.PopularIngredientsSection
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -168,13 +168,51 @@ fun HomeScreen(
                                 }
                             }
 
-                            if (uiState.ingredients.isNotEmpty()) {
-                                IngredientGrid(
-                                    ingredients = uiState.ingredients,
-                                    onIngredientClick = onIngredientClick,
-                                    modifier = Modifier.padding(4.dp)
+                            if (uiState.popularIngredients.isNotEmpty()) {
+                                PopularIngredientsSection(
+                                    ingredients = uiState.popularIngredients,
+                                    onIngredientClick = { ingredient ->
+                                        viewModel.incrementIngredientClicks(ingredient.id)
+                                        onIngredientClick(ingredient)
+                                    },
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
                                 )
                             }
+
+                            if (uiState.ingredients.isNotEmpty()) {
+                                Column(modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)) {
+                                    Text(
+                                        text = "All Ingredients",
+                                        style = MaterialTheme.typography.displaySmall,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    )
+
+                                    Text(
+                                        text = "Explore our complete ingredient selection",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                                    )
+
+                                    Spacer(modifier = Modifier.height(8.dp))
+
+                                    IngredientGrid(
+                                        ingredients = uiState.ingredients,
+                                        onIngredientClick = onIngredientClick,
+                                        modifier = Modifier.padding(4.dp)
+                                    )
+                                }
+                            }
+
+
+//                            if (uiState.ingredients.isNotEmpty()) {
+//                                IngredientGrid(
+//                                    ingredients = uiState.ingredients,
+//                                    onIngredientClick = onIngredientClick,
+//                                    modifier = Modifier.padding(4.dp)
+//                                )
+//                            }
 
                             if (uiState.restaurants.isNotEmpty()) {
                                 RestaurantListRow(
