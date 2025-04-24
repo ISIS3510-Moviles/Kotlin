@@ -7,11 +7,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Star
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.DateRange
-import androidx.compose.material.icons.filled.Info
+
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenu
@@ -27,18 +24,29 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.example.campusbites.domain.model.CommentDomain
 import com.example.campusbites.domain.model.RestaurantDomain
-import java.time.LocalDateTime
-import java.time.LocalDate
-import java.time.LocalTime
-import java.time.format.DateTimeFormatter
+
 import java.util.Locale
+
+
+/**
+ * Calculates the average rating from a list of comments
+ */
+private fun calculateAverageRating(comments: List<CommentDomain>): Double {
+    if (comments.isEmpty()) return 0.0
+
+    val sum = comments.sumOf { it.rating }
+    return sum.toDouble() / comments.count()
+}
+
 
 @Composable
 fun RestaurantCard(
     restaurant: RestaurantDomain,
     onRestaurantClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    comments: List<CommentDomain> = emptyList(),
 ) {
     // Tags logic
     val allTags = restaurant.foodTags.map { it.name } + restaurant.dietaryTags.map { it.name }
