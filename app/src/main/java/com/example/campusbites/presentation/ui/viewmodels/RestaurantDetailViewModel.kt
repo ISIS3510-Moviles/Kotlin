@@ -20,6 +20,7 @@ import com.example.campusbites.domain.usecase.reservation.CancelReservationUseCa
 import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
+import com.example.campusbites.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -28,8 +29,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.filter
 import kotlin.collections.take
-import kotlinx.coroutines.Dispatchers // Importa Dispatchers
-import kotlinx.coroutines.withContext // Importa withContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -43,6 +44,7 @@ class RestaurantDetailViewModel @Inject constructor(
     private val createCommentUseCase: CreateCommentUseCase,
     private val homeDataRepository: HomeDataRepository,
     private val connectivityManager: ConnectivityManager,
+    private val authRepository: AuthRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -75,98 +77,142 @@ class RestaurantDetailViewModel @Inject constructor(
             combine(_restaurantId, isOnline) { restaurantId, online ->
                 Pair(restaurantId, online)
             }.collectLatest { (restaurantId, online) ->
-                if (restaurantId != null && online) {
-                    fetchRestaurantDetails(restaurantId)
+                _uiState.update { it.copy(isOnline = online) }
+                if (restaurantId != null) {
+                    loadRestaurantDetails(restaurantId)
+                    if (online) {
+                        fetchRestaurantDetails(restaurantId)
+                    }
                 }
             }
+        }
+
+        viewModelScope.launch {
+            _restaurantId.filterNotNull().collectLatest { restaurantId ->
+                getReviewsByRestaurantUseCase(restaurantId)
+                    .catch { e -> Log.e("RestaurantDetailViewModel", "Error fetching reviews: ${e.message}") }
+                    .collect { reviews ->
+                        _uiState.update { currentState ->
+                            currentState.copy(reviews = reviews)
+                        }
+                    }
+            }
+        }
+
+        viewModelScope.launch {
+            isOnline
+                .filter { it }
+                .collect {
+                    _restaurantId.value?.let { restaurantId ->
+                        syncReviews(restaurantId)
+                    }
+                }
         }
     }
 
     fun loadRestaurantDetails(restaurantId: String) {
         _restaurantId.value = restaurantId
-        viewModelScope.launch(Dispatchers.Main) { // Comentario: Usar Dispatchers.Main para operaciones de UI
-            val cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
-            if (cachedRestaurant != null) {
-                val cachedProducts = homeDataRepository.allProductsFlow.firstOrNull()?.filter { product ->
-                    cachedRestaurant.id.contains(product.restaurantId)
-                } ?: emptyList()
-                Log.d("RestaurantDetailViewModel", "Restaurant and products loaded from cache")
-                Log.d("RestaurantDetailViewModel", "Restaurant: $cachedRestaurant")
-                Log.d("RestaurantDetailViewModel", "Products: $cachedProducts")
-                _uiState.update { currentState ->
-                    currentState.copy(
-                        restaurant = cachedRestaurant,
-                        products = cachedProducts,
-                        reviews = emptyList(),
-                        popularProducts = cachedProducts.sortedByDescending { it.rating }.take(5),
-                        under20Products = cachedProducts.filter { it.price <= 20000 }
-                    )
+        viewModelScope.launch(Dispatchers.Main) {
+            try {
+                val cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
+                if (cachedRestaurant != null) {
+                    val cachedProducts = homeDataRepository.allProductsFlow.firstOrNull()?.filter { product ->
+                        cachedRestaurant.id.contains(product.restaurantId)
+                    } ?: emptyList()
+                    Log.d("RestaurantDetailViewModel", "Restaurant and products loaded from cache")
+                    Log.d("RestaurantDetailViewModel", "Restaurant: $cachedRestaurant")
+                    Log.d("RestaurantDetailViewModel", "Products: $cachedProducts")
+                    _uiState.update { currentState ->
+                        currentState.copy(
+                            restaurant = cachedRestaurant,
+                            products = cachedProducts,
+                            popularProducts = cachedProducts.sortedByDescending { it.rating }.take(5),
+                            under20Products = cachedProducts.filter { it.price <= 20000 }
+                        )
+                    }
                 }
-            }
-
-            if (isOnline.first()) {
-                viewModelScope.launch(Dispatchers.IO) { // Comentario: Usar Dispatchers.IO para operaciones de red
-                    fetchRestaurantDetails(restaurantId)
-                }
+            } catch (e: Exception) {
+                Log.e("RestaurantDetailViewModel", "Error loading cached details: ${e.message}")
             }
         }
     }
 
     private suspend fun fetchRestaurantDetails(restaurantId: String) {
-        withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar UI
+        withContext(Dispatchers.Main) {
             _uiState.update { it.copy(isLoadingNetwork = true) }
         }
         try {
             val restaurant = getRestaurantByIdUseCase(restaurantId)
             val products = getProductsByRestaurantUseCase(restaurantId)
-            val reviews = getReviewsByRestaurantUseCase(restaurantId)
 
-            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar UI
+            withContext(Dispatchers.Main) {
                 _uiState.update { currentState ->
                     currentState.copy(
                         restaurant = restaurant,
                         products = products,
-                        reviews = reviews,
                         popularProducts = products.sortedByDescending { it.rating }.take(5),
                         under20Products = products.filter { it.price <= 20000 }
                     )
                 }
             }
-        } catch (e: Exception) {
 
+        } catch (e: Exception) {
+            Log.e("RestaurantDetailViewModel", "Error fetching restaurant details from network: ${e.message}")
         } finally {
-            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar UI
+            withContext(Dispatchers.Main) {
                 _uiState.update { it.copy(isLoadingNetwork = false) }
             }
         }
     }
 
-    suspend fun onSaveClick(user: UserDomain) {
-        updateUserUseCase(user.id, user)
-    }
-
-    fun loadAllRestaurants() {
-        viewModelScope.launch(Dispatchers.IO) { // Usar Dispatchers.IO para operaciones de red/base de datos
-            val allRestaurants = getRestaurantsUseCase()
-            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar StateFlow
-                _restaurants.value = allRestaurants
+    private fun syncReviews(restaurantId: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                getReviewsByRestaurantUseCase(restaurantId).firstOrNull()
+            } catch (e: Exception) {
+                Log.e("RestaurantDetailViewModel", "Error syncing reviews: ${e.message}")
             }
         }
     }
 
-    fun createReservation(reservation: ReservationDomain, authViewModel: AuthViewModel) {
-        viewModelScope.launch(Dispatchers.IO) { // Usar Dispatchers.IO para operaciones de red/base de datos
-            createReservationUseCase(reservation)
+
+    suspend fun onSaveClick(user: UserDomain) {
+        try {
+            updateUserUseCase(user.id, user)
+        } catch (e: Exception) {
+            Log.e("RestaurantDetailViewModel", "Error updating user: ${e.message}")
+        }
+    }
+
+    fun loadAllRestaurants() {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val allRestaurants = getRestaurantsUseCase()
+                withContext(Dispatchers.Main) {
+                    _restaurants.value = allRestaurants
+                }
+            } catch (e: Exception) {
+                Log.e("RestaurantDetailViewModel", "Error loading all restaurants: ${e.message}")
+            }
+        }
+    }
+
+    fun createReservation(reservation: ReservationDomain) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                createReservationUseCase(reservation)
+            } catch (e: Exception) {
+                Log.e("RestaurantDetailViewModel", "Error creating reservation: ${e.message}")
+            }
         }
     }
 
     fun createReview(comment: CommentDomain) {
-        viewModelScope.launch(Dispatchers.IO) { // Usar Dispatchers.IO para operaciones de red/base de datos
-            val created = createCommentUseCase(comment)
-            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar StateFlow
-                _uiState.update { state ->
-                    state.copy(reviews = state.reviews + created)
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                val created = createCommentUseCase(comment)
+            } catch (e: Exception) {
+                Log.e("RestaurantDetailViewModel", "Error creating review: ${e.message}")
             }
         }
     }
@@ -178,5 +224,6 @@ data class RestaurantDetailUiState(
     val reviews: List<CommentDomain> = emptyList(),
     val popularProducts: List<ProductDomain> = emptyList(),
     val under20Products: List<ProductDomain> = emptyList(),
-    val isLoadingNetwork: Boolean = false
+    val isLoadingNetwork: Boolean = false,
+    val isOnline: Boolean = false
 )

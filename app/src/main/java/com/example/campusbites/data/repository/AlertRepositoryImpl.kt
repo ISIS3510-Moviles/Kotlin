@@ -28,8 +28,6 @@ class AlertRepositoryImpl @Inject constructor(
             .atZone(ZoneOffset.UTC)
             .toLocalDateTime()
 
-
-
         val userDTO: UserDTO = apiService.getUserById(dto.publisherId)
         val publisher = UserDomain(
             id = userDTO.id,

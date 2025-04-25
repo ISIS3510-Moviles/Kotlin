@@ -28,6 +28,10 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import java.time.OffsetDateTime
 import java.util.UUID
+import kotlinx.coroutines.launch // Importa launch
+import androidx.compose.runtime.rememberCoroutineScope // Importa rememberCoroutineScope
+import android.widget.Toast // Importa Toast
+import androidx.compose.ui.platform.LocalContext // Importa LocalContext
 
 @Composable
 fun ReviewsSection(
@@ -36,8 +40,9 @@ fun ReviewsSection(
 ) {
     val uiState = restaurantDetailViewModel.uiState.collectAsState().value
     var showDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+    val context = LocalContext.current
 
-    // Registrar un evento cada vez que se muestra la sección de reseñas
     LaunchedEffect(Unit) {
         Firebase.analytics.logEvent("restaurant_reviews_checked", null)
     }
@@ -62,8 +67,6 @@ fun ReviewsSection(
         ) {
             items(uiState.reviews) { comment -> CommentCard(comment) }
         }
-
-
     }
 
     if (showDialog) {
@@ -71,9 +74,11 @@ fun ReviewsSection(
             onDismiss = { showDialog = false },
             onSend = { rating, message ->
                 showDialog = false
-                val user = authViewModel.user.value ?: return@ReviewDialog
+                val user = authViewModel.user.value ?: run {
+                    Toast.makeText(context, "You must be logged in to write a review", Toast.LENGTH_SHORT).show()
+                    return@ReviewDialog
+                }
 
-                // Montamos CommentDomain mínimo
                 val newComment = CommentDomain(
                     id = UUID.randomUUID().toString(),
                     datetime = OffsetDateTime.now().toString(),
@@ -89,7 +94,15 @@ fun ReviewsSection(
                     productDomain = null,
                     restaurantDomain = restaurantDetailViewModel.uiState.value.restaurant
                 )
-                restaurantDetailViewModel.createReview(newComment)
+
+                coroutineScope.launch {
+                    try {
+                        restaurantDetailViewModel.createReview(newComment)
+                        Toast.makeText(context, "Review submitted!", Toast.LENGTH_SHORT).show()
+                    } catch (e: Exception) {
+                        Toast.makeText(context, "Failed to submit review. Please try again.", Toast.LENGTH_SHORT).show()
+                    }
+                }
             }
         )
     }

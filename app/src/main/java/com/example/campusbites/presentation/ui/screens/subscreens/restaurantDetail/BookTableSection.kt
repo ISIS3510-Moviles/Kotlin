@@ -28,6 +28,8 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlinx.coroutines.launch // Importa launch
+import androidx.compose.runtime.rememberCoroutineScope // Importa rememberCoroutineScope
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
@@ -50,11 +52,10 @@ fun BookTableSection(
     val calendar = Calendar.getInstance()
     val primaryBlue = Color(0xFF1565C0)
 
-    // Formateadores:
     val displayDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
-    val jsonDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE             // yyyy-MM-dd
+    val jsonDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
     val displayTimeFormatter = DateTimeFormatter.ofPattern("H:mm")
-    val jsonTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")       // 24h with leading zero
+    val jsonTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     val datePickerDialog = DatePickerDialog(
         context,
@@ -67,7 +68,6 @@ fun BookTableSection(
                     LocalDate.of(year, month + 1, dayOfMonth)
                 )
                 errorMessage = ""
-                // reset hour when date changes
                 selectedHour = ""
             }
         },
@@ -76,7 +76,6 @@ fun BookTableSection(
         calendar.get(Calendar.DAY_OF_MONTH)
     ).apply { datePicker.minDate = calendar.timeInMillis }
 
-    // Horas disponibles, filtradas si la fecha es hoy
     val availableHours = (7..23).map { it.toString() + ":00" }
     val filteredHours by remember(selectedDate) {
         derivedStateOf {
@@ -92,6 +91,11 @@ fun BookTableSection(
         }
     }
 
+    val uiState by restaurantDetailViewModel.uiState.collectAsState()
+    val isOnline = uiState.isOnline
+
+    val coroutineScope = rememberCoroutineScope()
+
     Card(
         shape = RoundedCornerShape(12.dp),
         modifier = Modifier
@@ -103,7 +107,6 @@ fun BookTableSection(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Date picker
             Text("Date:", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
@@ -116,7 +119,6 @@ fun BookTableSection(
                 Text(text = if (selectedDate.isNotEmpty()) selectedDate else "MM/DD/YYYY")
             }
 
-            // Hour dropdown
             Text("Hour", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
@@ -142,7 +144,6 @@ fun BookTableSection(
                 }
             }
 
-            // Comensales
             Text("Comensals", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Row(
                 modifier = Modifier
@@ -171,7 +172,6 @@ fun BookTableSection(
 
             Button(
                 onClick = {
-                    // Validación
                     val validationError = when {
                         !isUserLoggedIn       -> "You must be logged in to book"
                         selectedDate.isEmpty()  -> "Please select a date"
@@ -183,40 +183,43 @@ fun BookTableSection(
                         return@Button
                     }
 
-                    // Preparar formatos para JSON
                     val jsonDate = LocalDate.parse(selectedDate, displayDateFormatter)
                         .format(jsonDateFormatter)
                     val jsonTime = LocalTime.parse(selectedHour, displayTimeFormatter)
                         .format(jsonTimeFormatter)
 
-                    // Ejecutar reserva
                     errorMessage = ""
                     analytics.logEvent("restaurant_reservation_used") {
                         param("date", jsonDate)
                         param("time", jsonTime)
                     }
-                    restaurantDetailViewModel.createReservation(
-                        ReservationDomain(
-                            id = "",
-                            restaurantId = restaurant.id,
-                            userId = user!!.id,
-                            datetime = jsonDate,
-                            time = jsonTime,
-                            numberCommensals = comensals,
-                            isCompleted = false,
-                            hasBeenCancelled = false
-                        ),
-                        authViewModel
-                    )
 
-                    // Mostrar confirmación y resetear campos
-                    Toast.makeText(context, "Reservation confirmed!", Toast.LENGTH_SHORT).show()
-                    selectedDate = ""
-                    selectedHour = ""
-                    comensals = 1
+                    coroutineScope.launch {
+                        try {
+                            restaurantDetailViewModel.createReservation(
+                                ReservationDomain(
+                                    id = "",
+                                    restaurantId = restaurant.id,
+                                    userId = user!!.id,
+                                    datetime = jsonDate,
+                                    time = jsonTime,
+                                    numberCommensals = comensals,
+                                    isCompleted = false,
+                                    hasBeenCancelled = false
+                                ))
+                            Toast.makeText(context, "Reservation confirmed!", Toast.LENGTH_SHORT).show()
+                            selectedDate = ""
+                            selectedHour = ""
+                            comensals = 1
+                        } catch (e: Exception) {
+                            errorMessage = "Failed to create reservation. Please try again."
+                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        }
+                    }
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isOnline
             ) {
                 Text("Book", color = Color.White, fontWeight = FontWeight.Bold)
             }
