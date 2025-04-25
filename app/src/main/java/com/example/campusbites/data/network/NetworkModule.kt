@@ -7,8 +7,14 @@ import retrofit2.Retrofit
 
 private const val BASE_URL = "http://35.209.247.8:8080/"
 
+private val json = Json {
+    ignoreUnknownKeys = true
+    isLenient = true
+    encodeDefaults = true
+}
+
 private val retrofit = Retrofit.Builder()
-    .addConverterFactory(Json.asConverterFactory("application/json".toMediaType()))
+    .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
     .baseUrl(BASE_URL)
     .build()
 
@@ -17,5 +23,3 @@ object CampusBitesApi {
         retrofit.create(ApiService::class.java)
     }
 }
-
-

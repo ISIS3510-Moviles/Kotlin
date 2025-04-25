@@ -100,9 +100,14 @@ interface ApiService {
     @POST("reservation")
     suspend fun createReservation(@Body reservationDTO: CreateReservationDTO): ReservationDTO
 
+    @PATCH("reservation/{id}/cancel")
+    suspend fun cancelReservation(@Path("id") id: String): ReservationDTO
+
     @POST("comment")
     suspend fun createComment(@Body comment: CommentDTO): CommentDTO
 
+    @GET("reservation/by-user/{userId}")
+    suspend fun getReservationsForUser(@Path("userId") userId: String): List<ReservationDTO>
     // New method for partial update of restaurant
     @PATCH("restaurant/{id}")
     suspend fun updateRestaurantComments(

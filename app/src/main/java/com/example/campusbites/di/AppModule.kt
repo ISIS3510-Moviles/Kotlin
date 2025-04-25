@@ -6,12 +6,16 @@ import androidx.credentials.CredentialManager
 import com.example.campusbites.data.cache.InMemoryAlertCache
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.data.network.CampusBitesApi
+import com.example.campusbites.data.local.AppDatabase
+import androidx.room.Room
+import com.example.campusbites.data.local.dao.ReservationDao
 import com.example.campusbites.data.repository.AlertRepositoryImpl
 import com.example.campusbites.data.repository.CommentRepositoryImpl
 import com.example.campusbites.data.repository.DietaryTagRepositoryImpl
 import com.example.campusbites.data.repository.FoodTagRepositoryImpl
 import com.example.campusbites.data.repository.IngredientRepositoryImpl
 import com.example.campusbites.data.repository.InstitutionRepositoryImpl
+import com.example.campusbites.data.repository.LocalReservationRepositoryImpl
 import com.example.campusbites.data.repository.LocationRepositoryImpl
 import com.example.campusbites.data.repository.ProductRepositoryImpl
 import com.example.campusbites.data.repository.RecommendationRepositoryImpl
@@ -24,6 +28,7 @@ import com.example.campusbites.domain.repository.DietaryTagRepository
 import com.example.campusbites.domain.repository.FoodTagRepository
 import com.example.campusbites.domain.repository.IngredientRepository
 import com.example.campusbites.domain.repository.InstitutionRepository
+import com.example.campusbites.domain.repository.LocalReservationRepository
 import com.example.campusbites.domain.repository.LocationRepository
 import com.example.campusbites.domain.repository.ProductRepository
 import com.example.campusbites.domain.repository.RecommendationRepository
@@ -40,16 +45,44 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
+import retrofit2.Retrofit
+import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import okhttp3.MediaType.Companion.toMediaType
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
     @Provides
+    @Singleton
+    fun provideApplicationScope(): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
+        return Room.databaseBuilder(
+            context,
+            AppDatabase::class.java,
+            "campus_bites_db"
+        ).build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideReservationDao(database: AppDatabase): ReservationDao {
+        return database.reservationDao()
+    }
+
+
+    @Provides
     fun provideCredentialManager(@ApplicationContext context: Context): CredentialManager {
         return CredentialManager.create(context)
     }
-
 
     @Provides
     @Singleton
@@ -138,7 +171,6 @@ object AppModule {
         encodeDefaults = true
     }
 
-
     @Module
     @InstallIn(SingletonComponent::class)
     abstract class RepositoryModule {
@@ -147,18 +179,19 @@ object AppModule {
         abstract fun bindAlertRepository(
             alertRepositoryImpl: AlertRepositoryImpl
         ): AlertRepository
+
+        @Binds
+        @Singleton
+        abstract fun bindLocalReservationRepository(
+            localReservationRepositoryImpl: LocalReservationRepositoryImpl
+        ): LocalReservationRepository
+
+        @Binds
+        @Singleton
+        abstract fun bindReservationRepository(
+            reservationRepositoryImpl: ReservationRepositoryImpl
+        ): ReservationRepository
     }
 
-    @Provides
-    @Singleton
-    fun provideInMemoryAlertCache(): InMemoryAlertCache {
-        return InMemoryAlertCache()
-    }
-
-    @Provides
-    @Singleton
-    fun provideReservationsRepository(apiService: ApiService): ReservationRepository {
-        return ReservationRepositoryImpl(apiService)
-    }
 
 }

@@ -11,5 +11,6 @@ data class ReservationDomain(
     val numberCommensals: Int,
     val isCompleted: Boolean,
     val restaurantId: String,
-    val userId: String
+    val userId: String,
+    val hasBeenCancelled: Boolean
 )

@@ -25,7 +25,7 @@ data class ReservationDTORecommendation(
     val numberComensals: Int,
     val isCompleted: Boolean,
     val restaurant_id: String,
-    val user_id: String
+    val user_id: String,
 )
 
 @Serializable

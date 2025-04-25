@@ -16,6 +16,7 @@ import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
+import com.example.campusbites.domain.usecase.reservation.CancelReservationUseCase
 import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
@@ -27,6 +28,8 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 import kotlin.collections.filter
 import kotlin.collections.take
+import kotlinx.coroutines.Dispatchers // Importa Dispatchers
+import kotlinx.coroutines.withContext // Importa withContext
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -39,7 +42,7 @@ class RestaurantDetailViewModel @Inject constructor(
     private val createReservationUseCase: CreateReservationUseCase,
     private val createCommentUseCase: CreateCommentUseCase,
     private val homeDataRepository: HomeDataRepository,
-    private val connectivityManager: ConnectivityManager
+    private val connectivityManager: ConnectivityManager,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -81,7 +84,7 @@ class RestaurantDetailViewModel @Inject constructor(
 
     fun loadRestaurantDetails(restaurantId: String) {
         _restaurantId.value = restaurantId
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) { // Comentario: Usar Dispatchers.Main para operaciones de UI
             val cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
             if (cachedRestaurant != null) {
                 val cachedProducts = homeDataRepository.allProductsFlow.firstOrNull()?.filter { product ->
@@ -102,30 +105,39 @@ class RestaurantDetailViewModel @Inject constructor(
             }
 
             if (isOnline.first()) {
-                fetchRestaurantDetails(restaurantId)
+                viewModelScope.launch(Dispatchers.IO) { // Comentario: Usar Dispatchers.IO para operaciones de red
+                    fetchRestaurantDetails(restaurantId)
+                }
             }
         }
     }
 
     private suspend fun fetchRestaurantDetails(restaurantId: String) {
-        _uiState.update { it.copy(isLoadingNetwork = true) }
+        withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar UI
+            _uiState.update { it.copy(isLoadingNetwork = true) }
+        }
         try {
             val restaurant = getRestaurantByIdUseCase(restaurantId)
             val products = getProductsByRestaurantUseCase(restaurantId)
             val reviews = getReviewsByRestaurantUseCase(restaurantId)
 
-            _uiState.update { currentState ->
-                currentState.copy(
-                    restaurant = restaurant,
-                    products = products,
-                    reviews = reviews,
-                    popularProducts = products.sortedByDescending { it.rating }.take(5),
-                    under20Products = products.filter { it.price <= 20000 }
-                )
+            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar UI
+                _uiState.update { currentState ->
+                    currentState.copy(
+                        restaurant = restaurant,
+                        products = products,
+                        reviews = reviews,
+                        popularProducts = products.sortedByDescending { it.rating }.take(5),
+                        under20Products = products.filter { it.price <= 20000 }
+                    )
+                }
             }
         } catch (e: Exception) {
+
         } finally {
-            _uiState.update { it.copy(isLoadingNetwork = false) }
+            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar UI
+                _uiState.update { it.copy(isLoadingNetwork = false) }
+            }
         }
     }
 
@@ -134,27 +146,30 @@ class RestaurantDetailViewModel @Inject constructor(
     }
 
     fun loadAllRestaurants() {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) { // Usar Dispatchers.IO para operaciones de red/base de datos
             val allRestaurants = getRestaurantsUseCase()
-            _restaurants.value = allRestaurants
-        }
-    }
-
-    fun createReservation(reservation: ReservationDomain, authViewModel: AuthViewModel) {
-        viewModelScope.launch {
-            createReservationUseCase(reservation, authViewModel)
-        }
-    }
-
-    fun createReview(comment: CommentDomain) {
-        viewModelScope.launch {
-            val created = createCommentUseCase(comment)
-            _uiState.update { state ->
-                state.copy(reviews = state.reviews + created)
+            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar StateFlow
+                _restaurants.value = allRestaurants
             }
         }
     }
 
+    fun createReservation(reservation: ReservationDomain, authViewModel: AuthViewModel) {
+        viewModelScope.launch(Dispatchers.IO) { // Usar Dispatchers.IO para operaciones de red/base de datos
+            createReservationUseCase(reservation)
+        }
+    }
+
+    fun createReview(comment: CommentDomain) {
+        viewModelScope.launch(Dispatchers.IO) { // Usar Dispatchers.IO para operaciones de red/base de datos
+            val created = createCommentUseCase(comment)
+            withContext(Dispatchers.Main) { // Usar withContext(Dispatchers.Main) para actualizar StateFlow
+                _uiState.update { state ->
+                    state.copy(reviews = state.reviews + created)
+                }
+            }
+        }
+    }
 }
 
 data class RestaurantDetailUiState(
