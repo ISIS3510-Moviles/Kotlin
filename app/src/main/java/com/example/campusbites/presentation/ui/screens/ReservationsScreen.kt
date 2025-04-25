@@ -17,13 +17,11 @@ import androidx.navigation.NavHostController
 import com.example.campusbites.R
 import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
-import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
+import com.example.campusbites.presentation.ui.viewmodels.ReservationsViewModel
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
-import kotlinx.coroutines.launch
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.hilt.navigation.compose.hiltViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,12 +29,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 fun ReservationsScreen(
     authViewModel: AuthViewModel,
     navController: NavHostController,
+    reservationsViewModel: ReservationsViewModel = hiltViewModel()
 ) {
     val displayDateFormatter = DateTimeFormatter.ofPattern("dd MMM yyyy")
     val displayTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-    val viewModel: RestaurantDetailViewModel = hiltViewModel()
-    val user by authViewModel.user.collectAsState()
-    val coroutineScope = rememberCoroutineScope()
+    val reservations by reservationsViewModel.reservations.collectAsState()
 
     Scaffold(
         topBar = {
@@ -50,15 +47,32 @@ fun ReservationsScreen(
         },
         containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
-        val reservations = user?.reservationsDomain.orEmpty().map { res ->
-            val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
-            val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
-            val dateTime = LocalDateTime.of(date, time)
-            res to dateTime
-        }
         val now = LocalDateTime.now()
-        val (past, upcoming) = reservations.partition { it.second.isBefore(now) }
-        val sortedUpcoming = upcoming.sortedBy { it.second }
+
+        val (upcoming, pastAndCancelled) = reservations.partition {
+            val date = LocalDate.parse(it.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+            val time = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
+            val dateTime = LocalDateTime.of(date, time)
+            dateTime.isAfter(now)
+        }
+        val (past, cancelled) = pastAndCancelled.partition { it.hasBeenCancelled != true }
+
+        val sortedUpcoming = upcoming.sortedBy {
+            val date = LocalDate.parse(it.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+            val time = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
+            LocalDateTime.of(date, time)
+        }
+        val sortedPast = past.sortedByDescending {
+            val date = LocalDate.parse(it.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+            val time = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
+            LocalDateTime.of(date, time)
+        }
+        val sortedCancelled = cancelled.sortedByDescending {
+            val date = LocalDate.parse(it.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+            val time = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
+            LocalDateTime.of(date, time)
+        }
+
 
         if (reservations.isEmpty()) {
             Column(
@@ -88,22 +102,47 @@ fun ReservationsScreen(
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
-                    items(sortedUpcoming) { (res, dt) ->
+                    items(sortedUpcoming) { res ->
+                        val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+                        val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                        val dateTime = LocalDateTime.of(date, time)
                         ReservationCardWithCancel(
-                            date = dt.format(displayDateFormatter),
-                            time = dt.format(displayTimeFormatter),
+                            date = dateTime.format(displayDateFormatter),
+                            time = dateTime.format(displayTimeFormatter),
                             guests = res.numberCommensals,
                             status = if (res.isCompleted) "Completed" else "Pending",
                             modifier = Modifier.fillMaxWidth(),
                             onCancelClick = {
-                                coroutineScope.launch {
-                                    viewModel.cancelReservation(res.id, authViewModel)
-                                }
+                                reservationsViewModel.cancelReservation(res.id)
                             }
                         )
                     }
                 }
-                if (past.isNotEmpty()) {
+
+                if (sortedCancelled.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Reservaciones Canceladas",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    items(sortedCancelled) { res ->
+                        val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+                        val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                        val dateTime = LocalDateTime.of(date, time)
+                        ReservationCardWithCancel(
+                            date = dateTime.format(displayDateFormatter),
+                            time = dateTime.format(displayTimeFormatter),
+                            guests = res.numberCommensals,
+                            status = "Cancelada",
+                            modifier = Modifier.fillMaxWidth(),
+                            onCancelClick = null
+                        )
+                    }
+                }
+
+                if (sortedPast.isNotEmpty()) {
                     item {
                         Text(
                             text = stringResource(R.string.past_reservations),
@@ -111,12 +150,15 @@ fun ReservationsScreen(
                             modifier = Modifier.padding(vertical = 8.dp)
                         )
                     }
-                    items(past) { (res, dt) ->
+                    items(sortedPast) { res ->
+                        val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+                        val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                        val dateTime = LocalDateTime.of(date, time)
                         ReservationCardWithCancel(
-                            date = dt.format(displayDateFormatter),
-                            time = dt.format(displayTimeFormatter),
+                            date = dateTime.format(displayDateFormatter),
+                            time = dateTime.format(displayTimeFormatter),
                             guests = res.numberCommensals,
-                            status = "Completed",
+                            status = "Completada",
                             modifier = Modifier.fillMaxWidth(),
                             onCancelClick = null
                         )

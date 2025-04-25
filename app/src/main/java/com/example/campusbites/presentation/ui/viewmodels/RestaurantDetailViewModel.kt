@@ -148,11 +148,6 @@ class RestaurantDetailViewModel @Inject constructor(
         }
     }
 
-    fun cancelReservation(reservationId: String, authViewModel: AuthViewModel) {
-        viewModelScope.launch {
-            cancelReservationUseCase(reservationId, authViewModel = authViewModel)
-        }
-    }
 
     fun createReview(comment: CommentDomain) {
         viewModelScope.launch {

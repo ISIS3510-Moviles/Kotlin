@@ -13,13 +13,13 @@ class GetReservationByIdUseCase @Inject constructor(
     suspend operator fun invoke(reservationId: String): ReservationDomain {
         val reservation = repository.getReservationById(reservationId)
         return ReservationDomain(
-            id = reservation.id,
-            datetime = reservation.date,
+            id = reservation!!.id,
+            datetime = reservation.datetime,
             time = reservation.time,
-            numberCommensals = reservation.numberComensals,
+            numberCommensals = reservation.numberCommensals,
             isCompleted = reservation.isCompleted,
-            restaurantId = reservation.restaurant_id,
-            userId = reservation.user_id,
+            restaurantId = reservation.restaurantId,
+            userId = reservation.userId,
             hasBeenCancelled = reservation.hasBeenCancelled
         )
     }

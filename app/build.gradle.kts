@@ -59,6 +59,12 @@ android {
 }
 
 dependencies {
+    val roomVersion = "2.7.1"
+
+    implementation("androidx.room:room-runtime:$roomVersion")
+    kapt("androidx.room:room-compiler:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.credentials.vlatestversion)
     implementation (libs.googleid.vlatestversion)
@@ -112,3 +118,8 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
 }
+
+kapt {
+    correctErrorTypes = true
+}
+

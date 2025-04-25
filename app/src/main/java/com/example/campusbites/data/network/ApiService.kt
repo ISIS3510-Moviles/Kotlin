@@ -105,4 +105,7 @@ interface ApiService {
     @POST("comment")
     suspend fun createComment(@Body comment: CommentDTO): CommentDTO
 
+    @GET("reservation/by-user/{userId}")
+    suspend fun getReservationsForUser(@Path("userId") userId: String): List<ReservationDTO>
+
 }

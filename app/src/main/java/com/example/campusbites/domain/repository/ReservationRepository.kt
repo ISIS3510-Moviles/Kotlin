@@ -1,12 +1,12 @@
 package com.example.campusbites.domain.repository
 
 import com.example.campusbites.data.dto.CreateReservationDTO
-import com.example.campusbites.data.dto.ReservationDTO
+import com.example.campusbites.domain.model.ReservationDomain
+import kotlinx.coroutines.flow.Flow
 
 interface ReservationRepository {
-    suspend fun getReservationById(id: String): ReservationDTO
-
-    suspend fun createReservation(createReservationDTO: CreateReservationDTO): ReservationDTO
-    suspend fun cancelReservation(id: String): ReservationDTO
-
+    fun getReservationsForUser(userId: String): Flow<List<ReservationDomain>>
+    suspend fun getReservationById(id: String): ReservationDomain?
+    suspend fun createReservation(reservation: CreateReservationDTO): ReservationDomain
+    suspend fun cancelReservation(id: String): ReservationDomain
 }

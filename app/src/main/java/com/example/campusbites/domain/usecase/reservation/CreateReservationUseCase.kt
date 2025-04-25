@@ -16,7 +16,7 @@ class CreateReservationUseCase @Inject constructor(
     private val getUserByIdUseCase: GetUserByIdUseCase,
     private val getReservationByIdUseCase: GetReservationByIdUseCase,
 ) {
-    suspend operator fun invoke(reservationDomain: ReservationDomain, authViewModel: AuthViewModel): ReservationDTO {
+    suspend operator fun invoke(reservationDomain: ReservationDomain, authViewModel: AuthViewModel): ReservationDomain {
         val reservation = repository.createReservation(
             CreateReservationDTO(
                 date = reservationDomain.datetime,
