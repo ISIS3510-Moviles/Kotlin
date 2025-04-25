@@ -8,6 +8,7 @@ import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.local.AppDatabase
 import androidx.room.Room
+import com.example.campusbites.data.cache.InMemoryReviewCache
 import com.example.campusbites.data.local.dao.ReservationDao
 import com.example.campusbites.data.repository.AlertRepositoryImpl
 import com.example.campusbites.data.repository.CommentRepositoryImpl
@@ -23,6 +24,7 @@ import com.example.campusbites.data.repository.ReservationRepositoryImpl
 import com.example.campusbites.data.repository.RestaurantRepositoryImpl
 import com.example.campusbites.data.repository.UserRepositoryImpl
 import com.example.campusbites.domain.repository.AlertRepository
+import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.repository.CommentRepository
 import com.example.campusbites.domain.repository.DietaryTagRepository
 import com.example.campusbites.domain.repository.FoodTagRepository
@@ -76,6 +78,12 @@ object AppModule {
     @Singleton
     fun provideReservationDao(database: AppDatabase): ReservationDao {
         return database.reservationDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideInMemoryReviewCache(applicationScope: CoroutineScope): InMemoryReviewCache {
+        return InMemoryReviewCache(applicationScope)
     }
 
 
@@ -152,8 +160,8 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideCommentRepository(apiService: ApiService): CommentRepository{
-        return CommentRepositoryImpl(apiService)
+    fun provideCommentRepository(apiService: ApiService, inMemoryReviewCache: InMemoryReviewCache, authRepository: AuthRepository, connectivityManager: ConnectivityManager): CommentRepository{
+        return CommentRepositoryImpl(apiService, inMemoryReviewCache, authRepository, connectivityManager)
     }
 
     @Provides

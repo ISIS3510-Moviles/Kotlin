@@ -93,6 +93,7 @@ class AlertsViewModel @Inject constructor(
         }
         return try {
             val alerts = getAlertsUseCase()
+            Log.d("AlertsViewModel", "Fetched ${alerts.size} alerts from server.")
             alertCache.updateAlerts(alerts)
             Log.d("AlertsViewModel", "Fetched and cached ${alerts.size} alerts in memory.")
             alerts
