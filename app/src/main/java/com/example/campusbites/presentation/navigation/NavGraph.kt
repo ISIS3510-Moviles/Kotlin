@@ -13,6 +13,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
+import com.example.campusbites.presentation.ui.screens.DraftAlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
@@ -103,13 +104,22 @@ fun NavGraph(authViewModel: AuthViewModel) {
             val restaurants = alertsViewModel.restaurants.collectAsState()
             AlertCreateScreen(
                 onBackClick = { navController.popBackStack() },
-                onCreateClick = { description, restaurantId, userId ->
-                    alertsViewModel.createAlert(description, restaurantId)
+//                onCreateClick = { description, restaurantId, userId ->
+//                    alertsViewModel.createAlert(description, restaurantId)
+//
+//                    navController.navigate(NavigationRoutes.HOME_SCREEN)
+//                },
+//                restaurants = restaurants.value,
+                authViewModel = authViewModel,
+                onAlertCreated = { navController.popBackStack() },
+                viewModel = hiltViewModel()
+            )
+        }
 
-                    navController.navigate(NavigationRoutes.HOME_SCREEN)
-                },
-                restaurants = restaurants.value,
-                authViewModel = authViewModel
+        composable("draft_alerts") {
+            DraftAlertsScreen(
+                onBackClick = { navController.popBackStack() },
+                viewModel = hiltViewModel()
             )
         }
 

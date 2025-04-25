@@ -76,12 +76,14 @@ fun AlertsScreen(
                         // Aqui se debe navegar al detalle del restaurante
                         // navController.navigate("restaurant/$restaurant_id")
                     },
-                    onUpvoteClick = { alert ->
-                        viewModel.upvote(alert)
-                    },
-                    onDownvoteClick = { alert ->
-                        viewModel.downvote(alert)
-                    }
+                    onUpvoteClick = {},
+//                        { alert ->
+//                        viewModel.upvote(alert)
+//                    },
+                    onDownvoteClick = {}
+//                        { alert ->
+//                        viewModel.downvote(alert)
+//                    }
                 )
             }
         }

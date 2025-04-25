@@ -12,8 +12,10 @@ plugins {
 }
 
 configurations.all {
+
     exclude(group = "xmlpull", module = "xmlpull")
     exclude(group = "xpp3", module = "xpp3")
+    exclude(group = "com.intellij", module = "annotations")
 }
 
 android {
@@ -59,11 +61,14 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.compiler)
     val roomVersion = "2.7.1"
 
-    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation(libs.androidx.room.runtime)
     kapt("androidx.room:room-compiler:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
+    implementation(libs.androidx.room.ktx)
 
     implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.credentials.vlatestversion)
