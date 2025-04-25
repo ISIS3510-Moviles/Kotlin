@@ -50,14 +50,14 @@ class ReservationRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun createReservation(reservation: CreateReservationDTO): ReservationDomain {
+    override suspend fun createReservation(reservation: ReservationDomain): ReservationDomain {
         val createReservationDTO = CreateReservationDTO(
-            user_id = reservation.user_id,
-            restaurant_id = reservation.restaurant_id,
-            date = reservation.date,
+            user_id = reservation.userId,
+            restaurant_id = reservation.restaurantId,
+            date = reservation.datetime,
             time = reservation.time,
-            numberComensals = reservation.numberComensals,
-            isCompleted = reservation.isCompleted,
+            numberComensals = reservation.numberCommensals,
+            isCompleted = false,
         )
         val createdReservationDTO = apiService.createReservation(createReservationDTO)
         val createdReservationDomain = createdReservationDTO.toDomain()
@@ -71,7 +71,6 @@ class ReservationRepositoryImpl @Inject constructor(
         localReservationRepository.saveReservation(cancelledReservationDomain)
         return cancelledReservationDomain
     }
-
 
     fun ReservationDTO.toDomain(): ReservationDomain {
         return ReservationDomain(

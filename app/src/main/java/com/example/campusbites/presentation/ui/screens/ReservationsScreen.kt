@@ -49,13 +49,14 @@ fun ReservationsScreen(
     ) { paddingValues ->
         val now = LocalDateTime.now()
 
-        val (upcoming, pastAndCancelled) = reservations.partition {
+        val (cancelled, nonCancelled) = reservations.partition { it.hasBeenCancelled == true }
+
+        val (upcoming, past) = nonCancelled.partition {
             val date = LocalDate.parse(it.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
             val time = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
             val dateTime = LocalDateTime.of(date, time)
             dateTime.isAfter(now)
         }
-        val (past, cancelled) = pastAndCancelled.partition { it.hasBeenCancelled != true }
 
         val sortedUpcoming = upcoming.sortedBy {
             val date = LocalDate.parse(it.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
@@ -94,6 +95,31 @@ fun ReservationsScreen(
                     .padding(horizontal = 16.dp, vertical = 8.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Mostrar primero las reservaciones canceladas
+                if (sortedCancelled.isNotEmpty()) {
+                    item {
+                        Text(
+                            text = "Cancelled Reservations",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(vertical = 8.dp)
+                        )
+                    }
+                    items(sortedCancelled) { res ->
+                        val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
+                        val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                        val dateTime = LocalDateTime.of(date, time)
+                        ReservationCardWithCancel(
+                            date = dateTime.format(displayDateFormatter),
+                            time = dateTime.format(displayTimeFormatter),
+                            guests = res.numberCommensals,
+                            status = "Cancelada",
+                            modifier = Modifier.fillMaxWidth(),
+                            onCancelClick = null
+                        )
+                    }
+                }
+
+                // Luego mostrar las reservaciones próximas
                 if (sortedUpcoming.isNotEmpty()) {
                     item {
                         Text(
@@ -115,29 +141,6 @@ fun ReservationsScreen(
                             onCancelClick = {
                                 reservationsViewModel.cancelReservation(res.id)
                             }
-                        )
-                    }
-                }
-
-                if (sortedCancelled.isNotEmpty()) {
-                    item {
-                        Text(
-                            text = "Reservaciones Canceladas",
-                            style = MaterialTheme.typography.titleMedium,
-                            modifier = Modifier.padding(vertical = 8.dp)
-                        )
-                    }
-                    items(sortedCancelled) { res ->
-                        val date = LocalDate.parse(res.datetime, DateTimeFormatter.ISO_LOCAL_DATE)
-                        val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
-                        val dateTime = LocalDateTime.of(date, time)
-                        ReservationCardWithCancel(
-                            date = dateTime.format(displayDateFormatter),
-                            time = dateTime.format(displayTimeFormatter),
-                            guests = res.numberCommensals,
-                            status = "Cancelada",
-                            modifier = Modifier.fillMaxWidth(),
-                            onCancelClick = null
                         )
                     }
                 }

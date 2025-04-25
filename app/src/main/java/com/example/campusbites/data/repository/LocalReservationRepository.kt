@@ -42,7 +42,6 @@ class LocalReservationRepositoryImpl @Inject constructor(
     }
 }
 
-
 fun ReservationDomain.toEntity(): ReservationEntity {
     return ReservationEntity(
         id = this.id,
@@ -65,6 +64,6 @@ fun ReservationEntity.toDomain(): ReservationDomain {
         time = this.time,
         numberCommensals = this.numberCommensals,
         isCompleted = this.isCompleted,
-        hasBeenCancelled = this.hasBeenCancelled!!
+        hasBeenCancelled = this.hasBeenCancelled ?: false
     )
 }
