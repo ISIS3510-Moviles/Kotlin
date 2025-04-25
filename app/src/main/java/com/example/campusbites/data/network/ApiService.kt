@@ -14,6 +14,7 @@ import com.example.campusbites.data.dto.RecommendationRestaurantDTO
 import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
+import com.example.campusbites.data.dto.UpdateRestaurantCommentsDTO
 import com.example.campusbites.data.dto.UserDTO
 import retrofit2.Response
 import retrofit2.http.Body
@@ -107,5 +108,11 @@ interface ApiService {
 
     @GET("reservation/by-user/{userId}")
     suspend fun getReservationsForUser(@Path("userId") userId: String): List<ReservationDTO>
+    // New method for partial update of restaurant
+    @PATCH("restaurant/{id}")
+    suspend fun updateRestaurantComments(
+        @Path("id") id: String,
+        @Body updateRestaurantCommentsDTO: UpdateRestaurantCommentsDTO
+    ): Response<Unit>
 
 }

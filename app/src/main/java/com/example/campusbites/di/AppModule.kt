@@ -159,8 +159,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideCreateCommentUseCase(
-        repository: CommentRepository
-    ) = CreateCommentUseCase(repository)
+        commentRepository: CommentRepository,
+        restaurantRepository: RestaurantRepository
+    ) = CreateCommentUseCase(commentRepository)
 
     @Provides
     @Singleton
