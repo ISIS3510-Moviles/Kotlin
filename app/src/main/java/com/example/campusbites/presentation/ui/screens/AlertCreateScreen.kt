@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -18,31 +19,59 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.presentation.ui.components.AlertTopBar
-import com.example.campusbites.presentation.ui.material.CampusBitesTheme
+import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AlertCreateScreen(
     onBackClick: () -> Unit,
-    onCreateClick: (String, String, String) -> Unit,
-    restaurants: List<RestaurantDomain> = getSampleRestaurants(),
+    onAlertCreated: () -> Unit,
+    viewModel: AlertsViewModel,
     authViewModel: AuthViewModel
 ) {
+    val connectivityState by viewModel.connectivityState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val restaurants by viewModel.restaurants.collectAsState()
+    val isNetworkAvailable = connectivityState.isConnected
+
     var description by remember { mutableStateOf("") }
     var selectedRestaurantId by remember { mutableStateOf("") }
     var selectedRestaurantName by remember { mutableStateOf("") }
     var isRestaurantMenuExpanded by remember { mutableStateOf(false) }
+
+    // Load latest draft if available
+    LaunchedEffect(key1 = true) {
+        viewModel.getLatestDraftAlert()
+    }
+
+    // Update fields if a draft is available
+    LaunchedEffect(key1 = uiState.latestDraftAlert) {
+        uiState.latestDraftAlert?.let { draft ->
+            description = draft.message
+            selectedRestaurantId = draft.restaurantId
+            selectedRestaurantName = draft.restaurantName
+        }
+    }
+
+    // Show success message and navigate back
+    LaunchedEffect(key1 = uiState.successMessage) {
+        uiState.successMessage?.let {
+            onAlertCreated()
+        }
+    }
 
     Scaffold { innerPadding ->
         Column(
@@ -58,6 +87,23 @@ fun AlertCreateScreen(
                 style = MaterialTheme.typography.headlineMedium,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
             )
+
+            // Network status indicator
+            if (!isNetworkAvailable) {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+//                    containerColor = MaterialTheme.colorScheme.errorContainer
+                ) {
+                    Text(
+                        text = "You're offline. Your alert will be saved as a draft and can be sent when you're back online.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
+            }
 
             OutlinedTextField(
                 value = description,
@@ -108,13 +154,25 @@ fun AlertCreateScreen(
             Spacer(modifier = Modifier.height(16.dp))
 
             Button(
-                onClick = { authViewModel.user.value?.let { onCreateClick(description, selectedRestaurantId, it.id) } },
-                enabled = description.isNotBlank() && selectedRestaurantId.isNotBlank(),
+                onClick = {
+                    viewModel.createAlert(description, selectedRestaurantId)
+                },
+                enabled = description.isNotBlank() && selectedRestaurantId.isNotBlank() && !uiState.isLoading,
                 modifier = Modifier
                     .align(Alignment.CenterHorizontally)
                     .padding(vertical = 16.dp)
             ) {
-                Text("Create Alert")
+                Text(if (isNetworkAvailable) "Create Alert" else "Save Draft Alert")
+            }
+
+            // Error message
+            uiState.errorMessage?.let { errorMsg ->
+                Text(
+                    text = errorMsg,
+                    color = Color.Red,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(16.dp)
+                )
             }
         }
     }

@@ -9,9 +9,11 @@ import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.local.AppDatabase
 import androidx.room.Room
 import com.example.campusbites.data.local.dao.ReservationDao
+import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.repository.AlertRepositoryImpl
 import com.example.campusbites.data.repository.CommentRepositoryImpl
 import com.example.campusbites.data.repository.DietaryTagRepositoryImpl
+import com.example.campusbites.data.repository.DraftAlertRepositoryImpl
 import com.example.campusbites.data.repository.FoodTagRepositoryImpl
 import com.example.campusbites.data.repository.IngredientRepositoryImpl
 import com.example.campusbites.data.repository.InstitutionRepositoryImpl
@@ -25,6 +27,7 @@ import com.example.campusbites.data.repository.UserRepositoryImpl
 import com.example.campusbites.domain.repository.AlertRepository
 import com.example.campusbites.domain.repository.CommentRepository
 import com.example.campusbites.domain.repository.DietaryTagRepository
+import com.example.campusbites.domain.repository.DraftAlertRepository
 import com.example.campusbites.domain.repository.FoodTagRepository
 import com.example.campusbites.domain.repository.IngredientRepository
 import com.example.campusbites.domain.repository.InstitutionRepository
@@ -35,6 +38,7 @@ import com.example.campusbites.domain.repository.RecommendationRepository
 import com.example.campusbites.domain.repository.ReservationRepository
 import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.repository.UserRepository
+import com.example.campusbites.domain.service.AlertNotificationService
 import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
 import dagger.Binds
@@ -55,6 +59,24 @@ import okhttp3.MediaType.Companion.toMediaType
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideConnectivityMonitor(@ApplicationContext context: Context): ConnectivityMonitor {
+        return ConnectivityMonitor(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlertNotificationService(@ApplicationContext context: Context): AlertNotificationService {
+        return AlertNotificationService(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDraftAlertRepository(appDatabase: AppDatabase): DraftAlertRepository {
+        return DraftAlertRepositoryImpl(appDatabase.draftAlertDao())
+    }
 
     @Provides
     @Singleton

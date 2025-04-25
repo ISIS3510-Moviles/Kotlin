@@ -68,7 +68,7 @@ interface ApiService {
     suspend fun updateAlertVotes(@Path("id") id: String,@Body updateAlertDto: UpdateAlertDTO): Boolean
 
     @POST("alert")
-    suspend fun createAlert(@Body createAlertDTO: CreateAlertDTO): Boolean
+    suspend fun createAlert(@Body createAlertDTO: CreateAlertDTO): AlertDTO
 
     @GET("comment")
     suspend fun getComments(): List<CommentDTO>
