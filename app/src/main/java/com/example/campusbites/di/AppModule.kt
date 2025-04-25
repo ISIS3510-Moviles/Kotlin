@@ -47,11 +47,20 @@ import kotlinx.serialization.json.Json
 import javax.inject.Singleton
 import retrofit2.Retrofit
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import okhttp3.MediaType.Companion.toMediaType
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideApplicationScope(): CoroutineScope {
+        return CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    }
 
     @Provides
     @Singleton
@@ -183,10 +192,5 @@ object AppModule {
         ): ReservationRepository
     }
 
-    @Provides
-    @Singleton
-    fun provideInMemoryAlertCache(): InMemoryAlertCache {
-        return InMemoryAlertCache()
-    }
 
 }
