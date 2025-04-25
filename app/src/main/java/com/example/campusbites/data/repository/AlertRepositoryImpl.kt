@@ -155,7 +155,7 @@ class AlertRepositoryImpl @Inject constructor(
         message: String,
         publisherId: String,
         restaurantId: String
-    ): Boolean {
+    ): AlertDomain  {
         val createAlertDTO = CreateAlertDTO(
             datetime = datetime,
             icon = icon,
@@ -164,6 +164,10 @@ class AlertRepositoryImpl @Inject constructor(
             restaurantId = restaurantId,
             votes = 0
         )
-        return apiService.createAlert(createAlertDTO)
+//        return apiService.createAlert(createAlertDTO)
+
+        val createdAlertDTO = apiService.createAlert(createAlertDTO)
+        // Ahora mapea el DTO de respuesta a un modelo de dominio
+        return mapDtoToDomain(createdAlertDTO)
     }
 }
