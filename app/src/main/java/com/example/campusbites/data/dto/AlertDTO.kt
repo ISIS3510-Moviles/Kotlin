@@ -7,7 +7,7 @@ import kotlinx.serialization.Serializable
 data class AlertDTO(
     val id: String,
     @SerialName("date")
-    val datetime: String,
+    val datetime: String?,
     val icon: String,
     val message: String,
     val votes: Int,

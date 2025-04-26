@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.navigation
 
+import android.util.Log
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -8,18 +9,22 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.rememberNavController
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
+import com.example.campusbites.presentation.ui.screens.DraftAlertsScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
+import com.example.campusbites.presentation.ui.screens.ReservationsScreen
 import com.example.campusbites.presentation.ui.screens.SearchingScreen
 
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
 import com.example.campusbites.presentation.ui.screens.SignInScreen
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
 
 object NavigationRoutes {
     const val HOME_SCREEN = "home_screen"
@@ -27,8 +32,8 @@ object NavigationRoutes {
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
     const val SEARCHING_SCREEN = "searching_screen/{query}"
-    const val SIGNIN_SCREEN = "sign_in"
     const val FOOD_DETAIL = "food_detail/{id}"
+    const val RESERVATIONS_SCREEN = "reservations_screen"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
@@ -37,19 +42,14 @@ object NavigationRoutes {
 
 @Composable
 
-fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
+fun NavGraph(authViewModel: AuthViewModel) {
+    val navController = rememberNavController()
     val alertsViewModel: AlertsViewModel = hiltViewModel()
+    val homeViewModel: HomeViewModel = hiltViewModel()
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN
     ) {
-
-        composable(NavigationRoutes.SIGNIN_SCREEN){
-            SignInScreen(
-                navController = navController,
-                authViewModel = authViewModel
-            )
-        }
         // Home Screen
         composable(NavigationRoutes.HOME_SCREEN) {
             HomeScreen(
@@ -58,7 +58,9 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
                     navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
                 },
                 onIngredientClick = { ingredient ->
-                    navController.navigate(NavigationRoutes.createSearchingRoute(ingredient))
+                    navController.navigate(NavigationRoutes.createSearchingRoute(ingredient.name))
+                    homeViewModel.incrementIngredientClicks(ingredient.id)
+
                 },
                 onProductClick = { productId ->
                     navController.navigate(NavigationRoutes.createFoodDetailRoute(productId))
@@ -76,7 +78,9 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val restaurantId = it.arguments?.getString("id") ?: ""
-            RestaurantDetailScreen(restaurantId = restaurantId)
+            Log.d("RestaurantIdDebug", "Restaurant ID: $restaurantId")
+            RestaurantDetailScreen(restaurantId = restaurantId, authViewModel = authViewModel,
+                onProductClick = { productId -> navController.navigate(NavigationRoutes.createFoodDetailRoute(productId)) })
         }
 
         // Profile Screen
@@ -91,7 +95,8 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
         composable(NavigationRoutes.ALERTS_SCREEN) {
             AlertsScreen(
                 navController = navController,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                viewModel = alertsViewModel
             )
         }
 
@@ -99,12 +104,22 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             val restaurants = alertsViewModel.restaurants.collectAsState()
             AlertCreateScreen(
                 onBackClick = { navController.popBackStack() },
-                onCreateClick = { description, restaurantId ->
-                    alertsViewModel.createAlert(description, restaurantId)
+//                onCreateClick = { description, restaurantId, userId ->
+//                    alertsViewModel.createAlert(description, restaurantId)
+//
+//                    navController.navigate(NavigationRoutes.HOME_SCREEN)
+//                },
+//                restaurants = restaurants.value,
+                authViewModel = authViewModel,
+                onAlertCreated = { navController.popBackStack() },
+                viewModel = hiltViewModel()
+            )
+        }
 
-                    navController.navigate(NavigationRoutes.HOME_SCREEN)
-                },
-                restaurants = restaurants.value
+        composable("draft_alerts") {
+            DraftAlertsScreen(
+                onBackClick = { navController.popBackStack() },
+                viewModel = hiltViewModel()
             )
         }
 
@@ -133,5 +148,16 @@ fun NavGraph(navController: NavHostController, authViewModel: AuthViewModel) {
             val foodId = it.arguments?.getString("id") ?: ""
             FoodDetailScreen(foodId = foodId, authViewModel = authViewModel)
         }
+
+        // Reservations Screen
+        composable(
+            route = NavigationRoutes.RESERVATIONS_SCREEN,
+        ) {
+            ReservationsScreen(
+                navController = navController,
+                authViewModel = authViewModel,
+            )
+        }
+
     }
 }

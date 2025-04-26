@@ -2,6 +2,7 @@ package com.example.campusbites.domain.model
 
 import kotlinx.serialization.Serializable
 
+@Serializable
 data class RestaurantDomain(
     val id: String,
     val name: String,

@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -8,8 +9,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Email
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -17,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -144,68 +144,58 @@ fun ProfileScreen(
                                     Text(text = user!!.email)
                                 }
 
-                                // Institución
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Icon(
-                                        imageVector = Icons.Default.LocationOn,
-                                        contentDescription = "Institución",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
-                                    Spacer(modifier = Modifier.width(12.dp))
-                                    user!!.institution?.let { Text(text = it.name) }
-                                }
                             }
                         }
 
                         // Preferencias dietarias
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                            )
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(12.dp)
-                            ) {
-                                Text(
-                                    text = "Dietary preferences",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    fontWeight = FontWeight.Bold
-                                )
-                                HorizontalDivider()
-                                if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
-                                    FlowRow(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                                    ) {
-                                        user!!.dietaryPreferencesTagIds.forEach { preference ->
-                                            Surface(
-                                                shape = RoundedCornerShape(16.dp),
-                                                color = MaterialTheme.colorScheme.secondaryContainer
-                                            ) {
-                                                Text(
-                                                    text = preference,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-                                                )
-                                            }
-                                        }
-                                    }
-                                } else {
-                                    Text(
-                                        text = "No dietary preferences specified",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                            }
-                        }
+//                        Card(
+//                            modifier = Modifier
+//                                .fillMaxWidth()
+//                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
+//                            shape = RoundedCornerShape(16.dp),
+//                            colors = CardDefaults.cardColors(
+//                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+//                            )
+//                        ) {
+//                            Column(
+//                                modifier = Modifier.padding(16.dp),
+//                                verticalArrangement = Arrangement.spacedBy(12.dp)
+//                            ) {
+//                                Text(
+//                                    text = "Dietary preferences",
+//                                    style = MaterialTheme.typography.titleMedium,
+//                                    fontWeight = FontWeight.Bold
+//                                )
+//                                HorizontalDivider()
+//                                if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
+//                                    FlowRow(
+//                                        modifier = Modifier.fillMaxWidth(),
+//                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+//                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+//                                    ) {
+//                                        user!!.dietaryPreferencesTagIds.forEach { preference ->
+//                                            Surface(
+//                                                shape = RoundedCornerShape(16.dp),
+//                                                color = MaterialTheme.colorScheme.secondaryContainer
+//                                            ) {
+//                                                Text(
+//                                                    text = preference,
+//                                                    style = MaterialTheme.typography.bodyMedium,
+//                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+//                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+//                                                )
+//                                            }
+//                                        }
+//                                    }
+//                                } else {
+//                                    Text(
+//                                        text = "No dietary preferences specified",
+//                                        style = MaterialTheme.typography.bodyMedium,
+//                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+//                                    )
+//                                }
+//                            }
+//                        }
 
                         // Productos guardados
                         if (user!!.savedProducts.isNotEmpty()) {
@@ -247,9 +237,16 @@ fun ProfileScreen(
                             }
                         }
 
-                        // Botón para cerrar sesión (ahora siempre visible, fuera del bloque de guardados)
+                        val context = LocalContext.current // Necesitas el contexto para el Toast
+
                         Button(
-                            onClick = { authViewModel.signOut() },
+                            onClick = {
+                                authViewModel.signOut(
+                                    onComplete = {
+                                        Toast.makeText(context, "Logged out successfully", Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
                             modifier = Modifier
                                 .padding(16.dp)
                                 .fillMaxWidth()

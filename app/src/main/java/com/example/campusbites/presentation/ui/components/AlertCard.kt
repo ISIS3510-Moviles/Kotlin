@@ -72,32 +72,33 @@ fun AlertCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 // Fila para mostrar los votos a la derecha.
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
-                ) {
-                    IconButton(onClick = { onUpvoteClick(notification) }) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_upvote),
-                            contentDescription = "Upvote",
-                            modifier = Modifier.size(24.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                        )
-                    }
-                    Text(
-                        text = notification.votes.toString(),
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                    IconButton(onClick = { onDownvoteClick(notification) }) {
-                        Image(
-                            painter = painterResource(id = R.drawable.ic_downvote),
-                            contentDescription = "Downvote",
-                            modifier = Modifier.size(24.dp),
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-                        )
-                    }
-                }
+//                Row(
+//                    modifier = Modifier.fillMaxWidth(),
+//                    verticalAlignment = Alignment.CenterVertically,
+//                    horizontalArrangement = Arrangement.End
+//                )
+//                {
+//                    IconButton(onClick = { onUpvoteClick(notification) }) {
+//                        Image(
+//                            painter = painterResource(id = R.drawable.ic_upvote),
+//                            contentDescription = "Upvote",
+//                            modifier = Modifier.size(24.dp),
+//                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+//                        )
+//                    }
+//                    Text(
+//                        text = notification.votes.toString(),
+//                        style = MaterialTheme.typography.bodyMedium
+//                    )
+//                    IconButton(onClick = { onDownvoteClick(notification) }) {
+//                        Image(
+//                            painter = painterResource(id = R.drawable.ic_downvote),
+//                            contentDescription = "Downvote",
+//                            modifier = Modifier.size(24.dp),
+//                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
+//                        )
+//                    }
+//                }
             }
         }
     }

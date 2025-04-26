@@ -44,17 +44,19 @@ fun RestaurantListRow(
             style = MaterialTheme.typography.displaySmall,
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(start = 8.dp)
         )
         Text(
             text = description,
             style = MaterialTheme.typography.bodySmall,
-            modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)
+            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
         )
 
         if (restaurants.isEmpty()) {
             Text(
-                "No hay restaurantes disponibles",
-                style = MaterialTheme.typography.bodyMedium
+                "There are no restaurants available at the moment",
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
             )
         } else {
             LazyRow(

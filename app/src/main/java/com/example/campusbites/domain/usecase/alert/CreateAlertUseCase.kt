@@ -1,5 +1,6 @@
 package com.example.campusbites.domain.usecase.alert
 
+import com.example.campusbites.domain.model.AlertDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AlertRepository
 import java.time.Instant
@@ -12,7 +13,7 @@ class CreateAlertUseCase @Inject constructor(
         message: String,
         restaurantId: String,
         user: UserDomain
-    ): Boolean {
+    ): AlertDomain {
         // Aquí se deberia obtener el usuario actual el usuario actual autenticado
         val currentUserId = user
 //        val currentUserId = userRepository.getCurrentUserId()

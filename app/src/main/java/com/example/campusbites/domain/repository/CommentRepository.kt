@@ -1,8 +1,10 @@
 package com.example.campusbites.domain.repository
 
-import com.example.campusbites.data.dto.CommentDTO
+import com.example.campusbites.domain.model.CommentDomain
+import kotlinx.coroutines.flow.Flow
 
 interface CommentRepository {
-    suspend fun getComments(restaurantId: String): List<CommentDTO>
-    suspend fun getAllComments(): List<CommentDTO>
+    fun getComments(restaurantId: String): Flow<List<CommentDomain>>
+    fun getAllComments(): Flow<List<CommentDomain>>
+    suspend fun createComment(comment: CommentDomain): CommentDomain
 }

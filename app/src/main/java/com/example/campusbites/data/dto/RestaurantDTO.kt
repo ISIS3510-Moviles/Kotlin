@@ -15,7 +15,7 @@ data class RestaurantDTO(
     val opensHolidays: Boolean,
     val opensWeekends: Boolean,
     val isActive: Boolean,
-    val rating: Double,
+    val rating: Double = 0.0,
     val address: String,
     val phone: String,
     val email: String,

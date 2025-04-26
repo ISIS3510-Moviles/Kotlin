@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
@@ -19,29 +20,33 @@ import com.example.campusbites.domain.model.IngredientDomain
 @Composable
 fun IngredientGrid(
     ingredients: List<IngredientDomain>,
-    onIngredientClick: (String) -> Unit,
-    modifier: Modifier = Modifier
+    onIngredientClick: (IngredientDomain) -> Unit,
+    modifier: Modifier = Modifier,
+    rowCount: Int = 2
 ) {
-    Column (
+    val scrollState = rememberScrollState()
+
+    val columns = ingredients.chunked(rowCount)
+
+    Column(
         modifier = modifier
-            .horizontalScroll(rememberScrollState())
-            .width(500.dp)
+            .horizontalScroll(scrollState)
+            .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
-        FlowRow(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalArrangement = Arrangement.Center,
-            maxLines = 2,
-            modifier = modifier
-                .padding(8.dp)
-                .wrapContentSize()
-        ) {
-            ingredients.forEach { ingredient ->
-                IngredientCard(
-                    ingredient = ingredient,
-                    onIngredientClick = onIngredientClick,
-                    modifier = Modifier
-                        .padding(8.dp)
-                )
+        for (rowIndex in 0 until rowCount) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(bottom = if (rowIndex < rowCount - 1) 8.dp else 0.dp)
+            ) {
+                columns.forEach { columnItems ->
+                    if (rowIndex < columnItems.size) {
+                        IngredientCard(
+                            ingredient = columnItems[rowIndex],
+                            onIngredientClick = onIngredientClick,
+                            modifier = Modifier
+                        )
+                    }
+                }
             }
         }
     }

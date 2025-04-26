@@ -9,11 +9,14 @@ plugins {
     id("com.google.gms.google-services")
     alias(libs.plugins.google.firebase.firebase.perf)
     alias(libs.plugins.google.firebase.crashlytics)
+    id("io.realm.kotlin")
 }
 
 configurations.all {
+
     exclude(group = "xmlpull", module = "xmlpull")
     exclude(group = "xpp3", module = "xpp3")
+    exclude(group = "com.intellij", module = "annotations")
 }
 
 android {
@@ -59,6 +62,19 @@ android {
 }
 
 dependencies {
+
+    implementation(libs.androidx.room.common.jvm)
+    implementation(libs.androidx.room.compiler)
+    val roomVersion = "2.7.1"
+
+    implementation("io.realm.kotlin:library-base:2.0.0")
+
+
+    implementation(libs.androidx.room.runtime)
+    kapt("androidx.room:room-compiler:$roomVersion")
+    implementation(libs.androidx.room.ktx)
+
+    implementation (libs.androidx.datastore.preferences)
     implementation (libs.androidx.credentials.vlatestversion)
     implementation (libs.googleid.vlatestversion)
     implementation(libs.androidx.credentials.play.services.auth.vlatestversion)
@@ -111,3 +127,8 @@ dependencies {
     implementation(libs.accompanist.permissions)
 
 }
+
+kapt {
+    correctErrorTypes = true
+}
+

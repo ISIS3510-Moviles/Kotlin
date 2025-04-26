@@ -6,5 +6,6 @@ import kotlinx.serialization.Serializable
 data class FoodTagDTO(
     val id: String,
     val name: String,
-    val description: String
+    val description: String,
+    val icon: String
 )

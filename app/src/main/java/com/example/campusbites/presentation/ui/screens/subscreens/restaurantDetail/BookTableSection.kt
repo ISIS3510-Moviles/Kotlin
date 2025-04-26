@@ -1,7 +1,9 @@
 package com.example.campusbites.presentation.ui.screens.subscreens.restaurantDetail
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.widget.DatePicker
+import android.widget.Toast
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,29 +17,84 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.campusbites.domain.model.ReservationDomain
+import com.example.campusbites.domain.model.RestaurantDomain
+import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.example.campusbites.presentation.ui.viewmodels.RestaurantDetailViewModel
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.ktx.logEvent
+import com.google.firebase.ktx.Firebase
+import java.time.LocalDate
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlinx.coroutines.launch // Importa launch
+import androidx.compose.runtime.rememberCoroutineScope // Importa rememberCoroutineScope
 
+@SuppressLint("StateFlowValueCalledInComposition")
 @Composable
-fun BookTableSection() {
+fun BookTableSection(
+    authViewModel: AuthViewModel,
+    restaurant: RestaurantDomain,
+    restaurantDetailViewModel: RestaurantDetailViewModel
+) {
+    val user by authViewModel.user.collectAsState()
+    val analytics = Firebase.analytics
+    val isUserLoggedIn = authViewModel.user.value != null
+
     var selectedDate by remember { mutableStateOf("") }
     var selectedHour by remember { mutableStateOf("") }
     var showHourDropdown by remember { mutableStateOf(false) }
     var comensals by remember { mutableStateOf(1) }
+    var errorMessage by remember { mutableStateOf("") }
 
     val context = LocalContext.current
     val calendar = Calendar.getInstance()
+    val primaryBlue = Color(0xFF1565C0)
+
+    val displayDateFormatter = DateTimeFormatter.ofPattern("MM/dd/yyyy")
+    val jsonDateFormatter = DateTimeFormatter.ISO_LOCAL_DATE
+    val displayTimeFormatter = DateTimeFormatter.ofPattern("H:mm")
+    val jsonTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     val datePickerDialog = DatePickerDialog(
         context,
         { _: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-            selectedDate = "${month + 1}/$dayOfMonth/$year"
+            val picked = Calendar.getInstance().apply { set(year, month, dayOfMonth) }
+            if (picked.before(calendar)) {
+                errorMessage = "You can't select a past date"
+            } else {
+                selectedDate = displayDateFormatter.format(
+                    LocalDate.of(year, month + 1, dayOfMonth)
+                )
+                errorMessage = ""
+                selectedHour = ""
+            }
         },
         calendar.get(Calendar.YEAR),
         calendar.get(Calendar.MONTH),
         calendar.get(Calendar.DAY_OF_MONTH)
-    )
+    ).apply { datePicker.minDate = calendar.timeInMillis }
 
-    val availableHours = listOf("7:00", "8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00")
+    val availableHours = (7..23).map { it.toString() + ":00" }
+    val filteredHours by remember(selectedDate) {
+        derivedStateOf {
+            if (selectedDate.isNotEmpty()) {
+                val pickedDate = LocalDate.parse(selectedDate, displayDateFormatter)
+                if (pickedDate.isEqual(LocalDate.now())) {
+                    availableHours.filter { hour ->
+                        val time = LocalTime.parse(hour, displayTimeFormatter)
+                        time.isAfter(LocalTime.now())
+                    }
+                } else availableHours
+            } else emptyList()
+        }
+    }
+
+    val uiState by restaurantDetailViewModel.uiState.collectAsState()
+    val isOnline = uiState.isOnline
+
+    val coroutineScope = rememberCoroutineScope()
 
     Card(
         shape = RoundedCornerShape(12.dp),
@@ -50,12 +107,11 @@ fun BookTableSection() {
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Date Picker
-            Text("Date:", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Date:", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
                     .clickable { datePickerDialog.show() },
                 contentAlignment = Alignment.CenterStart
@@ -63,21 +119,20 @@ fun BookTableSection() {
                 Text(text = if (selectedDate.isNotEmpty()) selectedDate else "MM/DD/YYYY")
             }
 
-            // Hour Picker
-            Text("Hour", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Hour", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp)
-                    .clickable { showHourDropdown = true }
+                    .clickable(enabled = selectedDate.isNotEmpty()) { showHourDropdown = true }
             ) {
                 Text(text = if (selectedHour.isNotEmpty()) selectedHour else "Select hour")
                 DropdownMenu(
                     expanded = showHourDropdown,
                     onDismissRequest = { showHourDropdown = false }
                 ) {
-                    availableHours.forEach { hour ->
+                    filteredHours.forEach { hour ->
                         DropdownMenuItem(
                             text = { Text(hour) },
                             onClick = {
@@ -89,36 +144,82 @@ fun BookTableSection() {
                 }
             }
 
-            // Comensals Selector
-            Text("Comensals", fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20), fontSize = 16.sp)
+            Text("Comensals", fontWeight = FontWeight.Bold, color = primaryBlue, fontSize = 16.sp)
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .border(2.dp, Color(0xFF1B5E20), RoundedCornerShape(8.dp))
+                    .border(2.dp, primaryBlue, RoundedCornerShape(8.dp))
                     .padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(
-                    onClick = { if (comensals > 1) comensals-- } // Evita que sea menor que 1
-                ) {
-                    Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                IconButton(onClick = { if (comensals > 1) comensals-- }) {
+                    Text("-", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
-
-                Text(text = comensals.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-                IconButton(
-                    onClick = { comensals++ }
-                ) {
-                    Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = Color(0xFF1B5E20))
+                Text(comensals.toString(), fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                IconButton(onClick = { comensals++ }) {
+                    Text("+", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = primaryBlue)
                 }
             }
 
-            // Book Button
+            if (errorMessage.isNotEmpty()) {
+                Text(
+                    text = errorMessage,
+                    color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
             Button(
-                onClick = { /* Acción de reserva */ },
-                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF1B5E20)),
-                modifier = Modifier.fillMaxWidth()
+                onClick = {
+                    val validationError = when {
+                        !isUserLoggedIn       -> "You must be logged in to book"
+                        selectedDate.isEmpty()  -> "Please select a date"
+                        selectedHour.isEmpty()  -> "Please select an hour"
+                        else                     -> null
+                    }
+                    if (validationError != null) {
+                        errorMessage = validationError
+                        return@Button
+                    }
+
+                    val jsonDate = LocalDate.parse(selectedDate, displayDateFormatter)
+                        .format(jsonDateFormatter)
+                    val jsonTime = LocalTime.parse(selectedHour, displayTimeFormatter)
+                        .format(jsonTimeFormatter)
+
+                    errorMessage = ""
+                    analytics.logEvent("restaurant_reservation_used") {
+                        param("date", jsonDate)
+                        param("time", jsonTime)
+                    }
+
+                    coroutineScope.launch {
+                        try {
+                            restaurantDetailViewModel.createReservation(
+                                ReservationDomain(
+                                    id = "",
+                                    restaurantId = restaurant.id,
+                                    userId = user!!.id,
+                                    datetime = jsonDate,
+                                    time = jsonTime,
+                                    numberCommensals = comensals,
+                                    isCompleted = false,
+                                    hasBeenCancelled = false
+                                ))
+                            Toast.makeText(context, "Reservation confirmed!", Toast.LENGTH_SHORT).show()
+                            selectedDate = ""
+                            selectedHour = ""
+                            comensals = 1
+                        } catch (e: Exception) {
+                            errorMessage = "Failed to create reservation. Please try again."
+                            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = primaryBlue),
+                modifier = Modifier.fillMaxWidth(),
+                enabled = isOnline
             ) {
                 Text("Book", color = Color.White, fontWeight = FontWeight.Bold)
             }

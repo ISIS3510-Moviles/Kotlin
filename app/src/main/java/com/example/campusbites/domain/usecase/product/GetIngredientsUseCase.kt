@@ -14,7 +14,8 @@ class GetIngredientsUseCase @Inject constructor(
                 id = ingredientDTO.id,
                 name = ingredientDTO.name,
                 description = ingredientDTO.description,
-                image = ingredientDTO.image
+                image = ingredientDTO.image,
+                clicks = ingredientDTO.clicks
             )
         }
     }

@@ -1,5 +1,6 @@
 package com.example.campusbites.data.repository
 
+import android.util.Log
 import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.CreateAlertDTO
 import com.example.campusbites.data.dto.RestaurantDTO
@@ -11,18 +12,20 @@ import com.example.campusbites.domain.model.InstitutionDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AlertRepository
-import java.time.OffsetDateTime
-import java.time.format.DateTimeFormatter
+import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
+import java.time.Instant
+import java.time.ZoneOffset
 import javax.inject.Inject
 
 class AlertRepositoryImpl @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val GetReservationByIdUseCase: GetReservationByIdUseCase
 ) : AlertRepository {
 
     private suspend fun mapDtoToDomain(dto: AlertDTO): AlertDomain {
-        // Parsea la fecha usando ISO_OFFSET_DATE_TIME (por ejemplo, "2025-03-10T12:00:00Z")
-        val parsedDateTime = OffsetDateTime
-            .parse(dto.datetime, DateTimeFormatter.ISO_OFFSET_DATE_TIME)
+        val parsedDateTime = Instant
+            .parse(dto.datetime)
+            .atZone(ZoneOffset.UTC)
             .toLocalDateTime()
 
         val userDTO: UserDTO = apiService.getUserById(dto.publisherId)
@@ -35,7 +38,7 @@ class AlertRepositoryImpl @Inject constructor(
             isPremium = userDTO.isPremium,
             badgesIds = userDTO.badgesIds,
             schedulesIds = userDTO.schedulesIds,
-            reservationsIds = userDTO.reservationsIds,
+            reservationsDomain = userDTO.reservationsIds.map { reservationId -> GetReservationByIdUseCase(reservationId) },
             institution = InstitutionDomain(
                 id = userDTO.institutionId,
                 name = "Institución desconocida",
@@ -53,6 +56,7 @@ class AlertRepositoryImpl @Inject constructor(
         )
 
         val restaurants: List<RestaurantDTO> = apiService.getRestaurants()
+
         val restaurantDTO: RestaurantDTO? = restaurants.firstOrNull { it.id == dto.restaurantId }
 
         val restaurant = restaurantDTO?.let {
@@ -126,7 +130,10 @@ class AlertRepositoryImpl @Inject constructor(
 
     override suspend fun getAlerts(): List<AlertDomain> {
         val dtos: List<AlertDTO> = apiService.getAlerts()
-        return dtos.map { dto -> mapDtoToDomain(dto) }
+        val ret = dtos.map { dto -> mapDtoToDomain(dto) }
+        Log.d("AlertRepositoryImpl", "DTOS: $dtos")
+        Log.d("AlertRepositoryImpl", "RET: $ret")
+        return ret
     }
 
     override suspend fun getAlertById(id: String): AlertDomain? {
@@ -146,7 +153,7 @@ class AlertRepositoryImpl @Inject constructor(
         message: String,
         publisherId: String,
         restaurantId: String
-    ): Boolean {
+    ): AlertDomain  {
         val createAlertDTO = CreateAlertDTO(
             datetime = datetime,
             icon = icon,
@@ -155,6 +162,10 @@ class AlertRepositoryImpl @Inject constructor(
             restaurantId = restaurantId,
             votes = 0
         )
-        return apiService.createAlert(createAlertDTO)
+//        return apiService.createAlert(createAlertDTO)
+
+        val createdAlertDTO = apiService.createAlert(createAlertDTO)
+        // Ahora mapea el DTO de respuesta a un modelo de dominio
+        return mapDtoToDomain(createdAlertDTO)
     }
 }

@@ -12,5 +12,5 @@ interface AlertRepository {
         message: String,
         publisherId: String,
         restaurantId: String
-    ): Boolean
+    ): AlertDomain
 }

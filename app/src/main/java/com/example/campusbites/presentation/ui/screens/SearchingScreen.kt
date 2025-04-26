@@ -19,7 +19,6 @@ import com.example.campusbites.presentation.ui.viewmodels.SearchingScreenViewMod
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
-import com.example.campusbites.presentation.ui.components.CustomIcons
 import com.example.campusbites.presentation.ui.components.SearchBar
 
 @Composable
@@ -30,44 +29,39 @@ fun SearchingScreen(
     onFoodClick: (String) -> Unit,
     viewModel: SearchingScreenViewModel = hiltViewModel(),
 ) {
-
-
     val uiState by viewModel.uiState.collectAsState()
     var selectedCategory by remember { mutableStateOf("Food") }
-    val matchingRestaurants = uiState.filteredRestaurants
-    val matchingFoods = uiState.filteredProducts
+
 
     LaunchedEffect(query) {
-        viewModel.onSearchQueryChanged(query)
+        if (query.isNotBlank()) {
+            viewModel.performSearch(query)
+        }
     }
 
     Column(
         modifier = modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState())
             .padding(16.dp)
     ) {
-        // Search bar con icono de filtro
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 8.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            IconButton(onClick = { /* TODO: Open filter */ }) {
-                Icon(imageVector = CustomIcons.FilterList, contentDescription = "Filter")
-            }
             SearchBar(
                 query = uiState.searchQuery,
-                onQueryChange = viewModel::onSearchQueryChanged,
-                onSearch = { viewModel.onSearchQueryChanged(it) },
+                onQueryChange = { },
+                onSearch = { newQuery -> viewModel.performSearch(newQuery) },
                 modifier = Modifier.weight(1f),
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Category Selector
+
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
@@ -86,36 +80,47 @@ fun SearchingScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Show list based on category selection
-        when (selectedCategory) {
-            "Food" -> {
-                if (matchingFoods.isNotEmpty()) {
-                    matchingFoods.forEach { food ->
-                        ProductCard(
-                            product = food,
-                            onProductClick = { onFoodClick(food.id.toString()) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                    }
-                } else {
-                    Text("No se encontraron productos", style = MaterialTheme.typography.bodyLarge)
-                }
+        if (uiState.isLoading) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
             }
-            "Restaurants" -> {
-                if (matchingRestaurants.isNotEmpty()) {
-                    matchingRestaurants.forEach { restaurant ->
-                        RestaurantCard(
-                            restaurant = restaurant,
-                            onRestaurantClick = { onRestaurantClick(restaurant.id.toString()) }
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
+        } else if (uiState.errorMessage != null) {
+            Text(
+                text = "Error: ${uiState.errorMessage}",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(16.dp)
+            )
+        } else {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                when (selectedCategory) {
+                    "Food" -> {
+                        if (uiState.filteredProducts.isNotEmpty()) {
+                            uiState.filteredProducts.forEach { food ->
+                                ProductCard(
+                                    product = food,
+                                    onProductClick = { onFoodClick(food.id) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        } else {
+                            Text("No products found matching '$query'", style = MaterialTheme.typography.bodyLarge)
+                        }
                     }
-                } else {
-                    Text("No se encontraron restaurantes", style = MaterialTheme.typography.bodyLarge)
+                    "Restaurants" -> {
+                        if (uiState.filteredRestaurants.isNotEmpty()) {
+                            uiState.filteredRestaurants.forEach { restaurant ->
+                                RestaurantCard(
+                                    restaurant = restaurant,
+                                    onRestaurantClick = { onRestaurantClick(restaurant.id) }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                            }
+                        } else {
+                            Text("No restaurants found matching '$query'", style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
                 }
             }
         }
     }
 }
-
-
