@@ -5,6 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -38,7 +42,7 @@ fun ReservationsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Reservaciones", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("Reservations", style = MaterialTheme.typography.titleLarge) },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -112,7 +116,7 @@ fun ReservationsScreen(
                             date = dateTime.format(displayDateFormatter),
                             time = dateTime.format(displayTimeFormatter),
                             guests = res.numberCommensals,
-                            status = "Cancelada",
+                            status = "Canceled",
                             modifier = Modifier.fillMaxWidth(),
                             onCancelClick = null
                         )
@@ -161,7 +165,7 @@ fun ReservationsScreen(
                             date = dateTime.format(displayDateFormatter),
                             time = dateTime.format(displayTimeFormatter),
                             guests = res.numberCommensals,
-                            status = "Completada",
+                            status = "Completed",
                             modifier = Modifier.fillMaxWidth(),
                             onCancelClick = null
                         )
@@ -190,10 +194,41 @@ fun ReservationCardWithCancel(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Fecha: $date", style = MaterialTheme.typography.bodyMedium)
-                Text(text = "Hora: $time", style = MaterialTheme.typography.bodyMedium)
-                Text(text = "Comensales: $guests", style = MaterialTheme.typography.bodyMedium)
-                Text(text = "Estado: $status", style = MaterialTheme.typography.bodyMedium)
+                Row {
+                    Icon(
+                        imageVector = Icons.Filled.DateRange,
+                        contentDescription = "Date Icon",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(text = "Date: $date", style = MaterialTheme.typography.bodyMedium)
+                }
+                Row {
+                    Icon(
+                        imageVector = Icons.Filled.Info,
+                        contentDescription = "Date Icon",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(text = "Hour: $time", style = MaterialTheme.typography.bodyMedium)
+                }
+                Row {
+                    Icon(
+                        imageVector = Icons.Filled.Face,
+                        contentDescription = "Date Icon",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(
+                        text = "Participants: $guests",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+                Row {
+                    Icon(
+                        imageVector = Icons.Filled.Notifications,
+                        contentDescription = "Date Icon",
+                        modifier = Modifier.padding(end = 8.dp)
+                    )
+                    Text(text = "Status: $status", style = MaterialTheme.typography.bodyMedium)
+                }
             }
 
             if (onCancelClick != null) {

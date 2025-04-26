@@ -45,6 +45,9 @@ import com.example.campusbites.domain.repository.UserRepository
 import com.example.campusbites.domain.service.AlertNotificationService
 import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.firebase.Firebase
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.analytics
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -247,6 +250,16 @@ object AppModule {
         abstract fun bindReservationRepository(
             reservationRepositoryImpl: ReservationRepositoryImpl
         ): ReservationRepository
+    }
+
+    @Module
+    @InstallIn(SingletonComponent::class)
+    object FirebaseModule {
+        @Provides
+        @Singleton
+        fun provideFirebaseAnalytics(): FirebaseAnalytics {
+            return Firebase.analytics
+        }
     }
 
 
