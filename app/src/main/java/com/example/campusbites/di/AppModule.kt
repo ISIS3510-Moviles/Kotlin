@@ -10,7 +10,9 @@ import com.example.campusbites.data.local.AppDatabase
 import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
 import com.example.campusbites.data.local.dao.ReservationDao
+import com.example.campusbites.data.local.realm.RealmConfig
 import com.example.campusbites.data.network.ConnectivityMonitor
+import com.example.campusbites.data.preferences.HomeDataRepository
 import com.example.campusbites.data.repository.AlertRepositoryImpl
 import com.example.campusbites.data.repository.CommentRepositoryImpl
 import com.example.campusbites.data.repository.DietaryTagRepositoryImpl
@@ -51,16 +53,40 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import kotlinx.serialization.json.Json
 import javax.inject.Singleton
-import retrofit2.Retrofit
-import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import okhttp3.MediaType.Companion.toMediaType
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideHomeDataRepository(
+        @ApplicationContext context: Context,
+        json: Json
+    ): HomeDataRepository {
+        return HomeDataRepository(context, json)
+    }
+
+    @Provides
+    @Singleton
+    fun provideInMemoryAlertCache(applicationScope: CoroutineScope): InMemoryAlertCache {
+        return InMemoryAlertCache(applicationScope)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRealmConfig(): RealmConfig {
+        return RealmConfig()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDraftAlertRepository(realmConfig: RealmConfig): DraftAlertRepository {
+        return DraftAlertRepositoryImpl(realmConfig)
+    }
 
     @Provides
     @Singleton
@@ -74,11 +100,11 @@ object AppModule {
         return AlertNotificationService(context)
     }
 
-    @Provides
-    @Singleton
-    fun provideDraftAlertRepository(appDatabase: AppDatabase): DraftAlertRepository {
-        return DraftAlertRepositoryImpl(appDatabase.draftAlertDao())
-    }
+//    @Provides
+//    @Singleton
+//    fun provideDraftAlertRepository(appDatabase: AppDatabase): DraftAlertRepository {
+//        return DraftAlertRepositoryImpl(appDatabase.draftAlertDao())
+//    }
 
     @Provides
     @Singleton
