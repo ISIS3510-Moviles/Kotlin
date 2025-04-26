@@ -49,6 +49,9 @@ import com.google.accompanist.permissions.rememberPermissionState
 import androidx.compose.ui.text.font.FontWeight
 import com.example.campusbites.domain.model.IngredientDomain
 import com.example.campusbites.presentation.ui.components.PopularIngredientsSection
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.logEvent
+import com.google.firebase.ktx.Firebase
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
@@ -123,7 +126,17 @@ fun HomeScreen(
                             )
                         }
 
-                        IconButton(onClick = { navController.navigate(NavigationRoutes.ALERTS_SCREEN) }) {
+                        IconButton(onClick = {
+                            Firebase.analytics.logEvent("community_updates_button_clicked") {
+                                param("timestamp", System.currentTimeMillis().toString())
+                                param("user_id", user?.id ?: "anonymous")
+                                param("user_institution", user?.institution?.name ?: "none")
+                            }
+
+                            Log.i("Analytics", "Community Updates button clicked")
+
+                            navController.navigate(NavigationRoutes.ALERTS_SCREEN)
+                        }) {
                             Icon(
                                 imageVector = Icons.Filled.Notifications,
                                 contentDescription = stringResource(R.string.notifications)
