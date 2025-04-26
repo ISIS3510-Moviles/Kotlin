@@ -7,4 +7,5 @@ plugins {
     id("com.google.gms.google-services") version "4.4.2" apply false
     alias(libs.plugins.google.firebase.firebase.perf) apply false
     alias(libs.plugins.google.firebase.crashlytics) apply false
+    id("io.realm.kotlin") version "2.0.0" apply false
 }

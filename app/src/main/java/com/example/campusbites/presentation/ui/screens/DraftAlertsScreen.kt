@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import com.example.campusbites.data.local.entity.DraftAlertEntity
+import com.example.campusbites.domain.model.DraftAlert
 import com.example.campusbites.presentation.ui.components.AlertTopBar
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 import java.text.SimpleDateFormat
@@ -106,7 +106,7 @@ fun DraftAlertsScreen(
 
 @Composable
 fun DraftAlertItem(
-    draft: DraftAlertEntity,
+    draft: DraftAlert,
     isNetworkAvailable: Boolean,
     onSendClick: () -> Unit,
     onDeleteClick: () -> Unit

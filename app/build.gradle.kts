@@ -9,6 +9,7 @@ plugins {
     id("com.google.gms.google-services")
     alias(libs.plugins.google.firebase.firebase.perf)
     alias(libs.plugins.google.firebase.crashlytics)
+    id("io.realm.kotlin")
 }
 
 configurations.all {
@@ -65,6 +66,9 @@ dependencies {
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.compiler)
     val roomVersion = "2.7.1"
+
+    implementation("io.realm.kotlin:library-base:2.0.0")
+
 
     implementation(libs.androidx.room.runtime)
     kapt("androidx.room:room-compiler:$roomVersion")
