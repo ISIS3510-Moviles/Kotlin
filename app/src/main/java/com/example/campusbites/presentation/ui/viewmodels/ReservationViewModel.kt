@@ -3,80 +3,125 @@ package com.example.campusbites.presentation.ui.viewmodels
 import android.os.Bundle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusbites.data.local.realm.PendingCancellationLocalDataSource
+import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.domain.usecase.reservation.GetReservationsForUserUseCase
 import com.example.campusbites.domain.usecase.reservation.CancelReservationUseCase
 import com.example.campusbites.domain.repository.AuthRepository
 import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filterNotNull
 import java.time.DayOfWeek
 import java.time.LocalDate
+import javax.inject.Inject
 
 @HiltViewModel
 class ReservationsViewModel @Inject constructor(
     private val getReservationsForUserUseCase: GetReservationsForUserUseCase,
     private val cancelReservationUseCase: CancelReservationUseCase,
     private val authRepository: AuthRepository,
-    private val analytics: FirebaseAnalytics
+    private val analytics: FirebaseAnalytics,
+    private val pendingDataSource: PendingCancellationLocalDataSource,
+    private val connectivityMonitor: ConnectivityMonitor
 ) : ViewModel() {
 
+    // Estado de reservas
     private val _reservations = MutableStateFlow<List<ReservationDomain>>(emptyList())
     val reservations: StateFlow<List<ReservationDomain>> = _reservations.asStateFlow()
 
+    // Estado de red para la UI
+    private val _networkAvailable = MutableStateFlow(true)
+    val networkAvailable: StateFlow<Boolean> = _networkAvailable.asStateFlow()
+
+    // UI events (una sola vez)
+    private val _uiEvent = MutableSharedFlow<UIEvent>()
+    val uiEvent: SharedFlow<UIEvent> = _uiEvent
+
     init {
+        // 1) Cargar reservas actuales y Analytics
         viewModelScope.launch {
             authRepository.currentUser
                 .filterNotNull()
-                .collectLatest { user ->
-                    getReservationsForUserUseCase(user.id).collect {
-                        _reservations.value = it
-                        sendCancellationAnalytics(it)
-                    }
+                .flatMapLatest { user ->
+                    getReservationsForUserUseCase(user.id)
+                }
+                .collect { list ->
+                    _reservations.value = list
+                    sendCancellationAnalytics(list)
+                }
+        }
+
+        // 2) Observar conexión y procesar pendientes al reconectar
+        viewModelScope.launch {
+            connectivityMonitor.isNetworkAvailable
+                .distinctUntilChanged()
+                .collect { available ->
+                    _networkAvailable.value = available
+                    if (available) flushPendingCancellations()
                 }
         }
     }
 
+    /** Cancela o encola si no hay red */
     fun cancelReservation(reservationId: String) {
         viewModelScope.launch {
-            try {
-                cancelReservationUseCase(reservationId)
-            } catch (e: Exception) {
+            val hasNetwork = connectivityMonitor.isNetworkAvailable.first()
+            if (hasNetwork) {
+                try {
+                    cancelReservationUseCase(reservationId)
+                } catch (e: Exception) {
+                    pendingDataSource.add(reservationId)
+                    _uiEvent.emit(UIEvent.ShowMessage("Network error: Your cancellation has been queued."))
+                }
+            } else {
+                pendingDataSource.add(reservationId)
+                _uiEvent.emit(UIEvent.ShowMessage("Offline: Cancellation will occur when you return online."))
             }
         }
     }
 
-    private fun sendCancellationAnalytics(reservations: List<ReservationDomain>) {
-        val cancelledReservations = reservations.filter { it.hasBeenCancelled == true }
+    /** Reintenta todas las cancelaciones que quedaron en Realm */
+    private suspend fun flushPendingCancellations() {
+        val pending = pendingDataSource.getAll()
+        pending.forEach { item ->
+            try {
+                cancelReservationUseCase(item.reservationId)
+                pendingDataSource.remove(item)
+                _uiEvent.emit(UIEvent.ShowMessage("Reservation cancellation “${item.reservationId}” processed successfully."))
+            } catch (_: Exception) {
+                // si sigue fallando, lo dejaremos en Realm
+            }
+        }
+    }
 
-        // Agrupar por día de la semana
-        val dayCounts = cancelledReservations.groupBy {
+    /** Envia a Firebase Analytics conteo de cancelaciones por día */
+    private fun sendCancellationAnalytics(reservations: List<ReservationDomain>) {
+        val cancelled = reservations.filter { it.hasBeenCancelled == true }
+        val counts = cancelled.groupBy {
             LocalDate.parse(it.datetime).dayOfWeek
         }.mapValues { it.value.size }
 
-        // Mapear a nombres en español
         val params = Bundle().apply {
             DayOfWeek.values().forEach { day ->
-                val spanishDayName = when (day) {
-                    DayOfWeek.MONDAY -> "Lunes"
-                    DayOfWeek.TUESDAY -> "Martes"
+                val name = when (day) {
+                    DayOfWeek.MONDAY    -> "Lunes"
+                    DayOfWeek.TUESDAY   -> "Martes"
                     DayOfWeek.WEDNESDAY -> "Miercoles"
-                    DayOfWeek.THURSDAY -> "Jueves"
-                    DayOfWeek.FRIDAY -> "Viernes"
-                    DayOfWeek.SATURDAY -> "Sabado"
-                    DayOfWeek.SUNDAY -> "Domingo"
+                    DayOfWeek.THURSDAY  -> "Jueves"
+                    DayOfWeek.FRIDAY    -> "Viernes"
+                    DayOfWeek.SATURDAY  -> "Sabado"
+                    DayOfWeek.SUNDAY    -> "Domingo"
                 }
-                putInt(spanishDayName, dayCounts[day] ?: 0)
+                putInt(name, counts[day] ?: 0)
             }
         }
-
-        // Enviar evento a Analytics
         analytics.logEvent("cancelled_reservations_per_day_of_week", params)
+    }
+
+    /** Eventos de UI unidireccionales */
+    sealed class UIEvent {
+        data class ShowMessage(val message: String) : UIEvent()
     }
 }
