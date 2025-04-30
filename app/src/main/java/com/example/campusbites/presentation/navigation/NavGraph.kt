@@ -146,7 +146,11 @@ fun NavGraph(authViewModel: AuthViewModel) {
             arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val foodId = it.arguments?.getString("id") ?: ""
-            FoodDetailScreen(foodId = foodId, authViewModel = authViewModel)
+            FoodDetailScreen(
+                foodId = foodId,
+                onBack = { navController.popBackStack() },
+                authViewModel = authViewModel,
+            )
         }
 
         // Reservations Screen

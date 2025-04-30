@@ -31,6 +31,8 @@ import java.util.UUID
 import kotlinx.coroutines.launch // Importa launch
 import androidx.compose.runtime.rememberCoroutineScope // Importa rememberCoroutineScope
 import android.widget.Toast // Importa Toast
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.ui.platform.LocalContext // Importa LocalContext
 
 @Composable

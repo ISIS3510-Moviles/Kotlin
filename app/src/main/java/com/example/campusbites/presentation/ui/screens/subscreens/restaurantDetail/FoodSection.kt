@@ -50,5 +50,8 @@ fun FoodSection(
                 onProductClick = onProductClick
             )
         }
+
+        Spacer(modifier = Modifier.height(28.dp))
+
     }
 }

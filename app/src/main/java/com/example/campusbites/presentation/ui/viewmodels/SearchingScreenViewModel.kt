@@ -24,6 +24,10 @@ class SearchingScreenViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SearchingUiState())
     val uiState: StateFlow<SearchingUiState> = _uiState.asStateFlow()
 
+    fun updateSearchQuery(query: String) {
+        _uiState.update { it.copy(searchQuery = query) }
+    }
+
     fun performSearch(query: String) {
         _uiState.update { it.copy(searchQuery = query, isLoading = true) }
         viewModelScope.launch {
