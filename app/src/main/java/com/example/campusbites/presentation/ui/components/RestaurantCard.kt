@@ -57,7 +57,7 @@ fun RestaurantCard(
         shape = RoundedCornerShape(12.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         modifier = modifier
-            .width(379.dp)  // full screen width
+            .width(371.dp)  // full screen width
             .height(320.dp)
             .padding(8.dp)
             .clickable { onRestaurantClick(restaurant.id) }

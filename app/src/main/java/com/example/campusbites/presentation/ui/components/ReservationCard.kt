@@ -56,20 +56,22 @@ fun ReservationCard(
             modifier = Modifier.padding(16.dp)
         ) {
             // Fecha
-            Row(verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Icon(
                     imageVector = androidx.compose.material.icons.Icons.Filled.DateRange,
                     contentDescription = "Fecha de reservación",
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = date,
                     style = MaterialTheme.typography.titleSmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Hora
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -78,14 +80,14 @@ fun ReservationCard(
                     contentDescription = "Hora de reservación",
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = time,
                     style = MaterialTheme.typography.titleSmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Número de personas
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -94,14 +96,14 @@ fun ReservationCard(
                     contentDescription = "Número de personas",
                     tint = MaterialTheme.colorScheme.primary
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = "$guests Personas",
                     style = MaterialTheme.typography.titleSmall
                 )
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Estado de la reservación
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -110,7 +112,7 @@ fun ReservationCard(
                     contentDescription = "Estado de la reservación",
                     tint = statusColor
                 )
-                Spacer(modifier = Modifier.width(8.dp))
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = resolvedStatus,
                     style = MaterialTheme.typography.titleSmall.copy(

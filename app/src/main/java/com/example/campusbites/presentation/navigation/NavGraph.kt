@@ -154,8 +154,7 @@ fun NavGraph(authViewModel: AuthViewModel) {
             route = NavigationRoutes.RESERVATIONS_SCREEN,
         ) {
             ReservationsScreen(
-                navController = navController,
-                authViewModel = authViewModel,
+                navController = navController
             )
         }
 
