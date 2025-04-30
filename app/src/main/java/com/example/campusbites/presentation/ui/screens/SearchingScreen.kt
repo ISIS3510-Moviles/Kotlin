@@ -45,6 +45,8 @@ fun SearchingScreen(
             .padding(16.dp)
     ) {
 
+        Spacer(modifier = Modifier.height(16.dp))
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -53,7 +55,9 @@ fun SearchingScreen(
         ) {
             SearchBar(
                 query = uiState.searchQuery,
-                onQueryChange = { },
+                onQueryChange = { newQuery ->
+                    viewModel.updateSearchQuery(newQuery)
+                                },
                 onSearch = { newQuery -> viewModel.performSearch(newQuery) },
                 modifier = Modifier.weight(1f),
             )
