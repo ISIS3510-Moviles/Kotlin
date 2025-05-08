@@ -1,5 +1,7 @@
 package com.example.campusbites.presentation.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -15,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -22,7 +25,7 @@ import androidx.navigation.NavController
 import com.example.campusbites.presentation.ui.components.AlertList
 import com.example.campusbites.presentation.ui.components.AlertTopBar
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
-import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox // Correct import for M3
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -34,6 +37,7 @@ fun AlertsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val notifications = uiState.alerts
     val isLoading = uiState.isLoading
+    val showNoAlertsMessage = uiState.noAlertsMessageVisible // NUEVO
 
     Scaffold(
         floatingActionButton = {
@@ -50,7 +54,7 @@ fun AlertsScreen(
             }
         }
     ) { innerPadding ->
-        PullToRefreshBox(
+        PullToRefreshBox( // M3 PullToRefreshBox
             isRefreshing = isLoading,
             onRefresh = { viewModel.refreshAlertsManually() },
             modifier = Modifier
@@ -69,22 +73,33 @@ fun AlertsScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                AlertList(
-                    notifications = notifications,
-                    onAlertClick = { alertId ->
-                        println("Alert clicked: $alertId")
-                        // Aqui se debe navegar al detalle del restaurante
-                        // navController.navigate("restaurant/$restaurant_id")
-                    },
-                    onUpvoteClick = {},
-//                        { alert ->
-//                        viewModel.upvote(alert)
-//                    },
-                    onDownvoteClick = {}
-//                        { alert ->
-//                        viewModel.downvote(alert)
-//                    }
-                )
+                if (showNoAlertsMessage) { // <-- MOSTRAR MENSAJE
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "No hay alertas para mostrar en este momento. ¡Intenta refrescar o crea una nueva!",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                } else {
+                    AlertList(
+                        notifications = notifications,
+                        onAlertClick = { alertId ->
+                            println("Alert clicked: $alertId")
+                        },
+                        onUpvoteClick = { alert ->
+                            viewModel.upvote(alert)
+                        },
+                        onDownvoteClick = { alert ->
+                            viewModel.downvote(alert)
+                        }
+                    )
+                }
             }
         }
     }

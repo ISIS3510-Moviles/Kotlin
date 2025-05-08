@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.components
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -13,10 +14,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.example.campusbites.domain.model.AlertDomain
 import com.example.campusbites.R
 
@@ -27,6 +30,7 @@ fun AlertCard(
     onUpvoteClick: (AlertDomain) -> Unit,
     onDownvoteClick: (AlertDomain) -> Unit
 ) {
+    Log.d("AlertCard", "Icono de alerta: ${notification.restaurantDomain.profilePhoto}")
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -42,7 +46,12 @@ fun AlertCard(
             modifier = Modifier.padding(16.dp)
         ) {
             AsyncImage(
-                model = notification.restaurantDomain.profilePhoto,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(notification.icon)
+                    .crossfade(true)
+                    .placeholder(R.drawable.burguer_icon)
+                    .error(R.drawable.restaurant_logo)
+                    .build(),
                 contentDescription = "Icono de alerta",
                 modifier = Modifier
                     .size(40.dp)
@@ -71,34 +80,6 @@ fun AlertCard(
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-                // Fila para mostrar los votos a la derecha.
-//                Row(
-//                    modifier = Modifier.fillMaxWidth(),
-//                    verticalAlignment = Alignment.CenterVertically,
-//                    horizontalArrangement = Arrangement.End
-//                )
-//                {
-//                    IconButton(onClick = { onUpvoteClick(notification) }) {
-//                        Image(
-//                            painter = painterResource(id = R.drawable.ic_upvote),
-//                            contentDescription = "Upvote",
-//                            modifier = Modifier.size(24.dp),
-//                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-//                        )
-//                    }
-//                    Text(
-//                        text = notification.votes.toString(),
-//                        style = MaterialTheme.typography.bodyMedium
-//                    )
-//                    IconButton(onClick = { onDownvoteClick(notification) }) {
-//                        Image(
-//                            painter = painterResource(id = R.drawable.ic_downvote),
-//                            contentDescription = "Downvote",
-//                            modifier = Modifier.size(24.dp),
-//                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface)
-//                        )
-//                    }
-//                }
             }
         }
     }
