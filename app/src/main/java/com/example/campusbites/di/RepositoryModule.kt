@@ -1,6 +1,7 @@
-// En una carpeta 'di' (dependency injection)
 package com.example.campusbites.di
 
+import com.example.campusbites.data.local.LocalAlertDataSource
+import com.example.campusbites.data.local.RealmAlertDataSource
 import com.example.campusbites.data.repository.AuthRepositoryImpl
 import com.example.campusbites.domain.repository.AuthRepository
 import dagger.Binds
@@ -18,4 +19,11 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLocalAlertDataSource(
+        realmAlertDataSource: RealmAlertDataSource
+    ): LocalAlertDataSource
+
 }

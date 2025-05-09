@@ -6,8 +6,7 @@ import javax.inject.Inject
 class UpdateAlertUseCase @Inject constructor(
     private val repository: AlertRepository
 ) {
-    suspend operator fun invoke(alertId: String, newVotes: Int) {
-        repository.updateAlertVotes(alertId, newVotes)
+    suspend operator fun invoke(alertId: String, newVotes: Int): Boolean {
+        return repository.updateAlertVotes(alertId, newVotes)
     }
-
 }

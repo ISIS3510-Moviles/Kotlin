@@ -3,7 +3,7 @@ package com.example.campusbites.presentation.ui.viewmodels
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.campusbites.data.cache.InMemoryAlertCache
+// ELIMINAR: import com.example.campusbites.data.cache.InMemoryAlertCache
 import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.preferences.HomeDataRepository
 import com.example.campusbites.domain.model.AlertDomain
@@ -13,7 +13,8 @@ import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.repository.DraftAlertRepository
 import com.example.campusbites.domain.service.AlertNotificationService
 import com.example.campusbites.domain.usecase.alert.CreateAlertUseCase
-import com.example.campusbites.domain.usecase.alert.GetAlertsUseCase
+import com.example.campusbites.domain.usecase.alert.GetAlertsUseCase // Puede renombrarse a FetchRemoteAlertsUseCase
+import com.example.campusbites.domain.usecase.alert.ObserveLocalAlertsUseCase // NUEVO
 import com.example.campusbites.domain.usecase.alert.UpdateAlertUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,19 +33,18 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class AlertsViewModel @Inject constructor(
-    private val getAlertsUseCase: GetAlertsUseCase,
+    private val fetchRemoteAlertsUseCase: GetAlertsUseCase,
+    private val observeLocalAlertsUseCase: ObserveLocalAlertsUseCase,
     private val createAlertUseCase: CreateAlertUseCase,
     private val getRestaurantsUseCase: GetRestaurantsUseCase,
     private val updateAlertUseCase: UpdateAlertUseCase,
-    private val alertCache: InMemoryAlertCache,
     private val authRepository: AuthRepository,
     private val draftAlertRepository: DraftAlertRepository,
     private val connectivityMonitor: ConnectivityMonitor,
     private val notificationService: AlertNotificationService,
-    private val homeDataRepository: HomeDataRepository // Added HomeDataRepository
+    private val homeDataRepository: HomeDataRepository
 ) : ViewModel() {
 
-    // Use restaurants from the cache instead of fetching them directly
     val restaurants: StateFlow<List<RestaurantDomain>> = homeDataRepository.nearbyRestaurantsFlow
         .stateIn(
             scope = viewModelScope,
@@ -57,10 +57,11 @@ class AlertsViewModel @Inject constructor(
 
     data class AlertsUiState(
         val alerts: List<AlertDomain> = emptyList(),
-        val isLoading: Boolean = true,
+        val isLoading: Boolean = true, // Inicia en true para la carga inicial
         val errorMessage: String? = null,
         val successMessage: String? = null,
-        val latestDraftAlert: DraftAlert? = null
+        val latestDraftAlert: DraftAlert? = null,
+        val noAlertsMessageVisible: Boolean = false
     )
 
     private val _uiState = MutableStateFlow(AlertsUiState())
@@ -68,19 +69,15 @@ class AlertsViewModel @Inject constructor(
 
     private val _isNetworkAvailable = MutableStateFlow(false)
 
-    // Combine network status with draft alerts to determine UI state
     val connectivityState = combine(
         connectivityMonitor.isNetworkAvailable,
         draftAlertRepository.getAllDraftAlerts()
     ) { isConnected, drafts ->
         _isNetworkAvailable.value = isConnected
         _draftAlerts.value = drafts
-
-        // When connection returns and we have drafts, show notification
         if (isConnected && drafts.isNotEmpty() && notificationService.hasNotificationPermission()) {
             notificationService.showDraftAlertAvailableNotification(drafts.size)
         }
-
         ConnectivityUiState(
             isConnected = isConnected,
             hasDraftAlerts = drafts.isNotEmpty()
@@ -95,21 +92,20 @@ class AlertsViewModel @Inject constructor(
     )
 
     private var hasCheckedRestaurantsCache = false
+    private var initialAlertFetchAttempted = false
 
     init {
-        observeAlertCache()
-        checkRestaurantsCacheAndFetchIfNeeded() // Added check for restaurants cache
-        triggerAlertNetworkFetchIfNeeded()
+        observeLocalAlerts()
+        checkRestaurantsCacheAndFetchIfNeeded()
+        triggerInitialAlertFetch()
         monitorDraftAlerts()
     }
 
     private fun checkRestaurantsCacheAndFetchIfNeeded() {
         if (hasCheckedRestaurantsCache) return
-
         viewModelScope.launch {
             val cachedRestaurants = homeDataRepository.nearbyRestaurantsFlow.first()
             if (cachedRestaurants.isEmpty() && connectivityMonitor.isNetworkAvailable.first()) {
-                // Cache is empty and we have network - fetch restaurants
                 try {
                     Log.d("AlertsViewModel", "No cached restaurants found, fetching from network")
                     val restaurants = getRestaurantsUseCase()
@@ -134,38 +130,84 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
-    private fun observeAlertCache() {
+    private fun observeLocalAlerts() {
         viewModelScope.launch {
-            alertCache.alerts
+            observeLocalAlertsUseCase()
                 .catch { e ->
-                    Log.e("AlertsViewModel", "Error observing alerts cache", e)
-                    _uiState.update { it.copy(isLoading = false, errorMessage = "Failed to load cached alerts") }
+                    Log.e("AlertsViewModel", "Error observing local alerts", e)
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        errorMessage = "Failed to load alerts from database",
+                        noAlertsMessageVisible = it.alerts.isEmpty()
+                    )}
                 }
-                .collect { cachedAlerts ->
-                    Log.d("AlertsViewModel", "Alerts cache observed: ${cachedAlerts.size}")
+                .collect { localAlerts ->
+                    Log.d("AlertsViewModel", "Local alerts observed: ${localAlerts.size}")
                     _uiState.update {
-                        it.copy(alerts = cachedAlerts, isLoading = it.isLoading)
+                        it.copy(
+                            alerts = localAlerts,
+                            noAlertsMessageVisible = localAlerts.isEmpty() && !it.isLoading
+                                    && initialAlertFetchAttempted
+                        )
+                    }
+
+                    if (initialAlertFetchAttempted && localAlerts.isEmpty() && !_uiState.value.isLoading) {
+                        _uiState.update { it.copy(noAlertsMessageVisible = true) }
                     }
                 }
         }
     }
 
-    private fun triggerAlertNetworkFetchIfNeeded() {
-        if (alertCache.getAlerts().isNotEmpty()) {
-            Log.d("AlertsViewModel", "Alert cache already populated. Skipping initial network fetch.")
-            _uiState.update { it.copy(isLoading = false) }
+    private fun triggerInitialAlertFetch() {
 
-            viewModelScope.launch { fetchAndCacheAlerts() }
-            return
+        viewModelScope.launch {
+            if (connectivityMonitor.isNetworkAvailable.first()) {
+                refreshAlerts()
+            } else {
+
+                initialAlertFetchAttempted = true
+
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        noAlertsMessageVisible = state.alerts.isEmpty()
+                    )
+                }
+                Log.d("AlertsViewModel", "No network for initial fetch, relying on local DB.")
+            }
         }
-        refreshAlerts()
     }
 
-    fun refreshAlerts() {
-        _uiState.update { it.copy(isLoading = true) }
+    fun refreshAlerts() { // Usado para pull-to-refresh o recarga manual
+        _uiState.update { it.copy(isLoading = true, errorMessage = null, noAlertsMessageVisible = false) }
         viewModelScope.launch {
-            fetchAndCacheAlerts()
-            _uiState.update { it.copy(isLoading = false) }
+            val currentUser = authRepository.currentUser.first()
+            if (currentUser == null) {
+                Log.w("AlertsViewModel", "Cannot fetch alerts without user.")
+                _uiState.update { it.copy(errorMessage = "User not logged in", isLoading = false) }
+                initialAlertFetchAttempted = true
+                // Verificar si se debe mostrar "no hay alertas" si la lista actual está vacía
+                if (_uiState.value.alerts.isEmpty()) {
+                    _uiState.update { it.copy(noAlertsMessageVisible = true) }
+                }
+                return@launch
+            }
+            try {
+                fetchRemoteAlertsUseCase() // Esto obtiene de la red y guarda en Realm
+                // El Flow de observeLocalAlertsUseCase actualizará la UI
+                Log.d("AlertsViewModel", "Alerts refreshed from server and saved to DB.")
+            } catch (e: Exception) {
+                Log.e("AlertsViewModel", "Error refreshing alerts: ${e.message}", e)
+                _uiState.update { it.copy(errorMessage = e.localizedMessage ?: "Error refreshing alerts") }
+            } finally {
+                initialAlertFetchAttempted = true // Marcar que el intento de fetch ha ocurrido
+                _uiState.update { state ->
+                    state.copy(
+                        isLoading = false,
+                        noAlertsMessageVisible = state.alerts.isEmpty()
+                    )
+                }
+            }
         }
     }
 
@@ -173,23 +215,76 @@ class AlertsViewModel @Inject constructor(
         refreshAlerts()
     }
 
-    private suspend fun fetchAndCacheAlerts(): List<AlertDomain>? {
-        val currentUser = authRepository.currentUser.first()
-        if (currentUser == null) {
-            Log.w("AlertsViewModel", "Cannot fetch alerts without user.")
-            _uiState.update { it.copy(errorMessage = "User not logged in", isLoading = false) }
-            return null
+
+    fun createAlert(description: String, restaurantId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, successMessage = null, errorMessage = null) }
+            val currentUser = authRepository.currentUser.first()
+            if (currentUser == null) {
+                _uiState.update { it.copy(errorMessage = "User not available to create alert", isLoading = false) }
+                return@launch
+            }
+
+            try {
+                if (_isNetworkAvailable.value) {
+                    createAlertUseCase(description, restaurantId, currentUser)
+                    // La DB se actualiza a través del repositorio, el Flow la recogerá.
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        successMessage = "Alert created successfully"
+                    )}
+                } else {
+                    val restaurantName = restaurants.value.find { it.id == restaurantId }?.name ?: "Unknown Restaurant"
+                    draftAlertRepository.saveDraftAlert(description, restaurantId, restaurantName)
+                    _uiState.update { it.copy(
+                        isLoading = false,
+                        successMessage = "Alert saved as draft. Will be sent when you're back online."
+                    )}
+                }
+            } catch (e: Exception) {
+                Log.e("AlertsViewModel", "Error creating alert", e)
+                _uiState.update { it.copy(
+                    errorMessage = e.localizedMessage ?: "Error creating alert",
+                    isLoading = false
+                )}
+            }
         }
-        return try {
-            val alerts = getAlertsUseCase()
-            Log.d("AlertsViewModel", "Fetched ${alerts.size} alerts from server.")
-            alertCache.updateAlerts(alerts)
-            Log.d("AlertsViewModel", "Fetched and cached ${alerts.size} alerts in memory.")
-            alerts
-        } catch (e: Exception) {
-            Log.e("AlertsViewModel", "Error fetching/caching alerts: ${e.message}", e)
-            _uiState.update { it.copy(errorMessage = e.localizedMessage ?: "Error fetching alerts", isLoading = false) }
-            null
+    }
+
+    fun upvote(alert: AlertDomain) {
+
+        viewModelScope.launch {
+            try {
+                val success = updateAlertUseCase(alert.id, alert.votes + 1)
+                if (!success) {
+                    // Revert optimistic update si se hizo, o mostrar error
+                    _uiState.update { it.copy(errorMessage = "Failed to sync upvote with server.") }
+                    // Forzar una recarga para asegurar consistencia si el update local falló
+                    refreshAlerts()
+                }
+                // Si 'success' es true, el repositorio ya actualizó Realm, el Flow lo recogerá.
+            } catch (e: Exception) {
+                Log.e("AlertsViewModel", "Error upvoting alert ${alert.id} on server", e)
+                _uiState.update { it.copy(errorMessage = "Failed to sync upvote") }
+                refreshAlerts() // Re-sincronizar con la fuente de verdad (local DB)
+            }
+        }
+    }
+
+    fun downvote(alert: AlertDomain) {
+        // Similar a upvote
+        viewModelScope.launch {
+            try {
+                val success = updateAlertUseCase(alert.id, alert.votes - 1)
+                if (!success) {
+                    _uiState.update { it.copy(errorMessage = "Failed to sync downvote with server.") }
+                    refreshAlerts()
+                }
+            } catch (e: Exception) {
+                Log.e("AlertsViewModel", "Error downvoting alert ${alert.id} on server", e)
+                _uiState.update { it.copy(errorMessage = "Failed to sync downvote") }
+                refreshAlerts()
+            }
         }
     }
 
@@ -216,32 +311,21 @@ class AlertsViewModel @Inject constructor(
             }
 
             try {
-                Log.d("AlertsViewModel", "Sending draft alert with message: $message for restaurant: $restaurantId")
-                // Primero enviar la alerta
-                createAlertUseCase(message, restaurantId, currentUser)
-                Log.d("AlertsViewModel", "Alert sent successfully")
+                createAlertUseCase(message, restaurantId, currentUser) // Esto ya guarda en DB via repo
+                Log.d("AlertsViewModel", "Alert sent successfully from draft")
 
-                // Luego eliminar el borrador, pero no permitas que un error aquí afecte el resultado exitoso
                 try {
-                    Log.d("AlertsViewModel", "Deleting draft with id: $draftId")
                     draftAlertRepository.deleteDraftAlert(draftId)
-                    Log.d("AlertsViewModel", "Draft deleted successfully")
                 } catch (e: Exception) {
-                    // Sólo registramos el error, no informamos al usuario ya que la alerta se envió correctamente
                     Log.e("AlertsViewModel", "Failed to delete draft, but alert was sent: $draftId", e)
                 }
 
-                // Actualizar lista de alertas
-                fetchAndCacheAlerts()
-
-                // Informar al usuario del éxito
                 _uiState.update { it.copy(
                     isLoading = false,
                     successMessage = "Alert sent successfully",
                     errorMessage = null
                 )}
             } catch (e: Exception) {
-                // Error al enviar la alerta
                 Log.e("AlertsViewModel", "Error sending draft alert: ${e.message}", e)
                 _uiState.update { it.copy(
                     errorMessage = e.localizedMessage ?: "Error sending draft alert",
@@ -252,6 +336,7 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
+
     fun clearMessages() {
         _uiState.update { it.copy(errorMessage = null, successMessage = null) }
     }
@@ -259,11 +344,8 @@ class AlertsViewModel @Inject constructor(
     fun deleteDraftAlert(draftId: String) {
         viewModelScope.launch {
             try {
-                Log.d("AlertsViewModel", "Attempting to delete draft with ID: $draftId")
                 _uiState.update { it.copy(isLoading = true, errorMessage = null, successMessage = null) }
-
                 draftAlertRepository.deleteDraftAlert(draftId)
-
                 _uiState.update { it.copy(
                     isLoading = false,
                     successMessage = "Draft alert deleted",
@@ -280,97 +362,15 @@ class AlertsViewModel @Inject constructor(
         }
     }
 
-    fun createAlert(description: String, restaurantId: String) {
-        viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
-            val currentUser = authRepository.currentUser.first()
-            if (currentUser == null) {
-                _uiState.update { it.copy(errorMessage = "User not available to create alert", isLoading = false) }
-                return@launch
-            }
-
-            try {
-                if (_isNetworkAvailable.value) {
-                    // Online - send directly
-                    createAlertUseCase(description, restaurantId, currentUser)
-                    fetchAndCacheAlerts()
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        successMessage = "Alert created successfully"
-                    )}
-                } else {
-                    // Offline - save as draft
-                    val restaurantName = restaurants.value.find { it.id == restaurantId }?.name ?: "Unknown Restaurant"
-                    draftAlertRepository.saveDraftAlert(description, restaurantId, restaurantName)
-                    _uiState.update { it.copy(
-                        isLoading = false,
-                        successMessage = "Alert saved as draft. Will be sent when you're back online."
-                    )}
-                }
-            } catch (e: Exception) {
-                Log.e("AlertsViewModel", "Error creating alert", e)
-                _uiState.update { it.copy(
-                    errorMessage = e.localizedMessage ?: "Error creating alert",
-                    isLoading = false
-                )}
-            }
-        }
-    }
-
     fun getLatestDraftAlert() {
         viewModelScope.launch {
             val latestDraft = draftAlertRepository.getLatestDraftAlert()
-            if (latestDraft != null) {
-                _uiState.update { it.copy(latestDraftAlert = latestDraft) }
-            }
-        }
-    }
 
-    fun upvote(alert: AlertDomain) {
-        val originalAlerts = alertCache.getAlerts()
-        val alertIndex = originalAlerts.indexOfFirst { it.id == alert.id }
-        if (alertIndex == -1) return
-
-        val optimisticallyUpdatedAlert = alert.copy(votes = alert.votes + 1)
-        val newAlertList = originalAlerts.toMutableList().apply {
-            set(alertIndex, optimisticallyUpdatedAlert)
-        }
-        alertCache.updateAlerts(newAlertList)
-
-        viewModelScope.launch {
-            try {
-                updateAlertUseCase(alert.id, alert.votes + 1)
-            } catch (e: Exception) {
-                Log.e("AlertsViewModel", "Error upvoting alert ${alert.id} on server", e)
-                alertCache.updateAlerts(originalAlerts)
-                _uiState.update { it.copy(errorMessage = "Failed to sync upvote") }
-            }
-        }
-    }
-
-    fun downvote(alert: AlertDomain) {
-        val originalAlerts = alertCache.getAlerts()
-        val alertIndex = originalAlerts.indexOfFirst { it.id == alert.id }
-        if (alertIndex == -1) return
-
-        val optimisticallyUpdatedAlert = alert.copy(votes = alert.votes - 1)
-        val newAlertList = originalAlerts.toMutableList().apply {
-            set(alertIndex, optimisticallyUpdatedAlert)
-        }
-        alertCache.updateAlerts(newAlertList)
-
-        viewModelScope.launch {
-            try {
-                updateAlertUseCase(alert.id, alert.votes - 1)
-            } catch (e: Exception) {
-                Log.e("AlertsViewModel", "Error downvoting alert ${alert.id} on server", e)
-                alertCache.updateAlerts(originalAlerts)
-                _uiState.update { it.copy(errorMessage = "Failed to sync downvote") }
-            }
         }
     }
 }
 
+// ConnectivityUiState se mantiene igual
 data class ConnectivityUiState(
     val isConnected: Boolean,
     val hasDraftAlerts: Boolean

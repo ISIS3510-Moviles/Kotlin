@@ -53,7 +53,7 @@ interface ApiService {
     suspend fun getProductById(@Path("id") id: String): ProductDTO
 
     @GET("institution/{id}")
-    suspend fun getInstitutionById(@Path("id") id: String): InstitutionDTO
+    suspend fun getInstitutionById(@Path("id") id: String): InstitutionDTO?
 
     @GET("ingredient")
     suspend fun getIngredients(): List<IngredientDTO>
