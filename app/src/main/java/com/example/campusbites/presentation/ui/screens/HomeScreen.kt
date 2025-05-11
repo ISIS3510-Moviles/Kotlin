@@ -251,6 +251,16 @@ fun HomeScreen(
                                     strokeWidth = 2.dp
                                 )
                             }
+
+                            IconButton(onClick = {
+                                navController.navigate(NavigationRoutes.VENDOR_SCREEN)
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Filled.Person,
+                                    contentDescription = "Vendor Section"
+                                )
+                            }
+
                             IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
                                 Icon(
                                     imageVector = Icons.Filled.DateRange,

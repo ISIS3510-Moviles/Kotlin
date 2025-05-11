@@ -18,6 +18,7 @@ import com.example.campusbites.presentation.ui.screens.ReservationsScreen
 import com.example.campusbites.presentation.ui.screens.SearchingScreen
 
 import com.example.campusbites.presentation.ui.screens.RestaurantDetailScreen
+import com.example.campusbites.presentation.ui.screens.VendorScreen
 import com.example.campusbites.presentation.ui.viewmodels.AlertsViewModel
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.HomeViewModel
@@ -30,6 +31,7 @@ object NavigationRoutes {
     const val SEARCHING_SCREEN = "searching_screen/{query}"
     const val FOOD_DETAIL = "food_detail/{id}"
     const val RESERVATIONS_SCREEN = "reservations_screen"
+    const val VENDOR_SCREEN = "vendor_section_screen"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
@@ -84,6 +86,13 @@ fun NavGraph(authViewModel: AuthViewModel) {
             ProfileScreen(
                 navController = navController,
                 authViewModel = authViewModel,
+            )
+        }
+
+        // Vendor Screen
+        composable(NavigationRoutes.VENDOR_SCREEN) {
+            VendorScreen(
+                navController = navController
             )
         }
 
