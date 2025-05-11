@@ -251,7 +251,12 @@ class HomeViewModel @Inject constructor(
 
     fun incrementIngredientClicks(ingredientId: String) {
         viewModelScope.launch {
-            incrementIngredientClicksUseCase(ingredientId)
+            try {
+                incrementIngredientClicksUseCase(ingredientId)
+            } catch (e: Exception) {
+                Log.e("HomeViewModel", "Error al incrementar clics para $ingredientId: ${e.message}")
+                _uiState.update { it.copy(errorMessage = "No se pudo actualizar el contador de clics.") }
+            }
         }
     }
 }

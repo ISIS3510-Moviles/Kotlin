@@ -41,7 +41,6 @@ object NavigationRoutes {
 fun NavGraph(authViewModel: AuthViewModel) {
     val navController = rememberNavController()
     val alertsViewModel: AlertsViewModel = hiltViewModel()
-    val homeViewModel: HomeViewModel = hiltViewModel()
     NavHost(
         navController = navController,
         startDestination = NavigationRoutes.HOME_SCREEN
@@ -55,8 +54,6 @@ fun NavGraph(authViewModel: AuthViewModel) {
                 },
                 onIngredientClick = { ingredient ->
                     navController.navigate(NavigationRoutes.createSearchingRoute(ingredient.name))
-                    homeViewModel.incrementIngredientClicks(ingredient.id)
-
                 },
                 onProductClick = { productId ->
                     navController.navigate(NavigationRoutes.createFoodDetailRoute(productId))
