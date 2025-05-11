@@ -20,9 +20,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import com.example.campusbites.presentation.ui.components.ProductListRow
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
+import com.example.campusbites.presentation.ui.viewmodels.ProfileViewModel // Import the ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -31,8 +33,9 @@ fun ProfileScreen(
     navController: NavHostController,
     onProductClick: (String) -> Unit = {}
 ) {
-    // Se obtiene el user directamente del AuthViewModel
     val user by authViewModel.user.collectAsState()
+    val context = LocalContext.current
+    val profileViewModel: ProfileViewModel = hiltViewModel()
 
     Scaffold(
         topBar = {
@@ -51,7 +54,6 @@ fun ProfileScreen(
         content = { innerPadding ->
             Surface(modifier = Modifier.padding(innerPadding)) {
                 if (user == null) {
-                    // En caso de no tener la información del usuario
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -59,13 +61,11 @@ fun ProfileScreen(
                         Text(text = "No se encontró información del usuario.")
                     }
                 } else {
-                    // Se usa el objeto user proveniente del AuthViewModel
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState())
                     ) {
-                        // Cabecera con nombre y rol
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -73,19 +73,16 @@ fun ProfileScreen(
                                 .padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            // Nombre del usuario
                             Text(
                                 text = user!!.name,
                                 style = MaterialTheme.typography.headlineMedium,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(8.dp))
-                            // Rol del usuario
                             Text(
                                 text = "Rol: " + user!!.role,
                                 style = MaterialTheme.typography.bodyLarge
                             )
-                            // Tipo de usuario (Premium/Estándar)
                             if (user!!.isPremium) {
                                 Row(
                                     verticalAlignment = Alignment.CenterVertically,
@@ -113,7 +110,6 @@ fun ProfileScreen(
                             }
                         }
 
-                        // Información de contacto
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -133,7 +129,6 @@ fun ProfileScreen(
                                     fontWeight = FontWeight.Bold
                                 )
                                 HorizontalDivider()
-                                // Email
                                 Row(verticalAlignment = Alignment.CenterVertically) {
                                     Icon(
                                         imageVector = Icons.Default.Email,
@@ -143,61 +138,9 @@ fun ProfileScreen(
                                     Spacer(modifier = Modifier.width(12.dp))
                                     Text(text = user!!.email)
                                 }
-
                             }
                         }
 
-                        // Preferencias dietarias
-//                        Card(
-//                            modifier = Modifier
-//                                .fillMaxWidth()
-//                                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-//                            shape = RoundedCornerShape(16.dp),
-//                            colors = CardDefaults.cardColors(
-//                                containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-//                            )
-//                        ) {
-//                            Column(
-//                                modifier = Modifier.padding(16.dp),
-//                                verticalArrangement = Arrangement.spacedBy(12.dp)
-//                            ) {
-//                                Text(
-//                                    text = "Dietary preferences",
-//                                    style = MaterialTheme.typography.titleMedium,
-//                                    fontWeight = FontWeight.Bold
-//                                )
-//                                HorizontalDivider()
-//                                if (user!!.dietaryPreferencesTagIds.isNotEmpty()) {
-//                                    FlowRow(
-//                                        modifier = Modifier.fillMaxWidth(),
-//                                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-//                                        verticalArrangement = Arrangement.spacedBy(8.dp)
-//                                    ) {
-//                                        user!!.dietaryPreferencesTagIds.forEach { preference ->
-//                                            Surface(
-//                                                shape = RoundedCornerShape(16.dp),
-//                                                color = MaterialTheme.colorScheme.secondaryContainer
-//                                            ) {
-//                                                Text(
-//                                                    text = preference,
-//                                                    style = MaterialTheme.typography.bodyMedium,
-//                                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-//                                                    color = MaterialTheme.colorScheme.onSecondaryContainer
-//                                                )
-//                                            }
-//                                        }
-//                                    }
-//                                } else {
-//                                    Text(
-//                                        text = "No dietary preferences specified",
-//                                        style = MaterialTheme.typography.bodyMedium,
-//                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-//                                    )
-//                                }
-//                            }
-//                        }
-
-                        // Productos guardados
                         if (user!!.savedProducts.isNotEmpty()) {
                             ProductListRow(
                                 name = "Saved Products",
@@ -229,7 +172,7 @@ fun ProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Button(
-                                        onClick = { /* Navegar a descubrir productos */ }
+                                        onClick = { /* Navigate to discover products */ }
                                     ) {
                                         Text("Discover products")
                                     }
@@ -237,7 +180,41 @@ fun ProfileScreen(
                             }
                         }
 
-                        val context = LocalContext.current // Necesitas el contexto para el Toast
+                        // Upgrade Buttons
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    user?.id?.let { userId ->
+                                        profileViewModel.updateUserRole(userId, "analyst")
+                                        Toast.makeText(context, "Attempting to upgrade to Analyst", Toast.LENGTH_SHORT).show()
+                                    } ?: run {
+                                        Toast.makeText(context, "User ID not available", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(text = "Upgrade to Analyst")
+                            }
+                            Button(
+                                onClick = {
+                                    user?.id?.let { userId ->
+                                        profileViewModel.updateUserRole(userId, "vendor")
+                                        Toast.makeText(context, "Attempting to upgrade to Vendor", Toast.LENGTH_SHORT).show()
+                                    } ?: run {
+                                        Toast.makeText(context, "User ID not available", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(text = "Upgrade to Vendor")
+                            }
+                        }
+
 
                         Button(
                             onClick = {
@@ -259,4 +236,3 @@ fun ProfileScreen(
         }
     )
 }
-
