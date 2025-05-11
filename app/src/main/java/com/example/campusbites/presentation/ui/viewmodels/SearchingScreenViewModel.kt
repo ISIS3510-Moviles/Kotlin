@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 import android.util.Log
+import java.io.IOException // Import IOException for network errors
 
 @HiltViewModel
 class SearchingScreenViewModel @Inject constructor(
@@ -29,7 +30,7 @@ class SearchingScreenViewModel @Inject constructor(
     }
 
     fun performSearch(query: String) {
-        _uiState.update { it.copy(searchQuery = query, isLoading = true) }
+        _uiState.update { it.copy(searchQuery = query, isLoading = true, errorMessage = null) } // Clear previous error message
         viewModelScope.launch {
             try {
                 val products = searchProductsUseCase(query)
@@ -43,12 +44,20 @@ class SearchingScreenViewModel @Inject constructor(
                     )
                 }
                 Log.d("SearchingVM", "Search complete: ${products.size} products, ${restaurants.size} restaurants found for '$query'")
-            } catch (e: Exception) {
-                Log.e("SearchingVM", "Error during search for '$query'", e)
+            } catch (e: IOException) { // Catch specific network exceptions
+                Log.e("SearchingVM", "Network error during search for '$query'")
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        errorMessage = "Error performing search: ${e.message}"
+                        errorMessage = "No internet connection. Please check your network."
+                    )
+                }
+            } catch (e: Exception) { // Catch other potential exceptions
+                Log.e("SearchingVM", "Error during search for '$query'")
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        errorMessage = "An error occurred during search"
                     )
                 }
             }
