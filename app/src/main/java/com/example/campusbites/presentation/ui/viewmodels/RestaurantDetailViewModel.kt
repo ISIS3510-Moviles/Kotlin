@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
+import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.data.preferences.HomeDataRepository
@@ -21,6 +22,7 @@ import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCa
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
 import com.example.campusbites.domain.repository.AuthRepository
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
@@ -31,6 +33,7 @@ import kotlin.collections.filter
 import kotlin.collections.take
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.util.Calendar
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -44,7 +47,8 @@ class RestaurantDetailViewModel @Inject constructor(
     private val createCommentUseCase: CreateCommentUseCase,
     private val homeDataRepository: HomeDataRepository,
     private val connectivityManager: ConnectivityManager,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val firebaseAnalytics: FirebaseAnalytics
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
@@ -73,6 +77,12 @@ class RestaurantDetailViewModel @Inject constructor(
     }.distinctUntilChanged()
 
     init {
+        // Observamos cuando cambia el restaurantId y registramos la visita
+        viewModelScope.launch {
+            _restaurantId.filterNotNull().collect { id ->
+                logVisitEvent(id)
+            }
+        }
         viewModelScope.launch {
             combine(_restaurantId, isOnline) { restaurantId, online ->
                 Pair(restaurantId, online)
@@ -215,6 +225,32 @@ class RestaurantDetailViewModel @Inject constructor(
                 Log.e("RestaurantDetailViewModel", "Error creating review: ${e.message}")
             }
         }
+    }
+
+    /**
+     * Registra un evento "restaurant_visit" en Firebase Analytics
+     * con el id del restaurante y el día de la semana actual.
+     */
+    private fun logVisitEvent(restaurantId: String) {
+        val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK).let { value ->
+            when (value) {
+                Calendar.MONDAY -> "Monday"
+                Calendar.TUESDAY -> "Tuesday"
+                Calendar.WEDNESDAY -> "Wednesday"
+                Calendar.THURSDAY -> "Thursday"
+                Calendar.FRIDAY -> "Friday"
+                Calendar.SATURDAY -> "Saturday"
+                Calendar.SUNDAY -> "Sunday"
+                else -> "Unknown"
+            }
+        }
+
+        val params = bundleOf(
+            "restaurant_id" to restaurantId,
+            "day_of_week" to dayOfWeek
+        )
+        firebaseAnalytics.logEvent("restaurant_visit", params)
+        Log.d("RestaurantDetailVM", "Logged visit event: \$params")
     }
 }
 
