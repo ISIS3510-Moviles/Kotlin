@@ -2,12 +2,13 @@ package com.example.campusbites.domain.usecase.alert
 
 import com.example.campusbites.domain.model.AlertDomain
 import com.example.campusbites.domain.repository.AlertRepository
+import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
-class GetAlertsUseCase @Inject constructor(
+class ObserveLocalAlertsUseCase @Inject constructor(
     private val repository: AlertRepository
 ) {
-    suspend operator fun invoke(): List<AlertDomain> {
-        return repository.fetchAndSaveRemoteAlerts()
+    operator fun invoke(): Flow<List<AlertDomain>> {
+        return repository.getLocalAlertsFlow()
     }
 }

@@ -30,6 +30,8 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlinx.coroutines.launch // Importa launch
 import androidx.compose.runtime.rememberCoroutineScope // Importa rememberCoroutineScope
+import java.time.OffsetDateTime
+import java.time.ZoneOffset
 
 @SuppressLint("StateFlowValueCalledInComposition")
 @Composable
@@ -183,14 +185,22 @@ fun BookTableSection(
                         return@Button
                     }
 
-                    val jsonDate = LocalDate.parse(selectedDate, displayDateFormatter)
-                        .format(jsonDateFormatter)
-                    val jsonTime = LocalTime.parse(selectedHour, displayTimeFormatter)
-                        .format(jsonTimeFormatter)
+                    // Parse selected date and time
+                    val localDate = LocalDate.parse(selectedDate, displayDateFormatter)
+                    val localTime = LocalTime.parse(selectedHour, displayTimeFormatter)
+
+                    // Combine into OffsetDateTime in UTC
+                    val utcDateTime: OffsetDateTime =
+                        localDate.atTime(localTime)
+                            .atOffset(ZoneOffset.UTC)
+                    val jsonDateTime = utcDateTime.format(DateTimeFormatter.ISO_INSTANT)
+
+                    // Format separate time field
+                    val jsonTime = localTime.format(jsonTimeFormatter)
 
                     errorMessage = ""
                     analytics.logEvent("restaurant_reservation_used") {
-                        param("date", jsonDate)
+                        param("datetime", jsonDateTime)
                         param("time", jsonTime)
                     }
 
@@ -201,7 +211,7 @@ fun BookTableSection(
                                     id = "",
                                     restaurantId = restaurant.id,
                                     userId = user!!.id,
-                                    datetime = jsonDate,
+                                    datetime = jsonDateTime,
                                     time = jsonTime,
                                     numberCommensals = comensals,
                                     isCompleted = false,
