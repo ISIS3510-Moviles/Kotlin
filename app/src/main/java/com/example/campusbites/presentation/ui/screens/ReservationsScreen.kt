@@ -21,9 +21,11 @@ import androidx.navigation.NavHostController
 import com.example.campusbites.R
 import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.presentation.ui.viewmodels.ReservationsViewModel
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -86,27 +88,42 @@ fun ReservationsScreen(
 
             // --- LISTADO DE RESERVAS ---
             val now = LocalDateTime.now()
+
+            // 1) Separamos canceladas y no canceladas
             val (cancelled, nonCancelled) = reservations.partition { it.hasBeenCancelled == true }
-            val (upcoming, past) = nonCancelled.partition {
-                val d = LocalDate.parse(it.datetime)
-                val t = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
-                LocalDateTime.of(d, t).isAfter(now)
+
+            // 2) De las no canceladas, separamos próximas y pasadas
+            val (upcoming, past) = nonCancelled.partition { res ->
+                val date = Instant.parse(res.datetime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                LocalDateTime.of(date, time).isAfter(now)
             }
 
-            val sortedUpcoming = upcoming.sortedBy {
-                val d = LocalDate.parse(it.datetime)
-                val t = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
-                LocalDateTime.of(d, t)
+            // 3) Ordenamos cada grupo por fecha+hora
+            val sortedUpcoming = upcoming.sortedBy { res ->
+                val date = Instant.parse(res.datetime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                LocalDateTime.of(date, time)
             }
-            val sortedPast = past.sortedByDescending {
-                val d = LocalDate.parse(it.datetime)
-                val t = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
-                LocalDateTime.of(d, t)
+
+            val sortedPast = past.sortedByDescending { res ->
+                val date = Instant.parse(res.datetime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                LocalDateTime.of(date, time)
             }
-            val sortedCancelled = cancelled.sortedByDescending {
-                val d = LocalDate.parse(it.datetime)
-                val t = LocalTime.parse(it.time, DateTimeFormatter.ofPattern("HH:mm"))
-                LocalDateTime.of(d, t)
+
+            val sortedCancelled = cancelled.sortedByDescending { res ->
+                val date = Instant.parse(res.datetime)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+                val time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
+                LocalDateTime.of(date, time)
             }
 
             if (reservations.isEmpty()) {
@@ -139,7 +156,10 @@ fun ReservationsScreen(
                         }
                         items(sortedCancelled) { res ->
                             ReservationCardWithCancel(
-                                date = LocalDate.parse(res.datetime).format(displayDateFormatter),
+                                date = Instant.parse(res.datetime)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                                    .format(displayDateFormatter),
                                 time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
                                     .format(displayTimeFormatter),
                                 guests = res.numberCommensals,
@@ -161,7 +181,10 @@ fun ReservationsScreen(
                         }
                         items(sortedUpcoming) { res ->
                             ReservationCardWithCancel(
-                                date = LocalDate.parse(res.datetime).format(displayDateFormatter),
+                                date = Instant.parse(res.datetime)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                                    .format(displayDateFormatter),
                                 time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
                                     .format(displayTimeFormatter),
                                 guests = res.numberCommensals,
@@ -185,7 +208,10 @@ fun ReservationsScreen(
                         }
                         items(sortedPast) { res ->
                             ReservationCardWithCancel(
-                                date = LocalDate.parse(res.datetime).format(displayDateFormatter),
+                                date = Instant.parse(res.datetime)
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate()
+                                    .format(displayDateFormatter),
                                 time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
                                     .format(displayTimeFormatter),
                                 guests = res.numberCommensals,
@@ -219,22 +245,22 @@ fun ReservationCardWithCancel(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row (verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.DateRange, contentDescription = null, Modifier.padding(end = 8.dp))
                     Text("Date: $date", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Row (verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Info, contentDescription = null, Modifier.padding(end = 8.dp))
                     Text("Hour: $time", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Row (verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Face, contentDescription = null, Modifier.padding(end = 8.dp))
                     Text("Participants: $guests", style = MaterialTheme.typography.bodyMedium)
                 }
                 Spacer(modifier = Modifier.height(4.dp))
-                Row (verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.Notifications, contentDescription = null, Modifier.padding(end = 8.dp))
                     Text("Status: $status", style = MaterialTheme.typography.bodyMedium)
                 }
