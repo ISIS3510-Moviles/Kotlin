@@ -81,6 +81,7 @@ fun NavGraph(authViewModel: AuthViewModel) {
             ProfileScreen(
                 navController = navController,
                 authViewModel = authViewModel,
+                onProductClick = { productId -> navController.navigate(NavigationRoutes.createFoodDetailRoute(productId)) }
             )
         }
 
