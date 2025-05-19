@@ -1,11 +1,12 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.campusbites.data.cache.RestaurantLruCache
+import com.example.campusbites.data.local.realm.PendingReservationLocalDataSource
+import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.preferences.HomeDataRepository
 import com.example.campusbites.data.preferences.RestaurantPreferencesRepository
 import com.example.campusbites.domain.model.CommentDomain
@@ -13,31 +14,25 @@ import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.ReservationDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
+import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
-import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
-import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
+import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
+import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
-import com.example.campusbites.domain.repository.AuthRepository
 import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import java.util.*
 import javax.inject.Inject
 import kotlin.collections.filter
 import kotlin.collections.take
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import java.util.Calendar
-import kotlinx.coroutines.flow.first
-import com.example.campusbites.data.local.realm.PendingReservationLocalDataSource // IMPORTAR
-import com.example.campusbites.data.local.realm.model.PendingReservationRealmModel // IMPORTAR
-import com.example.campusbites.data.network.ConnectivityMonitor
-import com.example.campusbites.presentation.ui.viewmodels.FoodDetailViewModel.UiEvent
+
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -45,8 +40,8 @@ class RestaurantDetailViewModel @Inject constructor(
     private val getRestaurantByIdUseCase: GetRestaurantByIdUseCase,
     private val getProductsByRestaurantUseCase: GetProductsByRestaurantUseCase,
     private val getReviewsByRestaurantUseCase: GetCommentsUseCase,
-    private val getRestaurantsUseCase: GetRestaurantsUseCase,
-    private val updateUserUseCase: UpdateUserUseCase,
+    private val getRestaurantsUseCase: GetRestaurantsUseCase, // No se usa directamente aquí, pero se mantiene por si acaso
+    private val updateUserUseCase: UpdateUserUseCase, // Para guardar/desguardar restaurantes
     private val createReservationUseCase: CreateReservationUseCase,
     private val createCommentUseCase: CreateCommentUseCase,
     private val homeDataRepository: HomeDataRepository,
@@ -54,41 +49,36 @@ class RestaurantDetailViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val firebaseAnalytics: FirebaseAnalytics,
     private val restaurantPreferencesRepository: RestaurantPreferencesRepository,
-    private val pendingReservationDataSource: PendingReservationLocalDataSource
+    private val pendingReservationDataSource: PendingReservationLocalDataSource,
+    private val restaurantLruCache: RestaurantLruCache // Inyectar el nuevo LRU Cache
 ) : ViewModel() {
 
-    // Para eventos de UI como Snackbars/Toasts desde el ViewModel
     private val _uiEventFlow = MutableSharedFlow<UiEvent>()
     val uiEventFlow = _uiEventFlow.asSharedFlow()
 
-    // El isOnline que ya tenías, ahora usando el ConnectivityMonitor inyectado
     private val isOnline: StateFlow<Boolean> = connectivityMonitorProvider.isNetworkAvailable
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
-            initialValue = true // Asumir online inicialmente, se actualizará
+            initialValue = true
         )
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
     val uiState: StateFlow<RestaurantDetailUiState> = combine(
-        _uiState, // El MutableStateFlow interno
-        isOnline, // El StateFlow de conectividad
+        _uiState,
+        isOnline,
         restaurantPreferencesRepository.lastSelectedTabIndexFlow
     ) { state, onlineStatus, tabIndex ->
         state.copy(isOnline = onlineStatus, lastSelectedTabIndex = tabIndex)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = RestaurantDetailUiState(isOnline = isOnline.value) // Valor inicial de isOnline
+        initialValue = RestaurantDetailUiState(isOnline = isOnline.value)
     )
-
-    private val _restaurants = MutableStateFlow<List<RestaurantDomain>>(emptyList())
-    val restaurants: StateFlow<List<RestaurantDomain>> = _restaurants
 
     private val _restaurantId = MutableStateFlow<String?>(null)
 
     init {
-        // Observamos cuando cambia el restaurantId y registramos la visita
         viewModelScope.launch {
             _restaurantId.filterNotNull().collect { id ->
                 logVisitEvent(id)
@@ -100,9 +90,9 @@ class RestaurantDetailViewModel @Inject constructor(
             }.collectLatest { (restaurantId, online) ->
                 _uiState.update { it.copy(isOnline = online) }
                 if (restaurantId != null) {
-                    loadRestaurantDetails(restaurantId)
-                    if (online) {
-                        fetchRestaurantDetails(restaurantId)
+                    loadRestaurantDetails(restaurantId) // Carga inicial desde caches
+                    if (online) { // Si hay red, intentar refrescar desde la API
+                        fetchRestaurantDetailsFromServer(restaurantId) // Renombrado para claridad
                     }
                 }
             }
@@ -125,20 +115,10 @@ class RestaurantDetailViewModel @Inject constructor(
                 .filter { it }
                 .collect {
                     _restaurantId.value?.let { restaurantId ->
-                        syncReviews(restaurantId)
+                        syncReviews(restaurantId) // Sincronizar reviews
                     }
-                }
-        }
-
-        // Observar la conexión para procesar pendientes al reconectar
-        viewModelScope.launch {
-            isOnline
-                .filter { it } // Solo cuando la red está disponible (true)
-                .distinctUntilChanged()
-                .collect {
-                    // _restaurantId.value?.let { restaurantId -> syncReviews(restaurantId) } // Esto ya lo tenías
                     Log.d("RestaurantDetailVM", "Network is available. Flushing pending reservations.")
-                    flushPendingReservations() // LLAMAR A LA NUEVA FUNCIÓN
+                    flushPendingReservations() // Sincronizar reservas pendientes
                 }
         }
     }
@@ -151,93 +131,133 @@ class RestaurantDetailViewModel @Inject constructor(
 
     fun loadRestaurantDetails(restaurantId: String) {
         _restaurantId.value = restaurantId
-        viewModelScope.launch(Dispatchers.Main) {
-            try {
-                val cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
-                if (cachedRestaurant != null) {
-                    val cachedProducts = homeDataRepository.allProductsFlow.firstOrNull()?.filter { product ->
-                        cachedRestaurant.id.contains(product.restaurantId)
-                    } ?: emptyList()
-                    Log.d("RestaurantDetailViewModel", "Restaurant and products loaded from cache")
-                    Log.d("RestaurantDetailViewModel", "Restaurant: $cachedRestaurant")
-                    Log.d("RestaurantDetailViewModel", "Products: $cachedProducts")
-                    _uiState.update { currentState ->
-                        currentState.copy(
-                            restaurant = cachedRestaurant,
-                            products = cachedProducts,
-                            popularProducts = cachedProducts.sortedByDescending { it.rating }.take(5),
-                            under20Products = cachedProducts.filter { it.price <= 20000 }
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                Log.e("RestaurantDetailViewModel", "Error loading cached details: ${e.message}")
-            }
-        }
-    }
-
-    private suspend fun fetchRestaurantDetails(restaurantId: String) {
-        withContext(Dispatchers.Main) {
-            _uiState.update { it.copy(isLoadingNetwork = true) }
-        }
-        try {
-            val restaurant = getRestaurantByIdUseCase(restaurantId)
-            val products = getProductsByRestaurantUseCase(restaurantId)
-
-            withContext(Dispatchers.Main) {
+        viewModelScope.launch {
+            // 1. Intentar desde LRU Cache
+            val lruCachedRestaurant = restaurantLruCache.get(restaurantId)
+            if (lruCachedRestaurant != null) {
+                Log.d("RestaurantDetailVM", "Restaurant $restaurantId loaded from LRU Cache.")
+                // Asumimos que si está en LRU, sus productos también están "actuales" o se recargarán si es necesario.
+                // Podríamos cargar productos desde HomeDataRepository aquí si LRU solo guarda RestaurantDomain.
+                // Por simplicidad, actualizamos el estado y dejamos que fetchRestaurantDetailsFromServer actualice si hay red.
                 _uiState.update { currentState ->
                     currentState.copy(
-                        restaurant = restaurant,
-                        products = products,
-                        popularProducts = products.sortedByDescending { it.rating }.take(5),
-                        under20Products = products.filter { it.price <= 20000 }
+                        restaurant = lruCachedRestaurant,
+                        // Los productos se cargarán/actualizarán en fetchRestaurantDetailsFromServer o desde HomeDataRepository
                     )
+                }
+                // Si se quiere cargar productos asociados inmediatamente:
+                loadProductsForRestaurant(lruCachedRestaurant)
+            }
+
+            // 2. Intentar desde HomeDataRepository (DataStore) si no está en LRU
+            if (lruCachedRestaurant == null) {
+                val homeCachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.firstOrNull()?.find { it.id == restaurantId }
+                if (homeCachedRestaurant != null) {
+                    Log.d("RestaurantDetailVM", "Restaurant $restaurantId loaded from HomeDataRepository.")
+                    restaurantLruCache.put(restaurantId, homeCachedRestaurant) // Añadir a LRU
+                    _uiState.update { currentState ->
+                        currentState.copy(restaurant = homeCachedRestaurant)
+                    }
+                    loadProductsForRestaurant(homeCachedRestaurant)
                 }
             }
 
-        } catch (e: Exception) {
-            Log.e("RestaurantDetailViewModel", "Error fetching restaurant details from network: ${e.message}")
-        } finally {
-            withContext(Dispatchers.Main) {
-                _uiState.update { it.copy(isLoadingNetwork = false) }
+            // 3. Si hay red, siempre intentar obtener la versión más reciente (se llama desde el colector de _restaurantId e isOnline)
+            // fetchRestaurantDetailsFromServer(restaurantId) se llamará si hay red.
+            // Si no hay red y no se encontró en ningún caché, el estado de carga se manejará.
+            if (_uiState.value.restaurant == null && !isOnline.value) {
+                _uiState.update { it.copy(errorMessage = "Restaurant details not found in cache and you are offline.") }
             }
         }
     }
+
+    private suspend fun loadProductsForRestaurant(restaurant: RestaurantDomain) {
+        val cachedProducts = homeDataRepository.allProductsFlow.firstOrNull()?.filter { product ->
+            restaurant.productsIds.contains(product.id) || product.restaurantId == restaurant.id // Mejorar filtro
+        } ?: emptyList()
+        Log.d("RestaurantDetailVM", "Products for ${restaurant.id} loaded from HomeDataRepository: ${cachedProducts.size}")
+        _uiState.update { currentState ->
+            currentState.copy(
+                products = cachedProducts,
+                popularProducts = cachedProducts.sortedByDescending { it.rating }.take(5),
+                under20Products = cachedProducts.filter { it.price <= 20000 }
+            )
+        }
+    }
+
+
+    private suspend fun fetchRestaurantDetailsFromServer(restaurantId: String) {
+        if (!isOnline.value) {
+            Log.d("RestaurantDetailVM", "Offline, skipping fetchRestaurantDetailsFromServer for $restaurantId")
+            return
+        }
+        _uiState.update { it.copy(isLoadingNetwork = true) }
+        try {
+            val restaurant = getRestaurantByIdUseCase(restaurantId) // Puede ser null si no existe
+            val products = if (restaurant != null) getProductsByRestaurantUseCase(restaurantId) else emptyList()
+
+            if (restaurant != null) {
+                restaurantLruCache.put(restaurantId, restaurant) // Actualizar LRU Cache
+                Log.d("RestaurantDetailVM", "Restaurant $restaurantId fetched from network and updated in LRU.")
+                // Opcional: Actualizar HomeDataRepository si es necesario (podría ser complejo manejar listas)
+                val currentNearby = homeDataRepository.nearbyRestaurantsFlow.first().toMutableList()
+                val index = currentNearby.indexOfFirst { it.id == restaurantId }
+                if (index != -1) {
+                    currentNearby[index] = restaurant
+                    homeDataRepository.saveNearbyRestaurants(currentNearby)
+                }
+
+
+                val currentAllProducts = homeDataRepository.allProductsFlow.first().toMutableList()
+                currentAllProducts.removeAll { it.restaurantId == restaurantId }
+                currentAllProducts.addAll(products)
+                homeDataRepository.saveAllProducts(currentAllProducts)
+
+            } else {
+                Log.w("RestaurantDetailVM", "Restaurant $restaurantId not found on server.")
+            }
+
+            _uiState.update { currentState ->
+                currentState.copy(
+                    restaurant = restaurant, // Puede ser null si la API devuelve 404, etc.
+                    products = products,
+                    popularProducts = products.sortedByDescending { it.rating }.take(5),
+                    under20Products = products.filter { it.price <= 20000 },
+                    isLoadingNetwork = false
+                )
+            }
+        } catch (e: Exception) {
+            Log.e("RestaurantDetailVM", "Error fetching restaurant details from network for $restaurantId: ${e.message}", e)
+            _uiState.update { it.copy(isLoadingNetwork = false, errorMessage = "Failed to refresh restaurant details.") }
+        }
+    }
+
 
     private fun syncReviews(restaurantId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
+                // Esta llamada actualiza el InMemoryReviewCache, que es observado por GetCommentsUseCase
                 getReviewsByRestaurantUseCase(restaurantId).firstOrNull()
+                Log.d("RestaurantDetailVM", "Reviews synced for restaurant $restaurantId")
             } catch (e: Exception) {
                 Log.e("RestaurantDetailViewModel", "Error syncing reviews: ${e.message}")
             }
         }
     }
 
-
-    suspend fun onSaveClick(user: UserDomain) {
+    suspend fun onSaveClick(user: UserDomain) { // Este método se usa para suscribir/desuscribir
         try {
             updateUserUseCase(user.id, user)
+            // El AuthViewModel es la fuente de verdad del usuario,
+            // así que el cambio se reflejará a través de su StateFlow.
         } catch (e: Exception) {
-            Log.e("RestaurantDetailViewModel", "Error updating user: ${e.message}")
-        }
-    }
-
-    fun loadAllRestaurants() {
-        viewModelScope.launch(Dispatchers.IO) {
-            try {
-                val allRestaurants = getRestaurantsUseCase()
-                withContext(Dispatchers.Main) {
-                    _restaurants.value = allRestaurants
-                }
-            } catch (e: Exception) {
-                Log.e("RestaurantDetailViewModel", "Error loading all restaurants: ${e.message}")
-            }
+            Log.e("RestaurantDetailViewModel", "Error updating user for subscription: ${e.message}")
+            _uiEventFlow.emit(UiEvent.ShowMessage("Error updating subscription status."))
         }
     }
 
     fun createReservation(reservation: ReservationDomain) {
-        viewModelScope.launch { // Usar el dispatcher por defecto o IO según la naturaleza de la operación
+        viewModelScope.launch {
             if (isOnline.value) {
                 try {
                     Log.d("RestaurantDetailVM", "Online. Creating reservation directly for user ${reservation.userId}")
@@ -245,7 +265,6 @@ class RestaurantDetailViewModel @Inject constructor(
                     _uiEventFlow.emit(UiEvent.ShowMessage("Reservation confirmed!"))
                 } catch (e: Exception) {
                     Log.e("RestaurantDetailVM", "Error creating reservation online, queueing: ${e.message}", e)
-                    // Si falla la red a pesar de que isOnline.value era true, encolamos
                     pendingReservationDataSource.addPendingReservation(reservation)
                     _uiEventFlow.emit(UiEvent.ShowMessage("Network error. Your reservation has been queued."))
                 }
@@ -258,7 +277,7 @@ class RestaurantDetailViewModel @Inject constructor(
     }
 
     private suspend fun flushPendingReservations() {
-        if (!isOnline.value) return // Doble chequeo
+        if (!isOnline.value) return
 
         val pending = pendingReservationDataSource.getAllPendingReservations()
         if (pending.isEmpty()) {
@@ -269,13 +288,13 @@ class RestaurantDetailViewModel @Inject constructor(
 
         for (pendingItem in pending) {
             val reservationToCreate = ReservationDomain(
-                id = pendingItem.reservationIdAttempt, // Usar el ID de intento, backend asignará el final
+                id = pendingItem.reservationIdAttempt,
                 restaurantId = pendingItem.restaurantId,
                 userId = pendingItem.userId,
                 datetime = pendingItem.datetime,
                 time = pendingItem.time,
                 numberCommensals = pendingItem.numberCommensals,
-                isCompleted = false, // Valores por defecto para una nueva reserva
+                isCompleted = false,
                 hasBeenCancelled = false
             )
             try {
@@ -286,28 +305,32 @@ class RestaurantDetailViewModel @Inject constructor(
                 Log.i("RestaurantDetailVM", "Successfully processed pending reservation: ${pendingItem.id}")
             } catch (e: Exception) {
                 Log.e("RestaurantDetailVM", "Failed to process pending reservation ${pendingItem.id}: ${e.message}", e)
-                // La reserva permanece en la cola para el próximo intento.
-                // Podrías implementar un contador de reintentos o una estrategia de backoff.
-                // Si un error es persistente (ej. datos inválidos), podría quedarse encolada indefinidamente.
-                break // Detener el flush actual si una falla, para reintentar todo en la próxima conexión.
+                break
             }
         }
     }
 
     fun createReview(comment: CommentDomain) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch { // Usar Dispatchers.IO si la operación es de red/DB
+            if (!isOnline.value) {
+                // TODO: Implementar guardado de reviews offline si se desea
+                _uiEventFlow.emit(UiEvent.ShowMessage("You are offline. Review cannot be submitted now."))
+                Log.w("RestaurantDetailVM", "Offline. Review submission for ${comment.restaurantDomain?.id} skipped.")
+                return@launch
+            }
             try {
                 val created = createCommentUseCase(comment)
+                // El CommentRepository debería actualizar el InMemoryReviewCache,
+                // lo que debería refrescar la lista de reviews observada.
+                _uiEventFlow.emit(UiEvent.ShowMessage("Review submitted successfully!"))
+                Log.d("RestaurantDetailVM", "Review created: ${created.id}")
             } catch (e: Exception) {
                 Log.e("RestaurantDetailViewModel", "Error creating review: ${e.message}")
+                _uiEventFlow.emit(UiEvent.ShowMessage("Failed to submit review."))
             }
         }
     }
 
-    /**
-     * Registra un evento "restaurant_visit" en Firebase Analytics
-     * con el id del restaurante y el día de la semana actual.
-     */
     private fun logVisitEvent(restaurantId: String) {
         val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK).let { value ->
             when (value) {
@@ -321,19 +344,16 @@ class RestaurantDetailViewModel @Inject constructor(
                 else -> "Unknown"
             }
         }
-
         val params = bundleOf(
             "restaurant_id" to restaurantId,
             "day_of_week" to dayOfWeek
         )
         firebaseAnalytics.logEvent("restaurant_visit", params)
-        Log.d("RestaurantDetailVM", "Logged visit event: \$params")
+        Log.d("RestaurantDetailVM", "Logged visit event: $params")
     }
 
-    // Clase sellada para eventos de UI (si no la tienes ya global)
     sealed class UiEvent {
         data class ShowMessage(val message: String) : UiEvent()
-        // Podrías añadir más tipos de eventos si es necesario
     }
 }
 
@@ -344,6 +364,7 @@ data class RestaurantDetailUiState(
     val popularProducts: List<ProductDomain> = emptyList(),
     val under20Products: List<ProductDomain> = emptyList(),
     val isLoadingNetwork: Boolean = false,
-    val isOnline: Boolean = false,
-    val lastSelectedTabIndex: Int = 0 // Añadir estado para el tab
+    val isOnline: Boolean = true, // Default to true, will be updated by connectivity monitor
+    val lastSelectedTabIndex: Int = 0,
+    val errorMessage: String? = null // Para mostrar errores generales
 )

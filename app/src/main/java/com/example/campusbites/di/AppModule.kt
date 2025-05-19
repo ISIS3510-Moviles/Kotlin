@@ -9,6 +9,9 @@ import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.local.AppDatabase
 import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
+// Importar los nuevos caches
+import com.example.campusbites.data.cache.RestaurantLruCache
+import com.example.campusbites.data.cache.SearchCache
 import com.example.campusbites.data.local.dao.DraftAlertDao
 import com.example.campusbites.data.local.dao.ReservationDao
 import com.example.campusbites.data.local.realm.RealmConfig
@@ -166,6 +169,21 @@ object AppModule {
     fun provideInMemoryAlertCache(applicationScope: CoroutineScope): InMemoryAlertCache {
         return InMemoryAlertCache(applicationScope)
     }
+
+    // --- Provisión de Nuevos Caches ---
+    @Provides
+    @Singleton
+    fun provideRestaurantLruCache(): RestaurantLruCache {
+        return RestaurantLruCache()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchCache(): SearchCache {
+        return SearchCache()
+    }
+    // --- Fin Provisión de Nuevos Caches ---
+
 
     @Provides
     @Singleton
