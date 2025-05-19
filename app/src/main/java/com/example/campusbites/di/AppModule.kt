@@ -11,6 +11,14 @@ import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
 import com.example.campusbites.data.local.dao.ReservationDao
 import com.example.campusbites.data.local.realm.RealmConfig
+// Importar los nuevos Mappers
+import com.example.campusbites.data.mapper.AlertMapper
+import com.example.campusbites.data.mapper.InstitutionMapper
+import com.example.campusbites.data.mapper.ProductMapper
+import com.example.campusbites.data.mapper.ReservationMapper
+import com.example.campusbites.data.mapper.RestaurantMapper
+import com.example.campusbites.data.mapper.TagMapper
+import com.example.campusbites.data.mapper.UserMapper
 import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.preferences.HomeDataRepository
 import com.example.campusbites.data.repository.AlertRepositoryImpl
@@ -44,6 +52,12 @@ import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.repository.UserRepository
 import com.example.campusbites.domain.service.AlertNotificationService
 import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
+// Asegúrate de que las importaciones de use cases para los mappers son correctas
+import com.example.campusbites.domain.usecase.institution.GetInstitutionByIdUseCase
+import com.example.campusbites.domain.usecase.product.GetProductByIdUseCase
+import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
+import com.example.campusbites.domain.usecase.tag.GetDietaryTagByIdUseCase
+import com.example.campusbites.domain.usecase.tag.GetFoodTagByIdUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
@@ -63,6 +77,72 @@ import kotlinx.coroutines.SupervisorJob
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    // ... (otras provisiones existentes) ...
+
+    @Provides
+    @Singleton
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
+
+    // --- Provisión de Mappers ---
+    @Provides
+    @Singleton
+    fun provideReservationMapper(): ReservationMapper {
+        return ReservationMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideInstitutionMapper(): InstitutionMapper {
+        return InstitutionMapper() // Asumiendo que no necesita UserMapper por ahora
+    }
+
+    @Provides
+    @Singleton
+    fun provideTagMapper(): TagMapper {
+        return TagMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProductMapper(
+        getFoodTagByIdUseCase: GetFoodTagByIdUseCase,
+        getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
+    ): ProductMapper {
+        return ProductMapper(getFoodTagByIdUseCase, getDietaryTagByIdUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserMapper(
+        getReservationByIdUseCase: GetReservationByIdUseCase,
+        getInstitutionByIdUseCase: GetInstitutionByIdUseCase,
+        getProductByIdUseCase: GetProductByIdUseCase,
+        institutionMapper: InstitutionMapper // Inyecta el InstitutionMapper aquí
+    ): UserMapper {
+        return UserMapper(getReservationByIdUseCase, getInstitutionByIdUseCase, getProductByIdUseCase, institutionMapper)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRestaurantMapper(
+        getFoodTagByIdUseCase: GetFoodTagByIdUseCase,
+        getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
+    ): RestaurantMapper {
+        return RestaurantMapper(getFoodTagByIdUseCase, getDietaryTagByIdUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlertMapper(): AlertMapper {
+        return AlertMapper()
+    }
+    // --- Fin Provisión de Mappers ---
+
 
     @Provides
     @Singleton
@@ -103,16 +183,12 @@ object AppModule {
         return AlertNotificationService(context)
     }
 
-//    @Provides
-//    @Singleton
-//    fun provideDraftAlertRepository(appDatabase: AppDatabase): DraftAlertRepository {
-//        return DraftAlertRepositoryImpl(appDatabase.draftAlertDao())
-//    }
-
     @Provides
     @Singleton
     fun provideApplicationScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        // Usar Dispatchers.IO para operaciones de datos por defecto si este scope se usa para eso.
+        // Si es un scope genérico de aplicación, Default puede estar bien, pero IO es más seguro para repositorios.
+        return CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 
     @Provides
@@ -122,7 +198,8 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "campus_bites_db"
-        ).build()
+        ).fallbackToDestructiveMigration() // Añadido para manejar migraciones simples durante el desarrollo
+            .build()
     }
 
     @Provides
@@ -219,20 +296,13 @@ object AppModule {
     @Singleton
     fun provideCreateCommentUseCase(
         commentRepository: CommentRepository,
-        restaurantRepository: RestaurantRepository
+        // restaurantRepository: RestaurantRepository // No parece usarse en el constructor de CreateCommentUseCase
     ) = CreateCommentUseCase(commentRepository)
 
-    @Provides
-    @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true
-    }
 
     @Module
     @InstallIn(SingletonComponent::class)
-    abstract class RepositoryModule {
+    abstract class RepositoryBindingModule { // Renombrado para evitar colisión con el otro RepositoryModule
         @Binds
         @Singleton
         abstract fun bindAlertRepository(
@@ -261,6 +331,4 @@ object AppModule {
             return Firebase.analytics
         }
     }
-
-
 }
