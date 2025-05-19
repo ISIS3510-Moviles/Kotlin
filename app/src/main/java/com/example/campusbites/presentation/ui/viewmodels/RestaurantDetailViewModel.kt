@@ -1,6 +1,5 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
-import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.util.Log
@@ -8,6 +7,7 @@ import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.data.preferences.HomeDataRepository
+import com.example.campusbites.data.preferences.RestaurantPreferencesRepository
 import com.example.campusbites.domain.model.CommentDomain
 import com.example.campusbites.domain.model.ProductDomain
 import com.example.campusbites.domain.model.ReservationDomain
@@ -17,7 +17,6 @@ import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsByRestaurantUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantByIdUseCase
 import com.example.campusbites.domain.usecase.comment.GetCommentsUseCase
-import com.example.campusbites.domain.usecase.reservation.CancelReservationUseCase
 import com.example.campusbites.domain.usecase.reservation.CreateReservationUseCase
 import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
@@ -34,6 +33,7 @@ import kotlin.collections.take
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
+import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -48,11 +48,20 @@ class RestaurantDetailViewModel @Inject constructor(
     private val homeDataRepository: HomeDataRepository,
     private val connectivityManager: ConnectivityManager,
     private val authRepository: AuthRepository,
-    private val firebaseAnalytics: FirebaseAnalytics
+    private val firebaseAnalytics: FirebaseAnalytics,
+    private val restaurantPreferencesRepository: RestaurantPreferencesRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
-    val uiState: StateFlow<RestaurantDetailUiState> = _uiState
+    val uiState: StateFlow<RestaurantDetailUiState> = _uiState.combine(
+        restaurantPreferencesRepository.lastSelectedTabIndexFlow // Combinar con el flujo del tab
+    ) { state, tabIndex ->
+        state.copy(lastSelectedTabIndex = tabIndex)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = RestaurantDetailUiState() // El tab inicial se cargará del flow
+    )
 
     private val _restaurants = MutableStateFlow<List<RestaurantDomain>>(emptyList())
     val restaurants: StateFlow<List<RestaurantDomain>> = _restaurants
@@ -117,6 +126,12 @@ class RestaurantDetailViewModel @Inject constructor(
                         syncReviews(restaurantId)
                     }
                 }
+        }
+    }
+
+    fun saveSelectedTabIndex(index: Int) {
+        viewModelScope.launch {
+            restaurantPreferencesRepository.saveLastSelectedTabIndex(index)
         }
     }
 
@@ -261,5 +276,6 @@ data class RestaurantDetailUiState(
     val popularProducts: List<ProductDomain> = emptyList(),
     val under20Products: List<ProductDomain> = emptyList(),
     val isLoadingNetwork: Boolean = false,
-    val isOnline: Boolean = false
+    val isOnline: Boolean = false,
+    val lastSelectedTabIndex: Int = 0 // Añadir estado para el tab
 )
