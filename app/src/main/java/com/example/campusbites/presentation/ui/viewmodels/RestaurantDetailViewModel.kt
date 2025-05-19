@@ -34,6 +34,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.Calendar
 import kotlinx.coroutines.flow.first
+import com.example.campusbites.data.local.realm.PendingReservationLocalDataSource // IMPORTAR
+import com.example.campusbites.data.local.realm.model.PendingReservationRealmModel // IMPORTAR
+import com.example.campusbites.data.network.ConnectivityMonitor
+import com.example.campusbites.presentation.ui.viewmodels.FoodDetailViewModel.UiEvent
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
@@ -46,44 +50,42 @@ class RestaurantDetailViewModel @Inject constructor(
     private val createReservationUseCase: CreateReservationUseCase,
     private val createCommentUseCase: CreateCommentUseCase,
     private val homeDataRepository: HomeDataRepository,
-    private val connectivityManager: ConnectivityManager,
+    private val connectivityMonitorProvider: ConnectivityMonitor,
     private val authRepository: AuthRepository,
     private val firebaseAnalytics: FirebaseAnalytics,
-    private val restaurantPreferencesRepository: RestaurantPreferencesRepository
+    private val restaurantPreferencesRepository: RestaurantPreferencesRepository,
+    private val pendingReservationDataSource: PendingReservationLocalDataSource
 ) : ViewModel() {
 
+    // Para eventos de UI como Snackbars/Toasts desde el ViewModel
+    private val _uiEventFlow = MutableSharedFlow<UiEvent>()
+    val uiEventFlow = _uiEventFlow.asSharedFlow()
+
+    // El isOnline que ya tenías, ahora usando el ConnectivityMonitor inyectado
+    private val isOnline: StateFlow<Boolean> = connectivityMonitorProvider.isNetworkAvailable
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = true // Asumir online inicialmente, se actualizará
+        )
+
     private val _uiState = MutableStateFlow(RestaurantDetailUiState())
-    val uiState: StateFlow<RestaurantDetailUiState> = _uiState.combine(
-        restaurantPreferencesRepository.lastSelectedTabIndexFlow // Combinar con el flujo del tab
-    ) { state, tabIndex ->
-        state.copy(lastSelectedTabIndex = tabIndex)
+    val uiState: StateFlow<RestaurantDetailUiState> = combine(
+        _uiState, // El MutableStateFlow interno
+        isOnline, // El StateFlow de conectividad
+        restaurantPreferencesRepository.lastSelectedTabIndexFlow
+    ) { state, onlineStatus, tabIndex ->
+        state.copy(isOnline = onlineStatus, lastSelectedTabIndex = tabIndex)
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
-        initialValue = RestaurantDetailUiState() // El tab inicial se cargará del flow
+        initialValue = RestaurantDetailUiState(isOnline = isOnline.value) // Valor inicial de isOnline
     )
 
     private val _restaurants = MutableStateFlow<List<RestaurantDomain>>(emptyList())
     val restaurants: StateFlow<List<RestaurantDomain>> = _restaurants
 
     private val _restaurantId = MutableStateFlow<String?>(null)
-
-    private val isOnline = callbackFlow {
-        val networkCallback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: android.net.Network) {
-                trySend(true)
-            }
-
-            override fun onLost(network: android.net.Network) {
-                trySend(false)
-            }
-        }
-        connectivityManager.registerDefaultNetworkCallback(networkCallback)
-        val capabilities = connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
-        val isConnected = capabilities != null && (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR))
-        trySend(isConnected)
-        awaitClose { connectivityManager.unregisterNetworkCallback(networkCallback) }
-    }.distinctUntilChanged()
 
     init {
         // Observamos cuando cambia el restaurantId y registramos la visita
@@ -125,6 +127,18 @@ class RestaurantDetailViewModel @Inject constructor(
                     _restaurantId.value?.let { restaurantId ->
                         syncReviews(restaurantId)
                     }
+                }
+        }
+
+        // Observar la conexión para procesar pendientes al reconectar
+        viewModelScope.launch {
+            isOnline
+                .filter { it } // Solo cuando la red está disponible (true)
+                .distinctUntilChanged()
+                .collect {
+                    // _restaurantId.value?.let { restaurantId -> syncReviews(restaurantId) } // Esto ya lo tenías
+                    Log.d("RestaurantDetailVM", "Network is available. Flushing pending reservations.")
+                    flushPendingReservations() // LLAMAR A LA NUEVA FUNCIÓN
                 }
         }
     }
@@ -223,11 +237,59 @@ class RestaurantDetailViewModel @Inject constructor(
     }
 
     fun createReservation(reservation: ReservationDomain) {
-        viewModelScope.launch(Dispatchers.IO) {
+        viewModelScope.launch { // Usar el dispatcher por defecto o IO según la naturaleza de la operación
+            if (isOnline.value) {
+                try {
+                    Log.d("RestaurantDetailVM", "Online. Creating reservation directly for user ${reservation.userId}")
+                    createReservationUseCase(reservation)
+                    _uiEventFlow.emit(UiEvent.ShowMessage("Reservation confirmed!"))
+                } catch (e: Exception) {
+                    Log.e("RestaurantDetailVM", "Error creating reservation online, queueing: ${e.message}", e)
+                    // Si falla la red a pesar de que isOnline.value era true, encolamos
+                    pendingReservationDataSource.addPendingReservation(reservation)
+                    _uiEventFlow.emit(UiEvent.ShowMessage("Network error. Your reservation has been queued."))
+                }
+            } else {
+                Log.d("RestaurantDetailVM", "Offline. Queueing reservation for user ${reservation.userId}")
+                pendingReservationDataSource.addPendingReservation(reservation)
+                _uiEventFlow.emit(UiEvent.ShowMessage("You're offline. Reservation will be made when you're back online."))
+            }
+        }
+    }
+
+    private suspend fun flushPendingReservations() {
+        if (!isOnline.value) return // Doble chequeo
+
+        val pending = pendingReservationDataSource.getAllPendingReservations()
+        if (pending.isEmpty()) {
+            Log.d("RestaurantDetailVM", "No pending reservations to flush.")
+            return
+        }
+        Log.d("RestaurantDetailVM", "Found ${pending.size} pending reservations to flush.")
+
+        for (pendingItem in pending) {
+            val reservationToCreate = ReservationDomain(
+                id = pendingItem.reservationIdAttempt, // Usar el ID de intento, backend asignará el final
+                restaurantId = pendingItem.restaurantId,
+                userId = pendingItem.userId,
+                datetime = pendingItem.datetime,
+                time = pendingItem.time,
+                numberCommensals = pendingItem.numberCommensals,
+                isCompleted = false, // Valores por defecto para una nueva reserva
+                hasBeenCancelled = false
+            )
             try {
-                createReservationUseCase(reservation)
+                Log.d("RestaurantDetailVM", "Flushing: Creating pending reservation for user ${reservationToCreate.userId}")
+                createReservationUseCase(reservationToCreate)
+                pendingReservationDataSource.removePendingReservation(pendingItem.id)
+                _uiEventFlow.emit(UiEvent.ShowMessage("Pending reservation for ${pendingItem.datetime.substringBefore('T')} processed successfully."))
+                Log.i("RestaurantDetailVM", "Successfully processed pending reservation: ${pendingItem.id}")
             } catch (e: Exception) {
-                Log.e("RestaurantDetailViewModel", "Error creating reservation: ${e.message}")
+                Log.e("RestaurantDetailVM", "Failed to process pending reservation ${pendingItem.id}: ${e.message}", e)
+                // La reserva permanece en la cola para el próximo intento.
+                // Podrías implementar un contador de reintentos o una estrategia de backoff.
+                // Si un error es persistente (ej. datos inválidos), podría quedarse encolada indefinidamente.
+                break // Detener el flush actual si una falla, para reintentar todo en la próxima conexión.
             }
         }
     }
@@ -266,6 +328,12 @@ class RestaurantDetailViewModel @Inject constructor(
         )
         firebaseAnalytics.logEvent("restaurant_visit", params)
         Log.d("RestaurantDetailVM", "Logged visit event: \$params")
+    }
+
+    // Clase sellada para eventos de UI (si no la tienes ya global)
+    sealed class UiEvent {
+        data class ShowMessage(val message: String) : UiEvent()
+        // Podrías añadir más tipos de eventos si es necesario
     }
 }
 

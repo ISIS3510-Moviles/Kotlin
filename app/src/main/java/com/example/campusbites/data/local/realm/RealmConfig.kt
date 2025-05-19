@@ -9,6 +9,7 @@ import io.realm.kotlin.RealmConfiguration
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.campusbites.data.local.realm.model.PendingFavoriteActionRealmModel
+import com.example.campusbites.data.local.realm.model.PendingReservationRealmModel
 
 @Singleton
 class RealmConfig @Inject constructor() {
@@ -24,7 +25,8 @@ class RealmConfig @Inject constructor() {
                     DraftAlertRealmModel::class,
                     PendingCancellationRealmModel::class,
                     AlertRealmModel::class,
-                    PendingFavoriteActionRealmModel::class // <-- AÑADIR AQUÍ
+                    PendingFavoriteActionRealmModel::class, // <-- AÑADIR AQUÍ
+                    PendingReservationRealmModel::class
                 )
             )
                 .schemaVersion(REALM_VERSION)
