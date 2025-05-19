@@ -22,6 +22,7 @@ import com.example.campusbites.data.mapper.TagMapper
 import com.example.campusbites.data.mapper.UserMapper
 import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.preferences.HomeDataRepository
+import com.example.campusbites.data.preferences.RestaurantPreferencesRepository
 import com.example.campusbites.data.repository.AlertRepositoryImpl
 import com.example.campusbites.data.repository.CommentRepositoryImpl
 import com.example.campusbites.data.repository.DietaryTagRepositoryImpl
@@ -79,7 +80,13 @@ import kotlinx.coroutines.SupervisorJob
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    // ... (otras provisiones existentes) ...
+    @Provides
+    @Singleton
+    fun provideRestaurantPreferencesRepository(
+        @ApplicationContext context: Context
+    ): RestaurantPreferencesRepository {
+        return RestaurantPreferencesRepository(context)
+    }
 
     @Provides
     @Singleton
