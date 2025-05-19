@@ -9,6 +9,7 @@ import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.local.AppDatabase
 import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
+import com.example.campusbites.data.local.dao.DraftAlertDao
 import com.example.campusbites.data.local.dao.ReservationDao
 import com.example.campusbites.data.local.realm.RealmConfig
 // Importar los nuevos Mappers
@@ -167,8 +168,14 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideDraftAlertRepository(realmConfig: RealmConfig): DraftAlertRepository {
-        return DraftAlertRepositoryImpl(realmConfig)
+    fun provideDraftAlertRepository(draftAlertDao: DraftAlertDao): DraftAlertRepository { // Inyecta el DAO de Room
+        return DraftAlertRepositoryImpl(draftAlertDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDraftAlertDao(appDatabase: AppDatabase): DraftAlertDao { // Provisión para el DAO de Room
+        return appDatabase.draftAlertDao()
     }
 
     @Provides
