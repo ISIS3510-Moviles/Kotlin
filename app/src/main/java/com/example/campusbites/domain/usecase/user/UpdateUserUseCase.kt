@@ -3,6 +3,7 @@ package com.example.campusbites.domain.usecase.user
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.UserRepository
 import com.example.campusbites.data.dto.UserDTO
+import com.example.campusbites.data.dto.UserUpdateDTO
 import javax.inject.Inject
 
 class UpdateUserUseCase @Inject constructor(
@@ -10,7 +11,7 @@ class UpdateUserUseCase @Inject constructor(
 ) {
 
     suspend operator fun invoke(id: String, user: UserDomain): Boolean {
-        val userDTO = UserDTO(
+        val userDTO = UserUpdateDTO(
             id = user.id,
             name = user.name,
             phone = user.phone,

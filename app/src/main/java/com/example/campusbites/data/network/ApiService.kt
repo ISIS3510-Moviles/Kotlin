@@ -16,6 +16,7 @@ import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
 import com.example.campusbites.data.dto.UpdateRestaurantCommentsDTO
 import com.example.campusbites.data.dto.UserDTO
+import com.example.campusbites.data.dto.UserUpdateDTO
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -77,7 +78,7 @@ interface ApiService {
     suspend fun createUser(@Body userDTO: UserDTO): Response<Unit>
 
     @PATCH("user/{id}")
-    suspend fun updateUser(@Path("id") id: String,@Body userDTO: UserDTO): Boolean
+    suspend fun updateUser(@Path("id") id: String,@Body userDTO: UserUpdateDTO): Boolean
 
     @GET("user")
     suspend fun getUsers(): List<UserDTO>

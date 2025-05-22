@@ -1,0 +1,223 @@
+Index: app/src/main/java/com/example/campusbites/presentation/ui/viewmodels/CreateProductViewModel.kt
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>package com.example.campusbites.presentation.ui.viewmodels\r\n\r\nclass CreateProductViewModel {\r\n}
+===================================================================
+diff --git a/app/src/main/java/com/example/campusbites/presentation/ui/viewmodels/CreateProductViewModel.kt b/app/src/main/java/com/example/campusbites/presentation/ui/viewmodels/CreateProductViewModel.kt
+--- a/app/src/main/java/com/example/campusbites/presentation/ui/viewmodels/CreateProductViewModel.kt	(revision 51c8f74b3442c19eefc51c0044a103a48908eed7)
++++ b/app/src/main/java/com/example/campusbites/presentation/ui/viewmodels/CreateProductViewModel.kt	(date 1746939976580)
+@@ -1,4 +1,212 @@
+ package com.example.campusbites.presentation.ui.viewmodels
+ 
+-class CreateProductViewModel {
++import androidx.lifecycle.ViewModel
++import androidx.lifecycle.viewModelScope
++import com.example.campusbites.domain.model.DietaryTagDomain
++import com.example.campusbites.domain.model.FoodTagDomain
++import com.example.campusbites.domain.model.IngredientDomain
++import com.example.campusbites.domain.model.RestaurantDomain
++import com.example.campusbites.domain.usecase.product.CreateProductUseCase
++import com.example.campusbites.domain.usecase.tag.GetDietaryTagsUseCase
++import com.example.campusbites.domain.usecase.tag.GetFoodTagsUseCase
++import com.example.campusbites.domain.usecase.restaurant.GetRestaurantsUseCase // Assuming a use case to get all restaurants
++import dagger.hilt.android.lifecycle.HiltViewModel
++import kotlinx.coroutines.flow.MutableStateFlow
++import kotlinx.coroutines.flow.StateFlow
++import kotlinx.coroutines.flow.asStateFlow
++import kotlinx.coroutines.flow.update
++import kotlinx.coroutines.launch
++import javax.inject.Inject
++import android.util.Log // Import Log for logging errors
++import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
++import java.io.IOException // Import IOException for network errors
++
++@HiltViewModel
++class CreateProductViewModel @Inject constructor(
++    private val createProductUseCase: CreateProductUseCase,
++    private val getRestaurantsUseCase: GetRestaurantsUseCase, // Inject use case to get restaurants
++    private val getIngredientsUseCase: GetIngredientsUseCase, // Inject use case to get ingredients
++    private val getFoodTagsUseCase: GetFoodTagsUseCase, // Inject use case to get food tags
++    private val getDietaryTagsUseCase: GetDietaryTagsUseCase // Inject use case to get dietary tags
++) : ViewModel() {
++
++    private val _uiState = MutableStateFlow(CreateProductUiState())
++    val uiState: StateFlow<CreateProductUiState> = _uiState.asStateFlow()
++
++    init {
++        fetchInitialData()
++    }
++
++    private fun fetchInitialData() {
++        viewModelScope.launch {
++            _uiState.update { it.copy(isLoading = true) }
++            try {
++                val restaurants = getRestaurantsUseCase()
++                val ingredients = getIngredientsUseCase()
++                val foodTags = getFoodTagsUseCase()
++                val dietaryTags = getDietaryTagsUseCase()
++
++                _uiState.update {
++                    it.copy(
++                        availableRestaurants = restaurants,
++                        availableIngredients = ingredients,
++                        availableFoodTags = foodTags,
++                        availableDietaryTags = dietaryTags,
++                        isLoading = false,
++                        errorMessage = null
++                    )
++                }
++            } catch (e: Exception) {
++                Log.e("CreateProductVM", "Error fetching initial data", e)
++                _uiState.update {
++                    it.copy(
++                        isLoading = false,
++                        errorMessage = "Failed to load necessary data. Please try again."
++                    )
++                }
++            }
++        }
++    }
++
++    fun onNameChange(name: String) {
++        _uiState.update { it.copy(name = name) }
++        validateForm()
++    }
++
++    fun onDescriptionChange(description: String) {
++        _uiState.update { it.copy(description = description) }
++        validateForm()
++    }
++
++    fun onPriceChange(price: String) {
++        _uiState.update { it.copy(price = price) }
++        validateForm()
++    }
++
++    fun onRestaurantChange(restaurantId: String?) {
++        _uiState.update { it.copy(restaurantId = restaurantId) }
++        validateForm()
++    }
++
++    fun onIngredientsChange(ingredientIds: List<String>) {
++        _uiState.update { it.copy(selectedIngredientIds = ingredientIds) }
++        // Ingredients are optional, so no need to validate form here based on this
++    }
++
++    fun onFoodTagsChange(foodTagIds: List<String>) {
++        _uiState.update { it.copy(selectedFoodTagIds = foodTagIds) }
++        // Food tags are optional, so no need to validate form here based on this
++    }
++
++    fun onDietaryTagsChange(dietaryTagIds: List<String>) {
++        _uiState.update { it.copy(selectedDietaryTagIds = dietaryTagIds) }
++        // Dietary tags are optional, so no need to validate form here based on this
++    }
++
++    fun onPhotoSelected(fileName: String) {
++        _uiState.update { it.copy(photoFileName = fileName) }
++        // Photo is optional, so no need to validate form here based on this
++    }
++
++    private fun validateForm() {
++        val currentState = _uiState.value
++        val isPriceValid = currentState.price.toFloatOrNull() != null && currentState.price.toFloat() >= 0
++        _uiState.update {
++            it.copy(
++                isFormValid = currentState.name.isNotBlank() &&
++                        currentState.description.isNotBlank() &&
++                        isPriceValid &&
++                        currentState.restaurantId != null
++                // Photo, ingredients, and tags are optional and don't affect basic form validity
++            )
++        }
++    }
++
++    fun createProduct() {
++        if (!uiState.value.isFormValid) {
++            _uiState.update { it.copy(errorMessage = "Please fill in all required fields.") }
++            return
++        }
++
++        _uiState.update { it.copy(isLoading = true, errorMessage = null, isProductCreated = false) }
++
++        viewModelScope.launch {
++            try {
++                val success = createProductUseCase(
++                    name = uiState.value.name,
++                    description = uiState.value.description,
++                    price = uiState.value.price.toFloat(), // Convert price to Float
++                    restaurantId = uiState.value.restaurantId!!, // We validated that it's not null
++                    ingredientIds = uiState.value.selectedIngredientIds,
++                    foodTagIds = uiState.value.selectedFoodTagIds,
++                    dietaryTagIds = uiState.value.selectedDietaryTagIds,
++                    photoFileName = uiState.value.photoFileName // Pass photo file name
++                    // Note: The actual photo upload logic will likely be handled elsewhere
++                )
++
++                if (success) {
++                    Log.d("CreateProductVM", "Product created successfully")
++                    _uiState.update { it.copy(isLoading = false, isProductCreated = true, errorMessage = null) }
++                    // Optionally, reset the form here:
++                    // _uiState.update { CreateProductUiState(availableRestaurants = it.availableRestaurants, availableIngredients = it.availableIngredients, availableFoodTags = it.availableFoodTags, availableDietaryTags = it.availableDietaryTags) }
++                } else {
++                    Log.e("CreateProductVM", "Product creation failed")
++                    _uiState.update { it.copy(isLoading = false, errorMessage = "Product creation failed. Please try again.") }
++                }
++            } catch (e: IOException) { // Catch specific network exceptions
++                Log.e("CreateProductVM", "Network error creating product", e)
++                _uiState.update {
++                    it.copy(
++                        isLoading = false,
++                        errorMessage = "No internet connection. Could not create product."
++                    )
++                }
++            } catch (e: Exception) { // Catch other potential exceptions
++                Log.e("CreateProductVM", "Error creating product", e)
++                _uiState.update {
++                    it.copy(
++                        isLoading = false,
++                        errorMessage = "An error occurred while creating the product: ${e.message}"
++                    )
++                }
++            }
++        }
++    }
++
++    // Function to reset the product created state after navigation or display
++    fun productCreatedHandled() {
++        _uiState.update { it.copy(isProductCreated = false) }
++    }
++}
++
++// Define the UI State for the ViewModel
++data class CreateProductUiState(
++    val name: String = "",
++    val description: String = "",
++    val price: String = "", // Use String for TextField input
++    val restaurantId: String? = null, // ID of the selected restaurant
++    val selectedIngredientIds: List<String> = emptyList(),
++    val selectedFoodTagIds: List<String> = emptyList(),
++    val selectedDietaryTagIds: List<String> = emptyList(),
++    val photoFileName: String = "", // Placeholder for photo file name
++
++    val availableRestaurants: List<RestaurantDomain> = emptyList(), // Data for dropdown
++    val availableIngredients: List<IngredientDomain> = emptyList(), // Data for dropdown
++    val availableFoodTags: List<FoodTagDomain> = emptyList(), // Data for dropdown
++    val availableDietaryTags: List<DietaryTagDomain> = emptyList(), // Data for dropdown
++
++    val isLoading: Boolean = false,
++    val errorMessage: String? = null,
++    val isProductCreated: Boolean = false, // State to indicate successful creation
++    val isFormValid: Boolean = false // State to track form validity
++) {
++    // Helper properties for displaying selected names in MultiSelectDropdown
++    val selectedIngredientNames: List<String>
++        get() = availableIngredients.filter { it.id in selectedIngredientIds }.map { it.name }
++
++    val selectedFoodTagNames: List<String>
++        get() = availableFoodTags.filter { it.id in selectedFoodTagIds }.map { it.name }
++
++    val selectedDietaryTagNames: List<String>
++        get() = availableDietaryTags.filter { it.id in selectedDietaryTagIds }.map { it.name }
+ }
+\ No newline at end of file
