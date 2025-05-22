@@ -5,9 +5,9 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "draft_alerts")
 data class DraftAlertEntity(
-    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    @PrimaryKey(autoGenerate = true) val id: Long = 0, // Room generará el ID
     val message: String,
     val restaurantId: String,
-    val restaurantName: String, // Store name for display purposes
+    val restaurantName: String,
     val createdAt: Long = System.currentTimeMillis()
 )

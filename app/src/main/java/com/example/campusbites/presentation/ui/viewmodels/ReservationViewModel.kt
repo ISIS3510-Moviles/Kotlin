@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import javax.inject.Inject
+import java.time.OffsetDateTime
+import kotlin.collections.filter
 
 @HiltViewModel
 class ReservationsViewModel @Inject constructor(
@@ -100,7 +102,8 @@ class ReservationsViewModel @Inject constructor(
     private fun sendCancellationAnalytics(reservations: List<ReservationDomain>) {
         val cancelled = reservations.filter { it.hasBeenCancelled == true }
         val counts = cancelled.groupBy {
-            LocalDate.parse(it.datetime).dayOfWeek
+            // Línea modificada:
+            OffsetDateTime.parse(it.datetime).toLocalDate().dayOfWeek
         }.mapValues { it.value.size }
 
         val params = Bundle().apply {

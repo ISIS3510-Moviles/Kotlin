@@ -22,6 +22,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.components.ProductListRow
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.ProfileViewModel // Import the ProfileViewModel
@@ -172,7 +173,8 @@ fun ProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.height(8.dp))
                                     Button(
-                                        onClick = { /* Navigate to discover products */ }
+                                        onClick = { navController.navigate(NavigationRoutes.HOME_SCREEN) },
+                                        modifier = Modifier.fillMaxWidth()
                                     ) {
                                         Text("Discover products")
                                     }

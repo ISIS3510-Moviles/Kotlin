@@ -8,11 +8,13 @@ import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import javax.inject.Inject
 import javax.inject.Singleton
+import com.example.campusbites.data.local.realm.model.PendingFavoriteActionRealmModel
+import com.example.campusbites.data.local.realm.model.PendingReservationRealmModel
 
 @Singleton
 class RealmConfig @Inject constructor() {
     companion object {
-        private const val REALM_VERSION = 1L
+        private const val REALM_VERSION = 1L // O la versión actual si la has incrementado
     }
 
     val realm: Realm by lazy {
@@ -22,11 +24,13 @@ class RealmConfig @Inject constructor() {
                 schema = setOf(
                     DraftAlertRealmModel::class,
                     PendingCancellationRealmModel::class,
-                    AlertRealmModel::class
+                    AlertRealmModel::class,
+                    PendingFavoriteActionRealmModel::class, // <-- AÑADIR AQUÍ
+                    PendingReservationRealmModel::class
                 )
             )
                 .schemaVersion(REALM_VERSION)
-                .deleteRealmIfMigrationNeeded()
+                .deleteRealmIfMigrationNeeded() // Considera una estrategia de migración real para producción
                 .build()
 
             val realmInstance = Realm.open(config)
@@ -37,5 +41,4 @@ class RealmConfig @Inject constructor() {
             throw IllegalStateException("Failed to initialize Realm. See logs for details.", e)
         }
     }
-
 }

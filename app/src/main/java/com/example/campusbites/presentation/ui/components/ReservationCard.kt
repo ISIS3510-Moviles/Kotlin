@@ -17,9 +17,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -30,15 +32,31 @@ fun ReservationCard(
     status: String,
     modifier: Modifier = Modifier
 ) {
-    // Determinar si la reserva es pasada
-    val resolvedStatus = try {
-        val datePart = LocalDate.parse(date, DateTimeFormatter.ISO_LOCAL_DATE)
-        val timePart = LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
-        val reservationDateTime = LocalDateTime.of(datePart, timePart)
-        if (reservationDateTime.isBefore(LocalDateTime.now())) "Completed" else status
+    // Parse the ISO datetime string to local date
+    val localDate = try {
+        Instant.parse(date)
+            .atZone(ZoneId.systemDefault())
+            .toLocalDate()
     } catch (e: Exception) {
-        status
+        null
     }
+
+    // Parse time part ("HH:mm")
+    val localTime = try {
+        LocalTime.parse(time, DateTimeFormatter.ofPattern("HH:mm"))
+    } catch (e: Exception) {
+        null
+    }
+
+    // Determine reservationDateTime if both parsed
+    val reservationDateTime = if (localDate != null && localTime != null) {
+        LocalDateTime.of(localDate, localTime)
+    } else null
+
+    // Determine resolved status based on whether date/time is before now
+    val resolvedStatus = if (reservationDateTime != null) {
+        if (reservationDateTime.isBefore(LocalDateTime.now())) "Completed" else status
+    } else status
 
     val statusColor = when (resolvedStatus) {
         "Pending" -> Color.Red
