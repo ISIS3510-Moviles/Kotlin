@@ -80,11 +80,6 @@ class RestaurantDetailViewModel @Inject constructor(
 
     init {
         viewModelScope.launch {
-            _restaurantId.filterNotNull().collect { id ->
-                logVisitEvent(id)
-            }
-        }
-        viewModelScope.launch {
             combine(_restaurantId, isOnline) { restaurantId, online ->
                 Pair(restaurantId, online)
             }.collectLatest { (restaurantId, online) ->
@@ -168,6 +163,8 @@ class RestaurantDetailViewModel @Inject constructor(
             if (_uiState.value.restaurant == null && !isOnline.value) {
                 _uiState.update { it.copy(errorMessage = "Restaurant details not found in cache and you are offline.") }
             }
+
+            logVisitEvent(_uiState.value.restaurant!!.name)
         }
     }
 
@@ -331,7 +328,7 @@ class RestaurantDetailViewModel @Inject constructor(
         }
     }
 
-    private fun logVisitEvent(restaurantId: String) {
+    private fun logVisitEvent(restaurantName: String) {
         val dayOfWeek = Calendar.getInstance().get(Calendar.DAY_OF_WEEK).let { value ->
             when (value) {
                 Calendar.MONDAY -> "Monday"
@@ -345,7 +342,7 @@ class RestaurantDetailViewModel @Inject constructor(
             }
         }
         val params = bundleOf(
-            "restaurant_id" to restaurantId,
+            "restaurant_name" to restaurantName,
             "day_of_week" to dayOfWeek
         )
         firebaseAnalytics.logEvent("restaurant_visit", params)
