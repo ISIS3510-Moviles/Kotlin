@@ -12,8 +12,6 @@ import com.example.campusbites.data.mapper.RestaurantMapper
 import com.example.campusbites.data.mapper.UserMapper
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.model.AlertDomain
-import com.example.campusbites.domain.model.RestaurantDomain
-import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AlertRepository
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -28,10 +26,8 @@ class AlertRepositoryImpl @Inject constructor(
     private val userMapper: UserMapper,
     private val restaurantMapper: RestaurantMapper,
     private val alertMapper: AlertMapper
-    // getReservationByIdUseCase y getInstitutionByIdUseCase se usan dentro de UserMapper
 ) : AlertRepository {
 
-    // Función auxiliar para obtener UserDTOs en "batch" (simulado con llamadas concurrentes)
     private suspend fun fetchUserDTOsConcurrently(userIds: List<String>): Map<String, UserDTO?> {
         return coroutineScope {
             userIds.map { id ->
@@ -41,16 +37,15 @@ class AlertRepositoryImpl @Inject constructor(
                         apiService.getUserById(id)
                     } catch (e: Exception) {
                         Log.e("AlertRepoImpl", "Failed to fetch UserDTO for id: $id. Error: ${e.message}", e)
-                        null // Devolver null si falla para este ID específico
+                        null
                     }
                 }
             }.awaitAll().mapIndexedNotNull { index, userDto ->
-                userIds[index] to userDto // Crea pares (ID, UserDTO?)
+                userIds[index] to userDto
             }.toMap()
         }
     }
 
-    // Función auxiliar para obtener RestaurantDTOs en "batch" (simulado con llamadas concurrentes)
     private suspend fun fetchRestaurantDTOsConcurrently(restaurantIds: List<String>): Map<String, RestaurantDTO?> {
         return coroutineScope {
             restaurantIds.map { id ->
@@ -74,29 +69,46 @@ class AlertRepositoryImpl @Inject constructor(
         return try {
             val alertDtos: List<AlertDTO> = apiService.getAlerts()
             Log.d("AlertRepoImpl", "Fetched ${alertDtos.size} alert DTOs from API.")
-            if (alertDtos.isEmpty()) return emptyList()
 
-            val uniquePublisherIds = alertDtos.map { it.publisherId }.distinct().filter { it.isNotBlank() }
-            val uniqueRestaurantIds = alertDtos.map { it.restaurantId }.distinct().filter { it.isNotBlank() }
+            val validAlertDtos = alertDtos.filter { dto ->
+                if (dto.id == null) {
+                    Log.w("AlertRepoImpl", "AlertDTO received from API with null ID. Publisher: ${dto.publisherId}, Restaurant: ${dto.restaurantId}, Message: ${dto.message.take(50)}. Skipping this alert.")
+                    false
+                } else {
+                    true
+                }
+            }
 
-            Log.d("AlertRepoImpl", "Unique publisher IDs: $uniquePublisherIds")
-            Log.d("AlertRepoImpl", "Unique restaurant IDs: $uniqueRestaurantIds")
+            if (validAlertDtos.isEmpty() && alertDtos.isNotEmpty()) {
+                Log.w("AlertRepoImpl", "All ${alertDtos.size} fetched AlertDTOs had null IDs or other critical missing fields. No alerts will be processed.")
+                localAlertDataSource.deleteAllAlerts()
+                return emptyList()
+            }
+            if (validAlertDtos.size < alertDtos.size) {
+                Log.w("AlertRepoImpl", "${alertDtos.size - validAlertDtos.size} AlertDTOs were filtered out due to null ID or other critical missing fields.")
+            }
 
-            // Obtener todos los UserDTOs y RestaurantDTOs necesarios
+            if (validAlertDtos.isEmpty()) return emptyList()
+
+
+            val uniquePublisherIds = validAlertDtos.map { it.publisherId }.distinct().filter { it.isNotBlank() }
+            val uniqueRestaurantIds = validAlertDtos.map { it.restaurantId }.distinct().filter { it.isNotBlank() }
+
+            Log.d("AlertRepoImpl", "Unique publisher IDs for valid alerts: $uniquePublisherIds")
+            Log.d("AlertRepoImpl", "Unique restaurant IDs for valid alerts: $uniqueRestaurantIds")
+
             val userDtosMap = if (uniquePublisherIds.isNotEmpty()) fetchUserDTOsConcurrently(uniquePublisherIds) else emptyMap()
             val restaurantDtosMap = if (uniqueRestaurantIds.isNotEmpty()) fetchRestaurantDTOsConcurrently(uniqueRestaurantIds) else emptyMap()
 
-            Log.d("AlertRepoImpl", "Fetched ${userDtosMap.size} user DTOs and ${restaurantDtosMap.size} restaurant DTOs.")
+            Log.d("AlertRepoImpl", "Fetched ${userDtosMap.size} user DTOs and ${restaurantDtosMap.size} restaurant DTOs for valid alerts.")
 
-            // Mapear DTOs a Domain Models (User y Restaurant)
-            // Esta parte todavía puede tener N+1 internos si los mappers hacen llamadas para dependencias (instituciones, reservas, tags)
             val usersDomainMap = userDtosMap.mapValuesNotNull { entry ->
                 entry.value?.let { userDto ->
                     try {
                         userMapper.mapDtoToDomain(userDto)
                     } catch (e: Exception) {
                         Log.e("AlertRepoImpl", "Error mapping UserDTO ${entry.key} to UserDomain: ${e.message}", e)
-                        userMapper.createFallbackUser(entry.key) // Usar fallback
+                        userMapper.createFallbackUser(entry.key)
                     }
                 }
             }
@@ -106,29 +118,30 @@ class AlertRepositoryImpl @Inject constructor(
                         restaurantMapper.mapDtoToDomain(restaurantDto)
                     } catch (e: Exception) {
                         Log.e("AlertRepoImpl", "Error mapping RestaurantDTO ${entry.key} to RestaurantDomain: ${e.message}", e)
-                        restaurantMapper.createFallbackRestaurant(entry.key) // Usar fallback
+                        restaurantMapper.createFallbackRestaurant(entry.key)
                     }
                 }
             }
 
-            Log.d("AlertRepoImpl", "Mapped ${usersDomainMap.size} UserDomains and ${restaurantsDomainMap.size} RestaurantDomains.")
+            Log.d("AlertRepoImpl", "Mapped ${usersDomainMap.size} UserDomains and ${restaurantsDomainMap.size} RestaurantDomains for valid alerts.")
 
-            val domainAlerts = alertDtos.mapNotNull { alertDto ->
+            val domainAlerts = validAlertDtos.mapNotNull { alertDto ->
                 try {
                     val publisher = usersDomainMap[alertDto.publisherId]
                         ?: userMapper.createFallbackUser(alertDto.publisherId)
                     val restaurant = restaurantsDomainMap[alertDto.restaurantId]
-                        ?: restaurantMapper.createFallbackRestaurant(alertDto.restaurantId, alertDto.id)
+                        ?: restaurantMapper.createFallbackRestaurant(alertDto.restaurantId, alertDto.id!!) // id no será null aquí
 
                     alertMapper.mapDtoToDomain(alertDto, publisher, restaurant)
                 } catch (e: Exception) {
-                    Log.e("AlertRepoImpl", "Failed to map AlertDTO ${alertDto.id} to AlertDomain. Error: ${e.message}", e)
+                    // El mapper ahora puede lanzar IllegalStateException si alertDto.id es null, aunque no debería llegar aquí.
+                    Log.e("AlertRepoImpl", "Failed to map valid AlertDTO ${alertDto.id} to AlertDomain. Error: ${e.message}", e)
                     null
                 }
             }
 
-            if (alertDtos.isNotEmpty() && domainAlerts.size < alertDtos.size) {
-                Log.w("AlertRepoImpl", "${alertDtos.size - domainAlerts.size} alert DTOs failed to map to Domain objects and were skipped.")
+            if (validAlertDtos.isNotEmpty() && domainAlerts.size < validAlertDtos.size) {
+                Log.w("AlertRepoImpl", "${validAlertDtos.size - domainAlerts.size} valid alert DTOs failed to map to Domain objects and were skipped.")
             }
 
             localAlertDataSource.deleteAllAlerts()
@@ -137,7 +150,7 @@ class AlertRepositoryImpl @Inject constructor(
             domainAlerts
         } catch (e: Exception) {
             Log.e("AlertRepositoryImpl", "Error fetching remote alerts: ${e.message}", e)
-            throw e // Relanzar para que el ViewModel lo maneje
+            throw e
         }
     }
 
@@ -147,8 +160,6 @@ class AlertRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAlertById(id: String): AlertDomain? {
-        // Podríamos optimizar esto para buscar primero en local y luego en remoto si no se encuentra,
-        // pero la interfaz actual no lo sugiere. Mantenemos la lógica de buscar en el flujo local.
         return localAlertDataSource.getAlertsFlow().firstOrNull()?.find { it.id == id }
     }
 
@@ -157,10 +168,10 @@ class AlertRepositoryImpl @Inject constructor(
         return try {
             val success = apiService.updateAlertVotes(id, updateDto)
             if (success) {
-                val alertToUpdate = getAlertById(id) // Obtiene de la caché local/Realm
+                val alertToUpdate = getAlertById(id)
                 alertToUpdate?.let {
                     val updatedAlert = it.copy(votes = votes)
-                    localAlertDataSource.updateAlert(updatedAlert) // Actualiza en Realm
+                    localAlertDataSource.updateAlert(updatedAlert)
                 } ?: Log.w("AlertRepositoryImpl", "Alert $id not found locally to update votes after API success.")
             }
             success
@@ -188,9 +199,14 @@ class AlertRepositoryImpl @Inject constructor(
         try {
             Log.d("AlertRepoImpl", "Creating alert with restaurantId: $restaurantId, publisherId: $publisherId")
             val createdAlertDTO = apiService.createAlert(createAlertDTO)
+
+            if (createdAlertDTO.id == null) {
+                Log.e("AlertRepoImpl", "API created an alert but returned it with a null ID. Cannot process: $createdAlertDTO")
+                throw IllegalStateException("API returned created alert with null ID.")
+            }
             Log.d("AlertRepoImpl", "Alert DTO created successfully, ID: ${createdAlertDTO.id}. Now mapping to domain.")
 
-            // Obtener UserDTO y RestaurantDTO para el mapeo
+
             val userDto = try { apiService.getUserById(createdAlertDTO.publisherId) } catch (e: Exception) {
                 Log.e("AlertRepoImpl", "Failed to fetch UserDTO for created alert ${createdAlertDTO.id}", e); null
             }
@@ -203,12 +219,12 @@ class AlertRepositoryImpl @Inject constructor(
             val publisherDomain = userDto?.let { userMapper.mapDtoToDomain(it) }
                 ?: userMapper.createFallbackUser(createdAlertDTO.publisherId)
             val restaurantDomain = restaurantDto?.let { restaurantMapper.mapDtoToDomain(it) }
-                ?: restaurantMapper.createFallbackRestaurant(createdAlertDTO.restaurantId, createdAlertDTO.id)
+                ?: restaurantMapper.createFallbackRestaurant(createdAlertDTO.restaurantId, createdAlertDTO.id!!) // id no será null
 
             val domainAlert = alertMapper.mapDtoToDomain(createdAlertDTO, publisherDomain, restaurantDomain)
 
             Log.d("AlertRepoImpl", "Alert mapped to domain. Saving to local data source.")
-            localAlertDataSource.updateAlert(domainAlert) // Guardar/Actualizar en Realm
+            localAlertDataSource.updateAlert(domainAlert)
             Log.d("AlertRepoImpl", "Alert saved locally. ID: ${domainAlert.id}")
             return domainAlert
         } catch (e: Exception) {
@@ -217,7 +233,6 @@ class AlertRepositoryImpl @Inject constructor(
         }
     }
 
-    // Helper para mapValues que no incluye entradas donde el valor es null
     private inline fun <K, V, R> Map<K, V>.mapValuesNotNull(transform: (Map.Entry<K, V>) -> R?): Map<K, R> {
         val result = LinkedHashMap<K, R>()
         for (entry in this) {

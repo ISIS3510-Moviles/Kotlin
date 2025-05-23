@@ -1,4 +1,3 @@
-// package com.example.campusbites.data.mapper
 package com.example.campusbites.data.mapper
 
 import android.util.Log
@@ -11,12 +10,16 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 import javax.inject.Inject
 
-class AlertMapper @Inject constructor() { // No necesita otros mappers directamente si se le pasan los Domain Objects
+class AlertMapper @Inject constructor() {
     fun mapDtoToDomain(
         dto: AlertDTO,
-        publisher: UserDomain, // UserDomain ya mapeado
-        restaurant: RestaurantDomain // RestaurantDomain ya mapeado
+        publisher: UserDomain,
+        restaurant: RestaurantDomain
     ): AlertDomain {
+        // El repositorio es responsable de asegurar que dto.id no sea null antes de llamar a este mapper.
+        val alertId = dto.id ?: throw IllegalStateException("AlertDTO.id cannot be null when mapping to AlertDomain. This should have been filtered by the repository.")
+
+
         val parsedDateTime = dto.datetime?.let {
             try {
                 Instant.parse(it).atZone(ZoneOffset.UTC).toLocalDateTime()
@@ -30,7 +33,7 @@ class AlertMapper @Inject constructor() { // No necesita otros mappers directame
         }
 
         return AlertDomain(
-            id = dto.id,
+            id = alertId, // Usar la variable verificada
             datetime = parsedDateTime,
             icon = dto.icon,
             message = dto.message,
