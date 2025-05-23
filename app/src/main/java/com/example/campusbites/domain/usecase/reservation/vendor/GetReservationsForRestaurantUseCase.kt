@@ -8,7 +8,7 @@ import javax.inject.Inject
 class GetReservationsForRestaurantUseCase @Inject constructor( // Renombrado para claridad si prefieres
     private val repository: ReservationRepository,
 ) {
-    suspend operator fun invoke(restaurantId: String): Flow<List<ReservationDomain>> { // Parámetro es restaurantId
+    operator fun invoke(restaurantId: String): Flow<List<ReservationDomain>> { // Parámetro es restaurantId
         return repository.getReservationsByRestaurantId(restaurantId)
     }
 }

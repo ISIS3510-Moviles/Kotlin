@@ -14,6 +14,7 @@ class LocalReservationRepositoryImpl @Inject constructor(
     private val reservationDao: ReservationDao
 ) : LocalReservationRepository {
 
+
     override suspend fun saveReservations(reservations: List<ReservationDomain>) {
         val entities = reservations.map { it.toEntity() }
         reservationDao.insertReservations(entities)
@@ -41,7 +42,7 @@ class LocalReservationRepositoryImpl @Inject constructor(
         reservationDao.deleteAllReservationsForUser(userId)
     }
 
-    override suspend fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>> {
+    override fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>> {
         return reservationDao.getReservationsByRestaurantId(restaurantId).map { entities -> entities.map { it.toDomain() } }
     }
 }
