@@ -159,7 +159,7 @@ class ReservationsVendorViewModel @Inject constructor(
             if (connectivityMonitor.isNetworkAvailable.first()) {
                 markReservationAsCompletedUseCase(reservationId)
                     .onSuccess {
-                        _uiEvent.emit(UIEvent.ShowMessage("Reservation marked as completed."))
+                        _uiEvent.emit(UIEvent.ShowMessage("Reservation marked as confirmed."))
                     }
                     .onFailure { e ->
                         pendingCompletionDataSource.add(reservationId)

@@ -29,20 +29,20 @@ fun ReservationVendorCard(
     date: String,
     time: String,
     guests: Int,
-    status: String, // "Pending", "Completed", "Cancelled"
+    status: String, // "Pending", "Confirmed", "Cancelled"
     onMarkAsCompleted: (() -> Unit)?,
     onCancelReservation: (() -> Unit)?
 ) {
     val statusColor = when (status) {
         "Pending" -> MaterialTheme.colorScheme.secondary
-        "Completed" -> MaterialTheme.colorScheme.primary
+        "Confirmed" -> MaterialTheme.colorScheme.primary
         "Cancelled" -> MaterialTheme.colorScheme.error
         else -> Color.Gray
     }
 
     val statusIcon = when (status) {
         "Pending" -> Icons.Filled.Info
-        "Completed" -> Icons.Filled.Check
+        "Confirmed" -> Icons.Filled.Check
         "Cancelled" -> Icons.Filled.Close
         else -> Icons.Filled.Info
     }
@@ -97,9 +97,9 @@ fun ReservationVendorCard(
                             ),
                             modifier = Modifier.weight(1f)
                         ) {
-                            Icon(Icons.Filled.CheckCircle, contentDescription = "Complete", modifier = Modifier.size(18.dp))
+                            Icon(Icons.Filled.CheckCircle, contentDescription = "Confirmed", modifier = Modifier.size(18.dp))
                             Spacer(modifier = Modifier.width(4.dp))
-                            Text("Complete")
+                            Text("Confirm")
                         }
                     }
                 }

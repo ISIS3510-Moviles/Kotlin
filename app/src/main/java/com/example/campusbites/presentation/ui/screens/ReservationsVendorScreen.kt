@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -29,14 +30,19 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReservationsVendorScreen(
-    // navController: NavHostController, // Descomentar si se necesita navegación
     viewModel: ReservationsVendorViewModel = hiltViewModel()
 ) {
     val reservationsWithUsers by viewModel.reservationsWithUserDetails.collectAsState()
     val networkAvailable by viewModel.networkAvailable.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+
+    // Log para ver el estado inicial de las reservaciones
+    LaunchedEffect(reservationsWithUsers) {
+        reservationsWithUsers.forEach {
+            Log.d("ReservationsVendorScreen", "Res: ${it.reservation.id}, Completed: ${it.reservation.isCompleted}, Cancelled: ${it.reservation.hasBeenCancelled}, DateTime: ${it.reservation.datetime} ${it.reservation.time}")
+        }
+    }
 
     LaunchedEffect(viewModel.uiEvent) {
         viewModel.uiEvent.collect { event ->
@@ -54,7 +60,7 @@ fun ReservationsVendorScreen(
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Restaurant Reservations", style = MaterialTheme.typography.titleLarge) },
+                title = { Text("Restaurant reservations") }, // Usar string resource
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary,
                     titleContentColor = MaterialTheme.colorScheme.onPrimary
@@ -78,7 +84,7 @@ fun ReservationsVendorScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "You are currently offline.", // Necesitarás añadir este string
+                        text = "Your are currently offline. Please check your internet connection.", // Usar string resource
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onErrorContainer,
                         textAlign = TextAlign.Center
@@ -98,31 +104,53 @@ fun ReservationsVendorScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "There are not reservations", // Necesitarás añadir este string
+                        text = "There are no reservations now.", // Usar string resource
                         style = MaterialTheme.typography.headlineSmall,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                     )
                 }
             } else {
-                // Clasificar reservas
                 val now = LocalDateTime.now()
-                val (pending, pastOrCancelled) = reservationsWithUsers.partition {
-                    val resDateTime = LocalDateTime.of(
-                        Instant.parse(it.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate(),
-                        LocalTime.parse(it.reservation.time, DateTimeFormatter.ofPattern("HH:mm"))
-                    )
-                    !it.reservation.hasBeenCancelled && !it.reservation.isCompleted && resDateTime.isAfter(now)
+
+                // 1. Filtrar canceladas primero
+                val (cancelled, activeReservations) = reservationsWithUsers.partition {
+                    it.reservation.hasBeenCancelled
                 }
-                val (completed, cancelled) = pastOrCancelled.partition { it.reservation.isCompleted && !it.reservation.hasBeenCancelled }
+
+                // 2. De las activas, separar las que aún son futuras y están pendientes de acción (no completadas)
+                val (pendingFuture, potentiallyPastOrCompleted) = activeReservations.partition { item ->
+                    val resDateTime = LocalDateTime.of(
+                        Instant.parse(item.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate(),
+                        LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm"))
+                    )
+                    // Condición para PENDING: No completada AÚN Y es FUTURA
+                    !item.reservation.isCompleted && resDateTime.isAfter(now)
+                }
+
+                // 3. De las restantes (potentiallyPastOrCompleted), separar las que YA fueron completadas por el vendor
+                val (completed, pastAndNotCompleted) = potentiallyPastOrCompleted.partition {
+                    it.reservation.isCompleted
+                }
+
+                // 4. De las que son pasadas y no completadas, estas son las "Missed"
+                // No es necesario un 'partition' aquí, 'pastAndNotCompleted' ya son las 'missed'
+                // porque ya filtramos las futuras pendientes y las completadas.
+                // Solo nos aseguramos que realmente sean pasadas.
+                val missed = pastAndNotCompleted.filter { item ->
+                    val resDateTime = LocalDateTime.of(
+                        Instant.parse(item.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate(),
+                        LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm"))
+                    )
+                    resDateTime.isBefore(now) // Y no está completada (ya filtrado) y no cancelada (ya filtrado)
+                }
+
 
                 // Ordenar cada grupo
-                val sortedPending = pending.sortedBy { Instant.parse(it.reservation.datetime) }
+                val sortedPending = pendingFuture.sortedBy { Instant.parse(it.reservation.datetime) }
                 val sortedCompleted = completed.sortedByDescending { Instant.parse(it.reservation.datetime) }
-                val sortedCancelled = pastOrCancelled
-                    .filter { it.reservation.hasBeenCancelled }
-                    .sortedByDescending { Instant.parse(it.reservation.datetime) }
-
+                val sortedMissed = missed.sortedByDescending { Instant.parse(it.reservation.datetime) }
+                val sortedCancelled = cancelled.sortedByDescending { Instant.parse(it.reservation.datetime) }
 
                 LazyColumn(
                     modifier = Modifier
@@ -131,18 +159,14 @@ fun ReservationsVendorScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                     contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp)
                 ) {
+                    // Pendientes (Futuras, no completadas, no canceladas)
                     if (sortedPending.isNotEmpty()) {
-                        item {
-                            ListHeader(title = "Pending reservations") // Añadir string
-                        }
+                        item { ListHeader("Upcoming reservations") }
                         items(sortedPending, key = { it.reservation.id }) { item ->
                             ReservationVendorCard(
                                 userFullName = item.userName,
-                                date = Instant.parse(item.reservation.datetime)
-                                    .atZone(ZoneId.systemDefault()).toLocalDate()
-                                    .format(viewModel.displayDateFormatter),
-                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm"))
-                                    .format(viewModel.displayTimeFormatter),
+                                date = Instant.parse(item.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate().format(viewModel.displayDateFormatter),
+                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm")).format(viewModel.displayTimeFormatter),
                                 guests = item.reservation.numberCommensals,
                                 status = "Pending",
                                 onMarkAsCompleted = { viewModel.markAsCompleted(item.reservation.id) },
@@ -151,38 +175,46 @@ fun ReservationsVendorScreen(
                         }
                     }
 
+                    // Completadas (Confirmadas por el vendor)
                     if (sortedCompleted.isNotEmpty()) {
-                        item {
-                            ListHeader(title = "Completed reservations") // Añadir string
-                        }
-                        items(sortedCompleted,  key = { it.reservation.id }) { item ->
+                        item { ListHeader(title = "Confirmed reservations") }
+                        items(sortedCompleted, key = { it.reservation.id }) { item ->
                             ReservationVendorCard(
                                 userFullName = item.userName,
-                                date = Instant.parse(item.reservation.datetime)
-                                    .atZone(ZoneId.systemDefault()).toLocalDate()
-                                    .format(viewModel.displayDateFormatter),
-                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm"))
-                                    .format(viewModel.displayTimeFormatter),
+                                date = Instant.parse(item.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate().format(viewModel.displayDateFormatter),
+                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm")).format(viewModel.displayTimeFormatter),
                                 guests = item.reservation.numberCommensals,
-                                status = "Completed",
-                                onMarkAsCompleted = null,
-                                onCancelReservation = null
+                                status = "Confirmed", // O "Completed"
+                                onMarkAsCompleted = null, // Ya no se puede marcar
+                                onCancelReservation = null  // Ya no se puede cancelar
                             )
                         }
                     }
 
-                    if (sortedCancelled.isNotEmpty()) {
-                        item {
-                            ListHeader(title = "Cancelled reservations") // Añadir string
-                        }
-                        items(sortedCancelled,  key = { it.reservation.id }) { item ->
+                    // Missed (Pasadas, no completadas por vendor, no canceladas)
+                    if (sortedMissed.isNotEmpty()) {
+                        item { ListHeader(title = "Missed reservations") } // Nuevo string
+                        items(sortedMissed, key = { it.reservation.id }) { item ->
                             ReservationVendorCard(
                                 userFullName = item.userName,
-                                date = Instant.parse(item.reservation.datetime)
-                                    .atZone(ZoneId.systemDefault()).toLocalDate()
-                                    .format(viewModel.displayDateFormatter),
-                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm"))
-                                    .format(viewModel.displayTimeFormatter),
+                                date = Instant.parse(item.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate().format(viewModel.displayDateFormatter),
+                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm")).format(viewModel.displayTimeFormatter),
+                                guests = item.reservation.numberCommensals,
+                                status = "Missed",
+                                onMarkAsCompleted = null, // No se puede marcar
+                                onCancelReservation = null  // No se puede cancelar
+                            )
+                        }
+                    }
+
+                    // Canceladas
+                    if (sortedCancelled.isNotEmpty()) {
+                        item { ListHeader(title = "Cancelled") }
+                        items(sortedCancelled, key = { it.reservation.id }) { item ->
+                            ReservationVendorCard(
+                                userFullName = item.userName,
+                                date = Instant.parse(item.reservation.datetime).atZone(ZoneId.systemDefault()).toLocalDate().format(viewModel.displayDateFormatter),
+                                time = LocalTime.parse(item.reservation.time, DateTimeFormatter.ofPattern("HH:mm")).format(viewModel.displayTimeFormatter),
                                 guests = item.reservation.numberCommensals,
                                 status = "Cancelled",
                                 onMarkAsCompleted = null,

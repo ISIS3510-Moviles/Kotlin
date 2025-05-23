@@ -188,7 +188,7 @@ fun ReservationsScreen(
                                 time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
                                     .format(displayTimeFormatter),
                                 guests = res.numberCommensals,
-                                status = if (res.isCompleted) "Completed" else "Pending",
+                                status = if (res.isCompleted) "Confirmed" else "Pending",
                                 modifier = Modifier.fillMaxWidth(),
                                 onCancelClick = {
                                     reservationsViewModel.cancelReservation(res.id)
@@ -201,7 +201,7 @@ fun ReservationsScreen(
                     if (sortedPast.isNotEmpty()) {
                         item {
                             Text(
-                                text = stringResource(R.string.past_reservations),
+                                text = "Previous reservations",
                                 style = MaterialTheme.typography.titleMedium,
                                 modifier = Modifier.padding(vertical = 8.dp)
                             )
@@ -215,7 +215,7 @@ fun ReservationsScreen(
                                 time = LocalTime.parse(res.time, DateTimeFormatter.ofPattern("HH:mm"))
                                     .format(displayTimeFormatter),
                                 guests = res.numberCommensals,
-                                status = "Completed",
+                                status = if (res.isCompleted) "Completed" else "Not confirmed by vendor",
                                 modifier = Modifier.fillMaxWidth(),
                                 onCancelClick = null
                             )
