@@ -10,5 +10,5 @@ interface LocalReservationRepository {
     suspend fun getReservationById(reservationId: String): ReservationDomain?
     suspend fun deleteReservationById(reservationId: String)
     suspend fun deleteAllReservationsForUser(userId: String)
-    suspend fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>>
+    fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>>
 }

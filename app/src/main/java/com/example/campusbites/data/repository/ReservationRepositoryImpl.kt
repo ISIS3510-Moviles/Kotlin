@@ -1,5 +1,6 @@
 package com.example.campusbites.data.repository
 
+import android.util.Log
 import com.example.campusbites.data.dto.CreateReservationDTO
 import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.data.network.ApiService
@@ -16,8 +17,11 @@ import kotlinx.coroutines.Dispatchers
 @Singleton
 class ReservationRepositoryImpl @Inject constructor(
     private val apiService: ApiService,
-    private val localReservationRepository: LocalReservationRepository
+    private val localReservationRepository: LocalReservationRepository,
+    private val externalScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
 ) : ReservationRepository {
+
+    private val TAG = "ReservationRepo"
 
     private val repositoryScope = CoroutineScope(Dispatchers.IO)
 
@@ -79,15 +83,29 @@ class ReservationRepositoryImpl @Inject constructor(
         return completedReservationDomain
     }
 
-    override suspend fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>> { // Cambiado id a restaurantId
+    override fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>> { // Cambiado id a restaurantId
         val localDataFlow = localReservationRepository.getReservationsByRestaurantId(restaurantId)
 
-        repositoryScope.launch {
+
+        externalScope.launch {
             try {
-                val remoteReservations = apiService.getReservationsByRestaurantId(restaurantId).map { it.toDomain() } // Usar restaurantId
-                localReservationRepository.saveReservations(remoteReservations)
+                Log.d(TAG, "Network fetch: Attempting for restaurant: $restaurantId")
+                val remoteReservationsDTO = apiService.getReservationsByRestaurantId(restaurantId)
+                Log.d(TAG, "Network fetch: Received ${remoteReservationsDTO.size} DTOs for $restaurantId")
+
+                val remoteReservationsDomain = remoteReservationsDTO.map { it.toDomain() } // Usa tu DTO.toDomain()
+                Log.d(TAG, "Network fetch: Mapped to ${remoteReservationsDomain.size} Domain objects for $restaurantId")
+
+                if (remoteReservationsDomain.isNotEmpty()) {
+                    Log.d(TAG, "Network fetch: First reservation to save: ID=${remoteReservationsDomain.first().id}, RestaurantID=${remoteReservationsDomain.first().restaurantId}")
+                }
+
+                Log.d(TAG, "Network fetch: Saving to local Room cache for $restaurantId...")
+                localReservationRepository.saveReservations(remoteReservationsDomain)
+                Log.d(TAG, "Network fetch: Successfully saved to Room cache for $restaurantId.")
+
             } catch (e: Exception) {
-                // Log error or handle
+                Log.e(TAG, "Network fetch: Error for $restaurantId: ${e.message}", e)
             }
         }
         return localDataFlow
