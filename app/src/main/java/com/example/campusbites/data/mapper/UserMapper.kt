@@ -58,7 +58,8 @@ class UserMapper @Inject constructor(
                     Log.e("UserMapper", "Error fetching saved product $productId for user ${dto.id}", e)
                     null
                 }
-            }
+            },
+            vendorRestaurantId = dto.vendorRestaurantId
         )
     }
 
@@ -80,7 +81,8 @@ class UserMapper @Inject constructor(
             visitsIds = dto.visitsIds,
             suscribedRestaurantIds = dto.suscribedRestaurantIds,
             publishedAlertsIds = dto.publishedAlertsIds,
-            savedProducts = emptyList()
+            savedProducts = emptyList(),
+            vendorRestaurantId = dto.vendorRestaurantId
         )
     }
 
@@ -101,7 +103,8 @@ class UserMapper @Inject constructor(
             visitsIds = emptyList(),
             suscribedRestaurantIds = emptyList(),
             publishedAlertsIds = emptyList(),
-            savedProducts = emptyList()
+            savedProducts = emptyList(),
+            vendorRestaurantId = null
         )
     }
 }

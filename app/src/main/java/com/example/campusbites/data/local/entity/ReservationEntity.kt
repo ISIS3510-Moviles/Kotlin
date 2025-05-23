@@ -12,5 +12,5 @@ data class ReservationEntity(
     val time: String,
     val numberCommensals: Int,
     val isCompleted: Boolean,
-    val hasBeenCancelled: Boolean?
+    val hasBeenCancelled: Boolean?,
 )

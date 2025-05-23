@@ -20,4 +20,5 @@ data class UserDomain(
     val suscribedRestaurantIds: List<String>,
     val publishedAlertsIds: List<String>,
     val savedProducts: List<ProductDomain>,
+    val vendorRestaurantId: String?
 )

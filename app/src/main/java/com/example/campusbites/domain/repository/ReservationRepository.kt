@@ -9,4 +9,6 @@ interface ReservationRepository {
     suspend fun getReservationById(id: String): ReservationDomain?
     suspend fun createReservation(reservation: ReservationDomain): ReservationDomain
     suspend fun cancelReservation(id: String): ReservationDomain
+    suspend fun getReservationsByRestaurantId(id: String): Flow<List<ReservationDomain>>
+    suspend fun markReservationAsCompleted(id: String): ReservationDomain
 }
