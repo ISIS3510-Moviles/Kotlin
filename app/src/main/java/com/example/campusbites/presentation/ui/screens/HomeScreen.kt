@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -257,20 +258,33 @@ fun HomeScreen(
                                 )
                             }
 
-                            IconButton(onClick = {
-                                navController.navigate(NavigationRoutes.VENDOR_SCREEN)
-                            }) {
-                                Icon(
-                                    imageVector = Icons.Filled.Person,
-                                    contentDescription = "Vendor Section"
-                                )
-                            }
+                            if (user?.role == "vendor"){
 
-                            IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.DateRange,
-                                    contentDescription = stringResource(R.string.reservations)
-                                )
+
+                                IconButton(onClick = {
+                                    navController.navigate(NavigationRoutes.VENDOR_SCREEN)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Email,
+                                        contentDescription = "Vendor Section"
+                                    )
+                                }
+
+                                IconButton(onClick = {
+                                    navController.navigate(NavigationRoutes.VENDOR_RESERVATIONS)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.DateRange,
+                                        contentDescription = "Vendor Reservations"
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.DateRange,
+                                        contentDescription = stringResource(R.string.reservations)
+                                    )
+                                }
                             }
 
                             IconButton(onClick = {

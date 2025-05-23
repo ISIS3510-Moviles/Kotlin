@@ -4,6 +4,7 @@ import android.util.Log
 import com.example.campusbites.data.local.realm.model.AlertRealmModel
 import com.example.campusbites.data.local.realm.model.DraftAlertRealmModel
 import com.example.campusbites.data.local.realm.model.PendingCancellationRealmModel
+import com.example.campusbites.data.local.realm.model.PendingCompletionRealmModel
 import io.realm.kotlin.Realm
 import io.realm.kotlin.RealmConfiguration
 import javax.inject.Inject
@@ -26,7 +27,8 @@ class RealmConfig @Inject constructor() {
                     PendingCancellationRealmModel::class,
                     AlertRealmModel::class,
                     PendingFavoriteActionRealmModel::class, // <-- AÑADIR AQUÍ
-                    PendingReservationRealmModel::class
+                    PendingReservationRealmModel::class,
+                    PendingCompletionRealmModel::class
                 )
             )
                 .schemaVersion(REALM_VERSION)

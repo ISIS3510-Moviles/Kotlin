@@ -27,4 +27,8 @@ interface ReservationDao {
 
     @Query("DELETE FROM reservations WHERE userId = :userId")
     suspend fun deleteAllReservationsForUser(userId: String)
+
+    @Query("SELECT * FROM reservations WHERE restaurantId = :restaurantId")
+    fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationEntity>>
+
 }

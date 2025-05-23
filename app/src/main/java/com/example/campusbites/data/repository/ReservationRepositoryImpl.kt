@@ -72,6 +72,27 @@ class ReservationRepositoryImpl @Inject constructor(
         return cancelledReservationDomain
     }
 
+    override suspend fun markReservationAsCompleted(id: String): ReservationDomain {
+        val completedReservationDTO = apiService.markReservationAsCompleted(id) // Llama al nuevo endpoint
+        val completedReservationDomain = completedReservationDTO.toDomain()
+        localReservationRepository.saveReservation(completedReservationDomain) // Actualiza el caché local
+        return completedReservationDomain
+    }
+
+    override suspend fun getReservationsByRestaurantId(restaurantId: String): Flow<List<ReservationDomain>> { // Cambiado id a restaurantId
+        val localDataFlow = localReservationRepository.getReservationsByRestaurantId(restaurantId)
+
+        repositoryScope.launch {
+            try {
+                val remoteReservations = apiService.getReservationsByRestaurantId(restaurantId).map { it.toDomain() } // Usar restaurantId
+                localReservationRepository.saveReservations(remoteReservations)
+            } catch (e: Exception) {
+                // Log error or handle
+            }
+        }
+        return localDataFlow
+    }
+
     fun ReservationDTO.toDomain(): ReservationDomain {
         return ReservationDomain(
             id = this.id,

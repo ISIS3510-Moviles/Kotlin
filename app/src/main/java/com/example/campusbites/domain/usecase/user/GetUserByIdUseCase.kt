@@ -31,7 +31,8 @@ class GetUserByIdUseCase @Inject constructor(
             visitsIds = userDTO.visitsIds,
             suscribedRestaurantIds = userDTO.suscribedRestaurantIds,
             publishedAlertsIds = userDTO.publishedAlertsIds,
-            savedProducts = userDTO.savedProductsIds.map { productId -> getProductByIdUseCase(productId) }
+            savedProducts = userDTO.savedProductsIds.map { productId -> getProductByIdUseCase(productId) },
+            vendorRestaurantId = userDTO.vendorRestaurantId
         )
     }
 }

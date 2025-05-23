@@ -116,4 +116,9 @@ interface ApiService {
         @Body updateRestaurantCommentsDTO: UpdateRestaurantCommentsDTO
     ): Response<Unit>
 
+    @GET("reservation/by-restaurant/{restaurantId}")
+    suspend fun getReservationsByRestaurantId(@Path("restaurantId") restaurantId: String): List<ReservationDTO>
+
+    @PATCH("reservation/{id}/complete") // O la ruta que defina tu backend
+    suspend fun markReservationAsCompleted(@Path("id") id: String): ReservationDTO
 }

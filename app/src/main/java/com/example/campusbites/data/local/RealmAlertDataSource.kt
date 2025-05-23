@@ -40,7 +40,8 @@ class RealmAlertDataSource @Inject constructor(
             phone = "", email = "", role = "", isPremium = false, badgesIds = emptyList(),
             schedulesIds = emptyList(), reservationsDomain = emptyList(), institution = null,
             dietaryPreferencesTagIds = emptyList(), commentsIds = emptyList(), visitsIds = emptyList(),
-            suscribedRestaurantIds = emptyList(), publishedAlertsIds = emptyList(), savedProducts = emptyList()
+            suscribedRestaurantIds = emptyList(), publishedAlertsIds = emptyList(), savedProducts = emptyList(),
+            vendorRestaurantId = null,
         )
 
         val restaurant = RestaurantDomain(

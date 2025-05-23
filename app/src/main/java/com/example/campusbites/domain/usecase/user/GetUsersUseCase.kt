@@ -48,7 +48,8 @@ class GetUsersUseCase @Inject constructor(
                     visitsIds = userDTO.visitsIds,
                     suscribedRestaurantIds = userDTO.suscribedRestaurantIds,
                     publishedAlertsIds = userDTO.publishedAlertsIds,
-                    savedProducts = savedProducts
+                    savedProducts = savedProducts,
+                    vendorRestaurantId = userDTO.vendorRestaurantId
                 )
 
                 Log.d(TAG, "Mapped userDomain: $userDomain")

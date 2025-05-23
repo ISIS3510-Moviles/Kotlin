@@ -40,7 +40,8 @@ class GetUserByEmailUseCase @Inject constructor(
                 publishedAlertsIds = userDTO.publishedAlertsIds,
                 savedProducts = userDTO.savedProductsIds.map { productId ->
                     getProductByIdUseCase(productId)
-                }
+                },
+                vendorRestaurantId = userDTO.vendorRestaurantId
             )
         } catch (e: Exception) {
             // Maneja errores de red, respuestas 404, etc.
