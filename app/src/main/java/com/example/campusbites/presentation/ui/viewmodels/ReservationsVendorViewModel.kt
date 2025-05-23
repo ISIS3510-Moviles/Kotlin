@@ -1,5 +1,6 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.data.local.realm.PendingCancellationLocalDataSource
@@ -39,6 +40,9 @@ class ReservationsVendorViewModel @Inject constructor(
     private val connectivityMonitor: ConnectivityMonitor
 ) : ViewModel() {
 
+    // Define un TAG para tus logs, usualmente el nombre de la clase.
+    private val TAG = "ReservationsVendorVM"
+
     private val _reservationsWithUserDetails = MutableStateFlow<List<ReservationWithUser>>(emptyList())
     val reservationsWithUserDetails: StateFlow<List<ReservationWithUser>> = _reservationsWithUserDetails.asStateFlow()
 
@@ -55,16 +59,31 @@ class ReservationsVendorViewModel @Inject constructor(
     val displayTimeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
 
     init {
+        Log.d(TAG, "ViewModel initialized") // Log de inicialización del ViewModel
         viewModelScope.launch {
             authRepository.currentUser.first()?.let { user ->
+                Log.d(TAG, "Current user found: ${user.id}, Email: ${user.email}")
                 val vendorRestaurantId = user.vendorRestaurantId
+                Log.d(TAG, "VendorRestaurantId from user: '$vendorRestaurantId'")
+                Log.d(TAG, user.toString())
+
                 if (!vendorRestaurantId.isNullOrBlank()) {
                     _isLoading.value = true
+                    Log.d(TAG, "Fetching reservations for restaurant ID: $vendorRestaurantId")
                     getReservationsForRestaurantUseCase(vendorRestaurantId)
+                        // Log para lo que emite getReservationsForRestaurantUseCase
+                        .onEach { reservationsList ->
+                            Log.d(TAG, "Reservations received from UseCase for $vendorRestaurantId: Count=${reservationsList.size}")
+                            if (reservationsList.isNotEmpty()) {
+                                Log.d(TAG, "First reservation example: ID=${reservationsList.first().id}, DateTime=${reservationsList.first().datetime}")
+                            }
+                        }
                         .flatMapLatest { reservations: List<ReservationDomain> ->
                             if (reservations.isEmpty()) {
+                                Log.d(TAG, "No reservations found for $vendorRestaurantId, returning empty list of ReservationWithUser.")
                                 flowOf(emptyList<ReservationWithUser>())
                             } else {
+                                Log.d(TAG, "Processing ${reservations.size} reservations to fetch user details.")
                                 flow<List<ReservationWithUser>> {
                                     val userIds = reservations.map { it.userId }.distinct()
                                     val usersDomainMap = mutableMapOf<String, UserDomain>()
