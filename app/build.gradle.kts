@@ -65,6 +65,7 @@ dependencies {
 
     implementation(libs.androidx.room.common.jvm)
     implementation(libs.androidx.room.compiler)
+    implementation(libs.androidx.adapters)
     val roomVersion = "2.7.1"
 
     implementation("io.realm.kotlin:library-base:2.0.0")

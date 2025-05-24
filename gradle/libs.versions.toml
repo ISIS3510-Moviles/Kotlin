@@ -51,6 +51,7 @@ firebaseCrashlytics = "19.4.1"
 googleFirebaseCrashlytics = "3.0.3"
 roomCommonJvm = "2.7.1"
 roomCompiler = "2.7.1"
+adapters = "3.2.0-alpha11"
 
 [libraries]
 accompanist-permissions = { module = "com.google.accompanist:accompanist-permissions", version.ref = "accompanistPermissions" }
@@ -117,6 +118,7 @@ firebase-perf = { group = "com.google.firebase", name = "firebase-perf", version
 firebase-crashlytics = { group = "com.google.firebase", name = "firebase-crashlytics", version.ref = "firebaseCrashlytics" }
 androidx-room-common-jvm = { group = "androidx.room", name = "room-common-jvm", version.ref = "roomCommonJvm" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "roomCompiler" }
+androidx-adapters = { group = "androidx.databinding", name = "adapters", version.ref = "adapters" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
