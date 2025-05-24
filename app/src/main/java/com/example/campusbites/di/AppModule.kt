@@ -43,8 +43,8 @@ import com.example.campusbites.data.repository.LocationRepositoryImpl
 import com.example.campusbites.data.repository.ProductRepositoryImpl
 import com.example.campusbites.data.repository.RecommendationRepositoryImpl
 import com.example.campusbites.data.repository.ReservationRepositoryImpl
+import com.example.campusbites.data.repository.RestaurantRepositoryImpl
 import com.example.campusbites.data.repository.UserRepositoryImpl
-import com.example.campusbites.data.repository.impl.RestaurantRepositoryImpl
 import com.example.campusbites.domain.repository.AlertRepository
 import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.repository.CommentRepository
@@ -299,10 +299,8 @@ object AppModule {
     @Singleton
     fun provideRestaurantRepository(
         apiService: ApiService,
-        localRestaurantDataSource: LocalRestaurantDataSource,
-        connectivityMonitor: ConnectivityMonitor
     ): RestaurantRepository {
-        return RestaurantRepositoryImpl(apiService, localRestaurantDataSource, connectivityMonitor)
+        return RestaurantRepositoryImpl(apiService)
     }
 
     @Provides
