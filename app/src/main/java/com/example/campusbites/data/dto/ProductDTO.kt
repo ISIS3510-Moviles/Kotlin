@@ -10,7 +10,7 @@ data class ProductDTO(
     val price: Float,
     val photo: String,
     val restaurant_id: String,
-    val rating: Float,
+    val rating: Float = 0.0f, // Modificado: Añadido valor por defecto
     val ingredientsIds: List<String>,
     val discountsIds: List<String> = emptyList(),
     val commentsIds: List<String> = emptyList(),
