@@ -10,7 +10,7 @@ private const val BASE_URL = "http://35.209.247.8:8080/"
 private val json = Json {
     ignoreUnknownKeys = true
     isLenient = true
-    encodeDefaults = true
+    encodeDefaults = false
 }
 
 private val retrofit = Retrofit.Builder()

@@ -33,5 +33,6 @@ fun UserDomain.toDTO() =
         visitsIds = this.visitsIds,
         suscribedRestaurantIds = this.suscribedRestaurantIds,
         publishedAlertsIds = this.publishedAlertsIds,
-        savedProductsIds = this.savedProducts.map { it.id }
+        savedProductsIds = this.savedProducts.map { it.id },
+        vendorRestaurantId = this.vendorRestaurantId.toString()
     )

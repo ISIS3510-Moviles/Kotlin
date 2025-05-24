@@ -3,6 +3,7 @@ package com.example.campusbites.data.network
 import com.example.campusbites.data.dto.AlertDTO
 import com.example.campusbites.data.dto.CommentDTO
 import com.example.campusbites.data.dto.CreateAlertDTO
+import com.example.campusbites.data.dto.CreateProductDTO
 import com.example.campusbites.data.dto.CreateReservationDTO
 import com.example.campusbites.data.dto.DietaryTagDTO
 import com.example.campusbites.data.dto.FoodTagDTO
@@ -14,10 +15,14 @@ import com.example.campusbites.data.dto.RecommendationRestaurantDTO
 import com.example.campusbites.data.dto.ReservationDTO
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateAlertDTO
+import com.example.campusbites.data.dto.UpdateProductDTO
 import com.example.campusbites.data.dto.UpdateRestaurantCommentsDTO
+import com.example.campusbites.data.dto.UpdateRestaurantDTO
 import com.example.campusbites.data.dto.UserDTO
+import com.example.campusbites.data.dto.UserUpdateDTO
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -52,6 +57,15 @@ interface ApiService {
     @GET("product/{id}")
     suspend fun getProductById(@Path("id") id: String): ProductDTO
 
+    @POST("product")
+    suspend fun createProduct(@Body product: CreateProductDTO): Response<ProductDTO>
+
+    @PATCH("product/{id}")
+    suspend fun updateProduct(@Path("id") id: String, @Body product: UpdateProductDTO): Response<Boolean> // Modificado: Espera un Booleano
+
+    @DELETE("product/{id}")
+    suspend fun deleteProduct(@Path("id") id: String): Response<Unit>
+
     @GET("institution/{id}")
     suspend fun getInstitutionById(@Path("id") id: String): InstitutionDTO?
 
@@ -77,7 +91,7 @@ interface ApiService {
     suspend fun createUser(@Body userDTO: UserDTO): Response<Unit>
 
     @PATCH("user/{id}")
-    suspend fun updateUser(@Path("id") id: String,@Body userDTO: UserDTO): Boolean
+    suspend fun updateUser(@Path("id") id: String,@Body userDTO: UserUpdateDTO): Boolean
 
     @GET("user")
     suspend fun getUsers(): List<UserDTO>
@@ -108,11 +122,22 @@ interface ApiService {
 
     @GET("reservation/by-user/{userId}")
     suspend fun getReservationsForUser(@Path("userId") userId: String): List<ReservationDTO>
-    // New method for partial update of restaurant
+
     @PATCH("restaurant/{id}")
     suspend fun updateRestaurantComments(
         @Path("id") id: String,
         @Body updateRestaurantCommentsDTO: UpdateRestaurantCommentsDTO
     ): Response<Unit>
 
+    @PATCH("restaurant/{id}")
+    suspend fun updateRestaurant(
+        @Path("id") id: String,
+        @Body updateRestaurantDTO: UpdateRestaurantDTO
+    ): Response<Unit>
+
+    @GET("reservation/by-restaurant/{restaurantId}")
+    suspend fun getReservationsByRestaurantId(@Path("restaurantId") restaurantId: String): List<ReservationDTO>
+
+    @PATCH("reservation/{id}/complete")
+    suspend fun markReservationAsCompleted(@Path("id") id: String): ReservationDTO
 }

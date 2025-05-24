@@ -9,10 +9,28 @@ import com.example.campusbites.data.network.CampusBitesApi
 import com.example.campusbites.data.local.AppDatabase
 import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
+import com.example.campusbites.data.cache.RestaurantLruCache
+import com.example.campusbites.data.cache.SearchCache
+import com.example.campusbites.data.local.LocalRestaurantDataSource
+import com.example.campusbites.data.local.RealmRestaurantDataSource
+import com.example.campusbites.data.local.dao.DraftAlertDao
+import com.example.campusbites.data.local.dao.PendingProductActionDao
 import com.example.campusbites.data.local.dao.ReservationDao
+import com.example.campusbites.data.local.realm.PendingCancellationLocalDataSource
+import com.example.campusbites.data.local.realm.PendingCompletionLocalDataSource
+import com.example.campusbites.data.local.realm.PendingFavoriteActionLocalDataSource
+import com.example.campusbites.data.local.realm.PendingReservationLocalDataSource
 import com.example.campusbites.data.local.realm.RealmConfig
+import com.example.campusbites.data.mapper.AlertMapper
+import com.example.campusbites.data.mapper.InstitutionMapper
+import com.example.campusbites.data.mapper.ProductMapper
+import com.example.campusbites.data.mapper.ReservationMapper
+import com.example.campusbites.data.mapper.RestaurantMapper
+import com.example.campusbites.data.mapper.TagMapper
+import com.example.campusbites.data.mapper.UserMapper
 import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.preferences.HomeDataRepository
+import com.example.campusbites.data.preferences.RestaurantPreferencesRepository
 import com.example.campusbites.data.repository.AlertRepositoryImpl
 import com.example.campusbites.data.repository.CommentRepositoryImpl
 import com.example.campusbites.data.repository.DietaryTagRepositoryImpl
@@ -44,10 +62,17 @@ import com.example.campusbites.domain.repository.RestaurantRepository
 import com.example.campusbites.domain.repository.UserRepository
 import com.example.campusbites.domain.service.AlertNotificationService
 import com.example.campusbites.domain.usecase.comment.CreateCommentUseCase
+import com.example.campusbites.domain.usecase.institution.GetInstitutionByIdUseCase
+import com.example.campusbites.domain.usecase.product.GetProductByIdUseCase
+import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
+import com.example.campusbites.domain.usecase.tag.GetDietaryTagByIdUseCase
+import com.example.campusbites.domain.usecase.tag.GetFoodTagByIdUseCase
 import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import com.google.gson.Gson
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -66,6 +91,84 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideRestaurantPreferencesRepository(
+        @ApplicationContext context: Context
+    ): RestaurantPreferencesRepository {
+        return RestaurantPreferencesRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
+    }
+
+    @Provides
+    @Singleton
+    fun provideJson(): Json = Json {
+        ignoreUnknownKeys = true
+        isLenient = true
+        encodeDefaults = true
+    }
+
+    // --- Provisión de Mappers ---
+    @Provides
+    @Singleton
+    fun provideReservationMapper(): ReservationMapper {
+        return ReservationMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideInstitutionMapper(): InstitutionMapper {
+        return InstitutionMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideTagMapper(): TagMapper {
+        return TagMapper()
+    }
+
+    @Provides
+    @Singleton
+    fun provideProductMapper(
+        getFoodTagByIdUseCase: GetFoodTagByIdUseCase,
+        getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
+    ): ProductMapper {
+        return ProductMapper(getFoodTagByIdUseCase, getDietaryTagByIdUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideUserMapper(
+        getReservationByIdUseCase: GetReservationByIdUseCase,
+        getInstitutionByIdUseCase: GetInstitutionByIdUseCase,
+        getProductByIdUseCase: GetProductByIdUseCase,
+        institutionMapper: InstitutionMapper
+    ): UserMapper {
+        return UserMapper(getReservationByIdUseCase, getInstitutionByIdUseCase, getProductByIdUseCase, institutionMapper)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRestaurantMapper(
+        getFoodTagByIdUseCase: GetFoodTagByIdUseCase,
+        getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
+    ): RestaurantMapper {
+        return RestaurantMapper(getFoodTagByIdUseCase, getDietaryTagByIdUseCase)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlertMapper(): AlertMapper {
+        return AlertMapper()
+    }
+    // --- Fin Provisión de Mappers ---
+
+
+    @Provides
+    @Singleton
     fun provideHomeDataRepository(
         @ApplicationContext context: Context,
         json: Json
@@ -81,14 +184,62 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideRestaurantLruCache(): RestaurantLruCache {
+        return RestaurantLruCache()
+    }
+
+    @Provides
+    @Singleton
+    fun provideSearchCache(): SearchCache {
+        return SearchCache()
+    }
+
+    @Provides
+    @Singleton
     fun provideRealmConfig(): RealmConfig {
         return RealmConfig()
     }
 
     @Provides
     @Singleton
-    fun provideDraftAlertRepository(realmConfig: RealmConfig): DraftAlertRepository {
-        return DraftAlertRepositoryImpl(realmConfig)
+    fun providePendingFavoriteActionLocalDataSource(realmConfig: RealmConfig): PendingFavoriteActionLocalDataSource {
+        return PendingFavoriteActionLocalDataSource(realmConfig)
+    }
+
+    @Provides
+    @Singleton
+    fun providePendingReservationLocalDataSource(realmConfig: RealmConfig): PendingReservationLocalDataSource {
+        return PendingReservationLocalDataSource(realmConfig)
+    }
+    @Provides
+    @Singleton
+    fun providePendingCompletionLocalDataSource(realmConfig: RealmConfig): PendingCompletionLocalDataSource {
+        return PendingCompletionLocalDataSource(realmConfig)
+    }
+
+    @Provides
+    @Singleton
+    fun providePendingCancellationLocalDataSource(realmConfig: RealmConfig): PendingCancellationLocalDataSource {
+        return PendingCancellationLocalDataSource(realmConfig)
+    }
+
+
+    @Provides
+    @Singleton
+    fun provideDraftAlertRepository(draftAlertDao: DraftAlertDao): DraftAlertRepository {
+        return DraftAlertRepositoryImpl(draftAlertDao)
+    }
+
+    @Provides
+    @Singleton
+    fun provideDraftAlertDao(appDatabase: AppDatabase): DraftAlertDao {
+        return appDatabase.draftAlertDao()
+    }
+
+    @Provides
+    @Singleton
+    fun providePendingProductActionDao(appDatabase: AppDatabase): PendingProductActionDao {
+        return appDatabase.pendingProductActionDao()
     }
 
     @Provides
@@ -103,16 +254,10 @@ object AppModule {
         return AlertNotificationService(context)
     }
 
-//    @Provides
-//    @Singleton
-//    fun provideDraftAlertRepository(appDatabase: AppDatabase): DraftAlertRepository {
-//        return DraftAlertRepositoryImpl(appDatabase.draftAlertDao())
-//    }
-
     @Provides
     @Singleton
     fun provideApplicationScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        return CoroutineScope(SupervisorJob() + Dispatchers.IO)
     }
 
     @Provides
@@ -122,7 +267,8 @@ object AppModule {
             context,
             AppDatabase::class.java,
             "campus_bites_db"
-        ).build()
+        ).fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -151,7 +297,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRestaurantRepository(apiService: ApiService): RestaurantRepository {
+    fun provideRestaurantRepository(
+        apiService: ApiService,
+    ): RestaurantRepository {
         return RestaurantRepositoryImpl(apiService)
     }
 
@@ -187,9 +335,18 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideProductRepository(apiService: ApiService): ProductRepository {
-        return ProductRepositoryImpl(apiService)
+    fun provideProductRepository(
+        apiService: ApiService,
+        productMapper: ProductMapper,
+        pendingProductActionDao: PendingProductActionDao,
+        connectivityMonitor: ConnectivityMonitor,
+        homeDataRepository: HomeDataRepository, // Inyectar HomeDataRepository
+        applicationScope: CoroutineScope
+    ): ProductRepository {
+        // Pasar homeDataRepository al constructor de ProductRepositoryImpl
+        return ProductRepositoryImpl(apiService, productMapper, pendingProductActionDao, connectivityMonitor, homeDataRepository, applicationScope)
     }
+
 
     @Provides
     @Singleton
@@ -199,8 +356,24 @@ object AppModule {
 
     @Provides
     @Singleton
+    fun provideFusedLocationProviderClient(@ApplicationContext context: Context): FusedLocationProviderClient {
+        return LocationServices.getFusedLocationProviderClient(context)
+    }
+
+
+    @Provides
+    @Singleton
     fun provideLocationRepository(fusedLocationProviderClient: FusedLocationProviderClient): LocationRepository {
         return LocationRepositoryImpl(fusedLocationProviderClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalRestaurantDataSource(
+        realmConfig: RealmConfig,
+        gson: Gson
+    ): LocalRestaurantDataSource {
+        return RealmRestaurantDataSource(realmConfig, gson)
     }
 
     @Provides
@@ -218,21 +391,13 @@ object AppModule {
     @Provides
     @Singleton
     fun provideCreateCommentUseCase(
-        commentRepository: CommentRepository,
-        restaurantRepository: RestaurantRepository
+        commentRepository: CommentRepository
     ) = CreateCommentUseCase(commentRepository)
 
-    @Provides
-    @Singleton
-    fun provideJson(): Json = Json {
-        ignoreUnknownKeys = true
-        isLenient = true
-        encodeDefaults = true
-    }
 
     @Module
     @InstallIn(SingletonComponent::class)
-    abstract class RepositoryModule {
+    abstract class RepositoryBindingModule {
         @Binds
         @Singleton
         abstract fun bindAlertRepository(
@@ -261,6 +426,4 @@ object AppModule {
             return Firebase.analytics
         }
     }
-
-
 }

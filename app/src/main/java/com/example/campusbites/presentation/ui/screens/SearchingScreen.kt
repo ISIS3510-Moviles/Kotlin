@@ -95,7 +95,10 @@ fun SearchingScreen(
                 modifier = Modifier.padding(16.dp)
             )
         } else {
-            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 when (selectedCategory) {
                     "Food" -> {
                         if (uiState.filteredProducts.isNotEmpty()) {

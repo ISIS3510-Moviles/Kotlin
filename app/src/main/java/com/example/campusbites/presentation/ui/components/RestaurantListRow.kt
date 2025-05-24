@@ -63,11 +63,13 @@ fun RestaurantListRow(
                 modifier = Modifier
                     .wrapContentSize()
             ) {
-                items(restaurants) { restaurant ->
+                items(
+                    items = restaurants,
+                    key = { restaurant -> restaurant.id }
+                ) { restaurant ->
                     RestaurantCard(
                         restaurant = restaurant,
                         onRestaurantClick = {
-                            // Usando un lambda para manejar errores
                             scope.launch {
                                 try {
                                     crashlytics.log("User clicked on restaurant: ${restaurant.id}")

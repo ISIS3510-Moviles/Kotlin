@@ -132,7 +132,8 @@ class AuthRepositoryImpl @Inject constructor(
                     visitsIds = emptyList(),
                     suscribedRestaurantIds = emptyList(),
                     publishedAlertsIds = emptyList(),
-                    savedProducts = emptyList()
+                    savedProducts = emptyList(),
+                    vendorRestaurantId = null
                 ).also { newUser ->
                     Log.d("AuthRepository", "🚀 Creando usuario nuevo…")
                     try {

@@ -3,6 +3,7 @@ package com.example.campusbites.data.repository
 import android.util.Log
 import com.example.campusbites.data.dto.RestaurantDTO
 import com.example.campusbites.data.dto.UpdateRestaurantCommentsDTO
+import com.example.campusbites.data.dto.UpdateRestaurantDTO
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.repository.RestaurantRepository
 import jakarta.inject.Inject
@@ -14,6 +15,16 @@ class RestaurantRepositoryImpl @Inject constructor(
     override suspend fun getRestaurants(): List<RestaurantDTO> {
         return apiService.getRestaurants()
     }
+
+    override suspend fun updateRestaurant(restaurantId: String, restaurant: UpdateRestaurantDTO): Boolean {
+        return try {
+            val response = apiService.updateRestaurant(restaurantId, restaurant)
+            response.isSuccessful
+        } catch (e: Exception) {
+            false
+        }
+    }
+
 
     override suspend fun getRestaurant(id: String): RestaurantDTO {
         return apiService.getRestaurant(id)

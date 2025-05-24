@@ -150,29 +150,35 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 coroutineScope {
-
                     val nearbyRestaurantsDeferred: Deferred<List<RestaurantDomain>?> = async { fetchRestaurants() }
                     val ingredientsDeferred: Deferred<List<IngredientDomain>?> = async { fetchIngredients() }
                     val productsDeferred: Deferred<List<ProductDomain>?> = async { fetchProducts() }
 
+                    launch {
+                        val fetchedNearby = nearbyRestaurantsDeferred.await()
+                        fetchedNearby?.let { homeDataRepository.saveNearbyRestaurants(it) }
+                        Log.d("HomeViewModel", "Fetched nearby restaurants and updated cache.")
+                    }
 
-                    val fetchedNearby = nearbyRestaurantsDeferred.await()
-                    val fetchedIngredients = ingredientsDeferred.await()
-                    val fetchedProducts = productsDeferred.await()
+                    launch {
+                        val fetchedIngredients = ingredientsDeferred.await()
+                        fetchedIngredients?.let { homeDataRepository.saveAllIngredients(it) }
+                        Log.d("HomeViewModel", "Fetched ingredients and updated cache.")
+                    }
 
+                    launch {
+                        val fetchedProducts = productsDeferred.await()
+                        fetchedProducts?.let { homeDataRepository.saveAllProducts(it) }
+                        Log.d("HomeViewModel", "Fetched products and updated cache.")
+                    }
 
                     val currentUser = authRepository.currentUser.first { it != null }
                     val fetchedRecommendations = currentUser?.let { user ->
-                        fetchAndSaveRecommendationRestaurants(user, fetchedNearby ?: homeDataRepository.nearbyRestaurantsFlow.first())
+                        val currentNearby = nearbyRestaurantsDeferred.await() ?: homeDataRepository.nearbyRestaurantsFlow.first()
+                        fetchAndSaveRecommendationRestaurants(user, currentNearby)
                     }
 
-
-                    fetchedNearby?.let { homeDataRepository.saveNearbyRestaurants(it) }
-                    fetchedIngredients?.let { homeDataRepository.saveAllIngredients(it) }
-                    fetchedProducts?.let { homeDataRepository.saveAllProducts(it) }
-
-
-                    Log.d("HomeViewModel", "Network fetches completed. Cache updated. UI will react via observeCache.")
+                    Log.d("HomeViewModel", "All network fetches launched. UI will react via observeCache as data becomes available.")
                 }
             } catch (e: Exception) {
                 Log.e("HomeViewModel", "Error during network fetches", e)
@@ -223,7 +229,7 @@ class HomeViewModel @Inject constructor(
     private suspend fun fetchAndSaveRecommendationRestaurants(user: UserDomain, nearbyRestaurants: List<RestaurantDomain>): List<RestaurantDomain>? {
         return try {
             Log.d("HomeViewModel", "Fetching recommendations for user: ${user.id}")
-            val recommendationsRaw = getRecommendationRestaurantsUseCase(user.id, 10)
+            val recommendationsRaw = getRecommendationRestaurantsUseCase(user.id, 5)
 
             val nearbyRestaurantMap = nearbyRestaurants.associateBy { it.id }
 

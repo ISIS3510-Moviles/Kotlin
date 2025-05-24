@@ -2,6 +2,7 @@ package com.example.campusbites.data.repository
 
 import android.util.Log
 import com.example.campusbites.data.dto.UserDTO
+import com.example.campusbites.data.dto.UserUpdateDTO
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.UserRepository
@@ -46,7 +47,7 @@ class UserRepositoryImpl @Inject constructor(
         return apiService.getUsers()
     }
 
-    override suspend fun updateUser(id: String, user: UserDTO): Boolean {
+    override suspend fun updateUser(id: String, user: UserUpdateDTO): Boolean {
         return apiService.updateUser(id, user)
     }
 

@@ -15,6 +15,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
@@ -97,7 +98,7 @@ fun HomeScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(16.dp),
+                        .padding(24.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
@@ -128,7 +129,8 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    Button(onClick = { notificationPermissionState.launchPermissionRequest() }) {
+                    Button(onClick = { notificationPermissionState.launchPermissionRequest() },
+                        modifier = Modifier.padding(top = 8.dp)) {
                         Text("Grant Permission")
                     }
 
@@ -202,12 +204,16 @@ fun HomeScreen(
 
         if (!locationPermissionState.status.isGranted) {
             Column(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier.fillMaxSize().padding(40.dp),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Location permissions are required to display nearby restaurants.")
-                Button(onClick = { locationPermissionState.launchPermissionRequest() }) {
+                Text(
+                    text= "Location permissions are required to display nearby restaurants.",
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                )
+                Button(onClick = { locationPermissionState.launchPermissionRequest() },
+                    modifier = Modifier.padding(top = 8.dp)) {
                     Text("Grant Permission")
                 }
             }
@@ -251,11 +257,34 @@ fun HomeScreen(
                                     strokeWidth = 2.dp
                                 )
                             }
-                            IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
-                                Icon(
-                                    imageVector = Icons.Filled.DateRange,
-                                    contentDescription = stringResource(R.string.reservations)
-                                )
+
+                            if (user?.role == "vendor"){
+
+
+                                IconButton(onClick = {
+                                    navController.navigate(NavigationRoutes.VENDOR_SCREEN)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Email,
+                                        contentDescription = "Vendor Section"
+                                    )
+                                }
+
+                                IconButton(onClick = {
+                                    navController.navigate(NavigationRoutes.VENDOR_RESERVATIONS)
+                                }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.DateRange,
+                                        contentDescription = "Vendor Reservations"
+                                    )
+                                }
+                            } else {
+                                IconButton(onClick = { navController.navigate(NavigationRoutes.RESERVATIONS_SCREEN) }) {
+                                    Icon(
+                                        imageVector = Icons.Filled.DateRange,
+                                        contentDescription = stringResource(R.string.reservations)
+                                    )
+                                }
                             }
 
                             IconButton(onClick = {
@@ -320,7 +349,7 @@ fun HomeScreen(
                                             viewModel.incrementIngredientClicks(ingredient.id)
                                             onIngredientClick(ingredient)
                                         },
-                                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 8.dp)
+                                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                                     )
                                 }
 
@@ -331,13 +360,13 @@ fun HomeScreen(
                                             style = MaterialTheme.typography.displaySmall,
                                             fontWeight = FontWeight.Bold,
                                             color = MaterialTheme.colorScheme.primary,
-                                            modifier = Modifier.padding(start = 8.dp)
+                                            modifier = Modifier.padding(start = 16.dp)
                                         )
 
                                         Text(
                                             text = "Explore our complete ingredient selection",
                                             style = MaterialTheme.typography.bodySmall,
-                                            modifier = Modifier.padding(start = 8.dp, top = 4.dp, bottom = 4.dp)
+                                            modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
                                         )
 
                                         Spacer(modifier = Modifier.height(8.dp))

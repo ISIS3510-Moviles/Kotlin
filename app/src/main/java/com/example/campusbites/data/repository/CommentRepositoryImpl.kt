@@ -214,7 +214,8 @@ class CommentRepositoryImpl @Inject constructor(
             visitsIds = emptyList(),
             suscribedRestaurantIds = emptyList(),
             publishedAlertsIds = emptyList(),
-            savedProducts = emptyList()
+            savedProducts = emptyList(),
+            vendorRestaurantId = null
         )
 
         val restaurant = try {
@@ -284,7 +285,8 @@ class CommentRepositoryImpl @Inject constructor(
             visitsIds = emptyList(),
             suscribedRestaurantIds = emptyList(),
             publishedAlertsIds = emptyList(),
-            savedProducts = emptyList()
+            savedProducts = emptyList(),
+            vendorRestaurantId = null
         )
     }
 
