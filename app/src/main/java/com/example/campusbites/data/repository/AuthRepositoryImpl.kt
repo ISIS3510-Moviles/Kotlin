@@ -7,7 +7,6 @@ import android.util.Log
 import com.example.campusbites.data.preferences.UserSessionRepository
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.user.CreateUserUseCase
-import com.example.campusbites.domain.usecase.user.GetUsersUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

@@ -20,5 +20,5 @@ data class UserDTO(
     val suscribedRestaurantIds: List<String> = emptyList(),
     val publishedAlertsIds: List<String> = emptyList(),
     val savedProductsIds: List<String> = emptyList(),
-    val vendorRestaurantId: String,
+    val vendorRestaurantId: String? = null,
 )
