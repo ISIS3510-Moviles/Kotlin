@@ -18,6 +18,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
 class AlertRepositoryImpl @Inject constructor(
@@ -28,13 +29,18 @@ class AlertRepositoryImpl @Inject constructor(
     private val alertMapper: AlertMapper
 ) : AlertRepository {
 
+    private val userDtoCache = ConcurrentHashMap<String, UserDTO>()
+    private val restaurantDtoCache = ConcurrentHashMap<String, RestaurantDTO>()
+
     private suspend fun fetchUserDTOsConcurrently(userIds: List<String>): Map<String, UserDTO?> {
         return coroutineScope {
             userIds.map { id ->
                 async {
-                    try {
+                    userDtoCache[id] ?: try {
                         Log.d("AlertRepoImpl", "Fetching UserDTO for id: $id")
-                        apiService.getUserById(id)
+                        val fetchedUser = apiService.getUserById(id)
+                        fetchedUser?.let { userDtoCache[id] = it }
+                        fetchedUser
                     } catch (e: Exception) {
                         Log.e("AlertRepoImpl", "Failed to fetch UserDTO for id: $id. Error: ${e.message}", e)
                         null
@@ -50,9 +56,13 @@ class AlertRepositoryImpl @Inject constructor(
         return coroutineScope {
             restaurantIds.map { id ->
                 async {
-                    try {
+                    restaurantDtoCache[id] ?: try {
                         Log.d("AlertRepoImpl", "Fetching RestaurantDTO for id: $id")
-                        if (id.isNotBlank()) apiService.getRestaurant(id) else null
+                        if (id.isNotBlank()) {
+                            val fetchedRestaurant = apiService.getRestaurant(id)
+                            fetchedRestaurant?.let { restaurantDtoCache[id] = it }
+                            fetchedRestaurant
+                        } else null
                     } catch (e: Exception) {
                         Log.e("AlertRepoImpl", "Failed to fetch RestaurantDTO for id: $id. Error: ${e.message}", e)
                         null
