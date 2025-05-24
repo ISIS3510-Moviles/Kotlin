@@ -11,6 +11,8 @@ import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
 import com.example.campusbites.data.cache.RestaurantLruCache
 import com.example.campusbites.data.cache.SearchCache
+import com.example.campusbites.data.local.LocalRestaurantDataSource
+import com.example.campusbites.data.local.RealmRestaurantDataSource
 import com.example.campusbites.data.local.dao.DraftAlertDao
 import com.example.campusbites.data.local.dao.PendingProductActionDao
 import com.example.campusbites.data.local.dao.ReservationDao
@@ -70,6 +72,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import com.google.gson.Gson
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -92,6 +95,12 @@ object AppModule {
         @ApplicationContext context: Context
     ): RestaurantPreferencesRepository {
         return RestaurantPreferencesRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
     }
 
     @Provides
@@ -288,7 +297,9 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRestaurantRepository(apiService: ApiService): RestaurantRepository {
+    fun provideRestaurantRepository(
+        apiService: ApiService,
+    ): RestaurantRepository {
         return RestaurantRepositoryImpl(apiService)
     }
 
@@ -354,6 +365,15 @@ object AppModule {
     @Singleton
     fun provideLocationRepository(fusedLocationProviderClient: FusedLocationProviderClient): LocationRepository {
         return LocationRepositoryImpl(fusedLocationProviderClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalRestaurantDataSource(
+        realmConfig: RealmConfig,
+        gson: Gson
+    ): LocalRestaurantDataSource {
+        return RealmRestaurantDataSource(realmConfig, gson)
     }
 
     @Provides

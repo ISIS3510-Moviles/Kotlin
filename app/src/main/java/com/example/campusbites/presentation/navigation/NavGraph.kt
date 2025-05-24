@@ -1,6 +1,7 @@
 package com.example.campusbites.presentation.navigation
 
 import android.util.Log
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavType
@@ -11,6 +12,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.campusbites.presentation.ui.screens.AlertCreateScreen
 import com.example.campusbites.presentation.ui.screens.AlertsScreen
 import com.example.campusbites.presentation.ui.screens.DraftAlertsScreen
+import com.example.campusbites.presentation.ui.screens.EditRestaurantScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
 import com.example.campusbites.presentation.ui.screens.ManageProductsScreen // Nuevo
@@ -36,6 +38,7 @@ object NavigationRoutes {
     const val VENDOR_RESERVATIONS = "vendor_reservations_screen"
     const val MANAGE_PRODUCTS_SCREEN = "manage_products_screen/{restaurantId}" // Nuevo
     const val PRODUCT_FORM_SCREEN = "product_form_screen/{restaurantId}?productId={productId}" // Nuevo, productId es opcional
+    const val EDIT_RESTAURANT_SCREEN = "edit_restaurant_screen/{restaurantId}"
 
     fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
@@ -47,6 +50,9 @@ object NavigationRoutes {
         } else {
             "product_form_screen/$restaurantId"
         }
+    }
+    fun createEditRestaurantRoute(restaurantId: String): String {
+        return "edit_restaurant_screen/$restaurantId"
     }
 }
 
@@ -168,6 +174,18 @@ fun NavGraph(authViewModel: AuthViewModel) {
 
         composable(NavigationRoutes.VENDOR_RESERVATIONS) {
             ReservationsVendorScreen(viewModel = hiltViewModel())
+        }
+
+        composable(
+            route = NavigationRoutes.EDIT_RESTAURANT_SCREEN,
+            arguments = listOf(navArgument("restaurantId") { type = NavType.StringType })
+        ) { backStackEntry ->
+            val restaurantId = backStackEntry.arguments?.getString("restaurantId")
+            if (restaurantId != null) {
+                EditRestaurantScreen(navController = navController, restaurantId = restaurantId)
+            } else {
+                Text("Error: Restaurant ID missing.")
+            }
         }
 
         // --- Nuevas Rutas para Gestión de Productos ---

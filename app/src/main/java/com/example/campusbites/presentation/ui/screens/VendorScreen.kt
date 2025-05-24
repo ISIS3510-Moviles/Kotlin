@@ -18,6 +18,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
+import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.VendorViewModel
@@ -105,17 +106,8 @@ fun VendorScreen(
                         )
                     }
                 } else if (restaurant != null) {
-                    Text(
-                        text = restaurant!!.name,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = restaurant!!.address,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center
-                    )
+                    RestaurantDetailsSection(restaurant = restaurant!!)
+
                     Spacer(modifier = Modifier.height(24.dp))
 
                     VendorActionButton(
@@ -132,27 +124,13 @@ fun VendorScreen(
                             navController.navigate(NavigationRoutes.VENDOR_RESERVATIONS)
                         }
                     )
-                    VendorActionButton(
-                        text = "Edit Restaurant Info (Not Implemented)",
-                        icon = Icons.Filled.Edit,
-                        onClick = { /* TODO */ },
-                        enabled = false
-                    )
-                    VendorActionButton(
-                        text = "Restaurant Settings (Not Implemented)",
-                        icon = Icons.Filled.Settings,
-                        onClick = { /* TODO */ },
-                        enabled = false
-                    )
-
-                } else if (vendorRestaurantId.isNullOrBlank()){
+                    } else if (vendorRestaurantId.isNullOrBlank()){
                     Text(
                         "You are not currently assigned as a vendor to any restaurant.",
                         style = MaterialTheme.typography.bodyMedium,
                         textAlign = TextAlign.Center
                     )
                 } else {
-                    // Estado por defecto si ninguna de las condiciones anteriores se cumple (raro)
                     Text(
                         "Loading restaurant information...",
                         style = MaterialTheme.typography.bodyMedium,
@@ -183,4 +161,88 @@ private fun VendorActionButton(
         Spacer(Modifier.size(ButtonDefaults.IconSpacing))
         Text(text)
     }
+}
+
+@Composable
+private fun RestaurantDetailsSection(restaurant: RestaurantDomain) {
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = restaurant.name,
+            style = MaterialTheme.typography.headlineMedium,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(
+            text = restaurant.description,
+            style = MaterialTheme.typography.bodyLarge,
+            textAlign = TextAlign.Center
+        )
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Sección de Contacto
+        Text(
+            text = "Contact Information",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        DetailRow(label = "Address:", value = restaurant.address)
+        DetailRow(label = "Phone:", value = restaurant.phone)
+        DetailRow(label = "Email:", value = restaurant.email)
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Sección de Horarios
+        Text(
+            text = "Operating Hours",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        DetailRow(label = "Opening Time:", value = restaurant.openingTime)
+        DetailRow(label = "Closing Time:", value = restaurant.closingTime)
+        DetailRow(label = "Opens Weekends:", value = if (restaurant.opensWeekends) "Yes" else "No")
+        DetailRow(label = "Opens Holidays:", value = if (restaurant.opensHolidays) "Yes" else "No")
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Sección de Estado y Rating
+        Text(
+            text = "Status & Rating",
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.align(Alignment.Start)
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        DetailRow(label = "Active:", value = if (restaurant.isActive) "Yes" else "No")
+        DetailRow(label = "Rating:", value = String.format("%.1f", restaurant.rating))
+        Spacer(modifier = Modifier.height(16.dp))
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.weight(0.4f) // Ocupa el 40% del ancho
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            textAlign = TextAlign.End,
+            modifier = Modifier.weight(0.6f) // Ocupa el 60% del ancho
+        )
+    }
+    Spacer(modifier = Modifier.height(4.dp)) // Espacio entre filas de detalles
 }
