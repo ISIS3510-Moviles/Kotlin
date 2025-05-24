@@ -3,7 +3,6 @@ package com.example.campusbites.presentation.ui.screens
 import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.CircularProgressIndicator
-// ... (otras importaciones)
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,52 +27,59 @@ fun RestaurantDetailScreen(
     viewModel: RestaurantDetailViewModel = hiltViewModel(),
     onProductClick: (String) -> Unit,
 ) {
+    // Crear un trace personalizado para medir el tiempo de carga completo de la pantalla
     val screenLoadTrace = remember {
         Firebase.performance.newTrace("restaurant_detail_screen_load_time")
     }
 
+
+
     val uiState by viewModel.uiState.collectAsState()
+
     val coroutineScope = rememberCoroutineScope()
 
-    // Usar el lastSelectedTabIndex del uiState, que ya viene de DataStore
-    var selectedTabIndex by remember(uiState.lastSelectedTabIndex) {
-        mutableStateOf(uiState.lastSelectedTabIndex)
-    }
-
-    val onSaveRestaurantClick: (String) -> Unit = { rId -> // Renombrado para claridad
+    val onSaveRestaurantClick: (String) -> Unit = { restaurantId ->
         coroutineScope.launch {
             val currentUser = authViewModel.user.value
+
             if (currentUser == null) {
-                Log.e("RestaurantDetailScreen", "❌ Usuario no disponible para guardar restaurante")
+                Log.e("RestaurantHeader", "❌ Usuario no disponible")
                 return@launch
             }
+
             val updatedIds = currentUser.suscribedRestaurantIds.toMutableList()
-            val alreadySaved = updatedIds.contains(rId)
+            val alreadySaved = updatedIds.contains(restaurantId)
+
             if (alreadySaved) {
-                updatedIds.remove(rId)
+                updatedIds.remove(restaurantId)
+                Log.d("RestaurantHeader", "🗑️ Restaurante eliminado de favoritos")
             } else {
-                updatedIds.add(rId)
+                updatedIds.add(restaurantId)
+                Log.d("RestaurantHeader", "✅ Restaurante agregado a favoritos")
             }
+
             val updatedUser = currentUser.copy(suscribedRestaurantIds = updatedIds)
-            authViewModel.updateUser(updatedUser) // Actualiza el estado en AuthViewModel
-            // viewModel.onSaveClick(updatedUser) // El ViewModel de detalle no necesita saber sobre esto directamente
-            // si la fuente de verdad del usuario es AuthViewModel
+            authViewModel.updateUser(updatedUser)
+            viewModel.onSaveClick(updatedUser)
         }
     }
+
 
     LaunchedEffect(restaurantId) {
         screenLoadTrace.start()
         screenLoadTrace.putAttribute("restaurant_id", restaurantId)
+
         viewModel.loadRestaurantDetails(restaurantId)
     }
 
-    // No es necesario este LaunchedEffect si uiState.restaurant es la fuente de verdad
-    // LaunchedEffect(uiState.restaurant) {
-    // if (uiState.restaurant != null) {
-    // }
-    // }
+    LaunchedEffect(uiState.restaurant) {
+        if (uiState.restaurant != null) {
+        }
+    }
 
     uiState.restaurant?.let { restaurant ->
+        var selectedTabIndex by remember { mutableStateOf(0) }
+
         Column(modifier = Modifier.fillMaxSize().padding(top= 30.dp, start = 16.dp, end = 16.dp)) {
             RestaurantHeader(
                 restaurant = restaurant,
@@ -82,43 +88,30 @@ fun RestaurantDetailScreen(
                 isLoading = uiState.isLoadingNetwork
             )
             Spacer(modifier = Modifier.height(16.dp))
-            RestaurantTabs(selectedTabIndex) { index ->
-                selectedTabIndex = index
-                viewModel.saveSelectedTabIndex(index) // Guardar el tab seleccionado
-            }
+            RestaurantTabs(selectedTabIndex) { index -> selectedTabIndex = index }
             Spacer(modifier = Modifier.height(16.dp))
 
             when (selectedTabIndex) {
-                0 -> FoodSection(
-                    popularProducts = uiState.popularProducts,
+                0 -> FoodSection(popularProducts = uiState.popularProducts,
                     affordableProducts = uiState.under20Products,
-                    onProductClick = onProductClick
+                    onProductClick =  onProductClick
                 )
-                1 -> BookTableSection(
-                    authViewModel = authViewModel,
-                    restaurant = restaurant,
-                    restaurantDetailViewModel = viewModel
-                )
-                2 -> ArriveSection() // Asumiendo que ArriveSection usa el mismo ViewModel o no necesita uno específico para el tab
+                1 -> BookTableSection(authViewModel = authViewModel, restaurant = restaurant, restaurantDetailViewModel = viewModel)
+                2 -> ArriveSection()
                 3 -> ReviewsSection(
                     restaurantDetailViewModel = viewModel,
                     authViewModel = authViewModel
                 )
             }
         }
-        LaunchedEffect(Unit) { // Este se ejecutará solo una vez cuando la composición entre
-            // screenLoadTrace.stop() // Mover esto a onDispose o al final de la carga real
+
+        LaunchedEffect(Unit) {
+            screenLoadTrace.stop()
         }
     } ?: Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.Center
+        modifier = Modifier.fillMaxSize()
     ) {
-        CircularProgressIndicator()
+        CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
     }
 
-    DisposableEffect(Unit) {
-        onDispose {
-            screenLoadTrace.stop() // Asegura que el trace se detenga
-        }
-    }
 }
