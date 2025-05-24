@@ -1,35 +1,32 @@
 package com.example.campusbites.data.dto
 
-import com.google.gson.annotations.SerializedName
 import kotlinx.serialization.Serializable
-import java.util.Date
-import kotlinx.serialization.Contextual
 
 @Serializable
 data class UpdateRestaurantDTO(
-    @SerializedName("name") val name: String? = null,
-    @SerializedName("description") val description: String? = null,
-    @SerializedName("latitude") val latitude: Double? = null,
-    @SerializedName("longitude") val longitude: Double? = null,
-    @SerializedName("routeIndications") val routeIndications: String? = null,
-    @Contextual @SerializedName("openingTime") val openingTime: Date? = null,
-    @Contextual @SerializedName("closingTime") val closingTime: Date? = null,
-    @SerializedName("opensHolidays") val opensHolidays: Boolean? = null,
-    @SerializedName("opensWeekends") val opensWeekends: Boolean? = null,
-    @SerializedName("rating") val rating: Double? = null,
-    @SerializedName("isActive") val isActive: Boolean? = null,
-    @SerializedName("address") val address: String? = null,
-    @SerializedName("phone") val phone: String? = null,
-    @SerializedName("email") val email: String? = null,
-    @SerializedName("overviewPhoto") val overviewPhoto: String? = null,
-    @SerializedName("profilePhoto") val profilePhoto: String? = null,
-    @SerializedName("photos") val photos: List<String>? = null, // Mapea a List<String>
-    @SerializedName("foodTagsIds") val foodTagsIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("dietaryTagsIds") val dietaryTagsIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("alertsIds") val alertsIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("reservationsIds") val reservationsIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("suscribersIds") val suscribersIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("visitsIds") val visitsIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("commentsIds") val commentsIds: List<String>? = null, // Mapea a List<String>
-    @SerializedName("productsIds") val productsIds: List<String>? = null // Mapea a List<String>
+    val name: String? = null,
+    val description: String? = null,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val routeIndications: String? = null,
+    val openingTime: String? = null,
+    val closingTime: String? = null,
+    val opensHolidays: Boolean? = null,
+    val opensWeekends: Boolean? = null,
+    val isActive: Boolean? = null,
+    val rating: Double? = null,
+    val address: String? = null,
+    val phone: String? = null,
+    val email: String? = null,
+    val overviewPhoto: String? = null,
+    val profilePhoto: String? = null,
+    val photos: List<String>? = null,
+    val foodTagsIds: List<String>? = null,
+    val dietaryTagsIds: List<String>? = null,
+    val alertsIds: List<String>? = null,
+    val reservationsIds: List<String>? = null,
+    val suscribersIds: List<String>? = null,
+    val visitsIds: List<String>? = null,
+    val commentsIds: List<String>? = null,
+    val productsIds: List<String>? = null,
 )

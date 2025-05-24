@@ -12,6 +12,6 @@ interface RestaurantRepository {
 
     // New method to update restaurant comments
     suspend fun updateRestaurantComments(restaurantId: String, commentsIds: List<String>): Boolean
-    suspend fun updateRestaurant(restaurantId: String, updateRestaurantDTO: UpdateRestaurantDTO): Boolean
 
+    suspend fun updateRestaurant(restaurantId: String, restaurant: UpdateRestaurantDTO): Boolean
 }
