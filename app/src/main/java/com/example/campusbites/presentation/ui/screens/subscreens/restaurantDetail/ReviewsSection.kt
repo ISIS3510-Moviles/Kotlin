@@ -28,25 +28,41 @@ import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.ktx.Firebase
 import java.time.OffsetDateTime
 import java.util.UUID
-import kotlinx.coroutines.launch // Importa launch
-import androidx.compose.runtime.rememberCoroutineScope // Importa rememberCoroutineScope
-import android.widget.Toast // Importa Toast
+import kotlinx.coroutines.launch
+import androidx.compose.runtime.rememberCoroutineScope
+import android.widget.Toast
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.ui.platform.LocalContext // Importa LocalContext
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun ReviewsSection(
     restaurantDetailViewModel: RestaurantDetailViewModel = viewModel(),
     authViewModel: AuthViewModel
 ) {
-    val uiState = restaurantDetailViewModel.uiState.collectAsState().value
+    val uiState by restaurantDetailViewModel.uiState.collectAsState() // Usar 'by' para desestructurar
     var showDialog by remember { mutableStateOf(false) }
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     LaunchedEffect(Unit) {
         Firebase.analytics.logEvent("restaurant_reviews_checked", null)
+    }
+
+    // **MODIFICACIÓN CLAVE AQUÍ:** Ordenar las reviews
+    val sortedReviews = remember(uiState.reviews) { // remember para evitar re-ordenar en cada recomposición innecesaria
+        uiState.reviews.sortedByDescending { comment ->
+            try {
+                // Intenta parsear la fecha. Si falla, se considera una fecha muy antigua
+                // para que los comentarios con fechas inválidas vayan al final.
+                OffsetDateTime.parse(comment.datetime)
+            } catch (e: Exception) {
+                // Loguea el error si el formato de fecha es incorrecto
+                // Puedes usar un OffsetDateTime.MIN o similar si quieres que se ordenen por la fecha actual
+                // si no se puede parsear la original. Para que vayan al final (más antiguas), puedes usar OffsetDateTime.MIN
+                OffsetDateTime.MIN // Esto asegura que los comentarios con fechas no parseables vayan al final
+            }
+        }
     }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -61,13 +77,26 @@ fun ReviewsSection(
             Text("Write a review")
         }
 
-        LazyColumn(
-            modifier = Modifier
-                .weight(1f)
-                .padding(top = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            items(uiState.reviews) { comment -> CommentCard(comment) }
+        // Spacer para dar un poco de espacio entre el botón y las reviews
+        Spacer(modifier = Modifier.height(16.dp))
+
+        if (sortedReviews.isEmpty()) {
+            Text(
+                text = "No reviews yet. Be the first to write one!",
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            )
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .weight(1f) // Asegura que el LazyColumn ocupe el espacio restante
+                    .padding(horizontal = 16.dp), // Añade padding horizontal para las tarjetas
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                items(sortedReviews) { comment -> CommentCard(comment) } // Usar la lista ordenada
+            }
         }
     }
 
@@ -83,7 +112,7 @@ fun ReviewsSection(
 
                 val newComment = CommentDomain(
                     id = UUID.randomUUID().toString(),
-                    datetime = OffsetDateTime.now().toString(),
+                    datetime = OffsetDateTime.now().toString(), // Asegúrate de que este formato sea parseable
                     message = message,
                     rating = rating,
                     likes = 0,

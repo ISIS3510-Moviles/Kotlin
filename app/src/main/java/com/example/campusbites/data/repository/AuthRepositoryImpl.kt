@@ -7,7 +7,6 @@ import android.util.Log
 import com.example.campusbites.data.preferences.UserSessionRepository
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.usecase.user.CreateUserUseCase
-import com.example.campusbites.domain.usecase.user.GetUsersUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,7 +15,6 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 import javax.inject.Singleton
 import com.example.campusbites.domain.repository.AuthRepository
-import com.example.campusbites.domain.usecase.reservation.GetReservationByIdUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByEmailUseCase
 import com.example.campusbites.domain.usecase.user.GetUserByIdUseCase
 import com.example.campusbites.domain.usecase.user.UpdateUserUseCase
@@ -29,6 +27,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
+import java.io.IOException // Importar IOException para manejar errores de red
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
@@ -69,8 +68,16 @@ class AuthRepositoryImpl @Inject constructor(
             try {
                 val initialUser = userSessionRepository.userSessionFlow.firstOrNull()
                 if (initialUser != null && _currentUser.value == null) {
-                    Log.d("AuthRepository", "Restoring session from DataStore for user: ${initialUser.id}")
+                    Log.d("AuthRepository", "Restoring session from DataStore for user: ${initialUser.id} with role: ${initialUser.role}")
                     _currentUser.value = initialUser
+                    // **MODIFICACIÓN 1: Intentar sincronizar al inicio si hay conexión**
+                    // Esto cubre el caso de que la app se cerró mientras estaba offline con un cambio pendiente.
+                    if (isOnline.firstOrNull() == true) {
+                        Log.d("AuthRepository", "Network is online at startup. Attempting to sync restored user.")
+                        syncLocalUserWithRemote()
+                    } else {
+                        Log.d("AuthRepository", "Network is offline at startup. User will sync when online.")
+                    }
                 } else if (initialUser == null) {
                     Log.d("AuthRepository", "No session found in DataStore.")
                 } else {
@@ -83,7 +90,7 @@ class AuthRepositoryImpl @Inject constructor(
 
         repositoryScope.launch {
             isOnline
-                .filter { it }
+                .filter { it } // Solo cuando la red está online
                 .collect {
                     Log.d("AuthRepository", "Network is back online. Attempting to sync local user data.")
                     syncLocalUserWithRemote()
@@ -110,6 +117,9 @@ class AuthRepositoryImpl @Inject constructor(
 
             val userToSet: UserDomain = if (existingUser != null) {
                 try {
+                    // **MODIFICACIÓN 2: Asegurarse de obtener el UserDomain completo del servidor**
+                    // Si el usuario existe, lo obtenemos por ID para tener la versión más reciente del servidor.
+                    // Esto es importante si el rol pudo haber sido cambiado por otro medio en el servidor.
                     getUserByIdUseCase(existingUser.id)
                 } catch (e: Exception) {
                     Log.e("AuthRepository", "Error getting user by ID after finding by email: ${e.message}", e)
@@ -121,7 +131,7 @@ class AuthRepositoryImpl @Inject constructor(
                     name = userName,
                     email = userEmail,
                     phone = "",
-                    role = "user",
+                    role = "user", // Rol por defecto para nuevos usuarios
                     isPremium = false,
                     badgesIds = emptyList(),
                     schedulesIds = emptyList(),
@@ -173,24 +183,36 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override fun updateCurrentUser(updatedUser: UserDomain?) {
-        Log.d("AuthRepository", "🔄 Updating currentUser in repository with: ${updatedUser?.id}")
-        _currentUser.value = updatedUser?.copy()
+        Log.d("AuthRepository", "🔄 Updating currentUser in repository with: ${updatedUser?.id}, new role: ${updatedUser?.role}")
+        _currentUser.value = updatedUser?.copy() // Asegura que se actualice el Flow para la UI
 
         if (updatedUser != null) {
             repositoryScope.launch {
                 try {
+                    // 1. Guardar el usuario actualizado en DataStore (persistencia offline)
                     userSessionRepository.saveUserSession(updatedUser)
                     Log.d("AuthRepository", "🔄 User session updated in DataStore for ID: ${updatedUser.id}")
 
-                    try {
+                    // 2. Intentar sincronizar con el servidor inmediatamente
+                    // Si hay conexión, se enviará. Si no, syncLocalUserWithRemote lo hará después.
+                    if (isOnline.firstOrNull() == true) { // Verifica si hay conexión antes de intentar
                         Log.d("AuthRepository", "🚀 Attempting to update user on server...")
-                        updateUserUseCase(updatedUser.id, updatedUser)
-                        Log.d("AuthRepository", "✅ User successfully updated on server.")
-                    } catch (e: Exception) {
-                        Log.e("AuthRepository", "❌ Failed to update user on server: ${e.message}", e)
+                        try {
+                            updateUserUseCase(updatedUser.id, updatedUser)
+                            Log.d("AuthRepository", "✅ User successfully updated on server.")
+                        } catch (e: IOException) { // Captura IOException para errores de red
+                            Log.e("AuthRepository", "❌ Failed to update user on server (network error): ${e.message}", e)
+                            // No re-lanzamos, ya que syncLocalUserWithRemote lo reintentará
+                        } catch (e: Exception) { // Captura otras excepciones (ej. errores de servidor)
+                            Log.e("AuthRepository", "❌ Failed to update user on server (other error): ${e.message}", e)
+                            // Aquí podrías decidir si quieres reintentar o notificar al usuario
+                            // Por ahora, el syncLocalUserWithRemote solo reintenta por red.
+                        }
+                    } else {
+                        Log.d("AuthRepository", "🌐 Offline. User update will sync when network is available.")
                     }
                 } catch (e: Exception) {
-                    Log.e("AuthRepository", "Error saving updated user session: ${e.message}", e)
+                    Log.e("AuthRepository", "Error saving updated user session to DataStore: ${e.message}", e)
                 }
             }
         } else {
@@ -209,18 +231,23 @@ class AuthRepositoryImpl @Inject constructor(
         return withContext(Dispatchers.IO) {
             _currentUser.value
         }
-
     }
 
     private suspend fun syncLocalUserWithRemote() {
         val localUser = _currentUser.value
         if (localUser != null) {
-            Log.d("AuthRepository", "Attempting to sync local user ${localUser.id} with remote.")
+            Log.d("AuthRepository", "Attempting to sync local user ${localUser.id} with remote. Current role: ${localUser.role}")
             try {
+                // Aquí es donde se reintenta el envío al servidor
                 updateUserUseCase(localUser.id, localUser)
                 Log.d("AuthRepository", "Local user ${localUser.id} successfully synced with remote.")
-            } catch (e: Exception) {
-                Log.e("AuthRepository", "Failed to sync local user ${localUser.id} with remote: ${e.message}", e)
+            } catch (e: IOException) { // Captura IOException para errores de red
+                Log.e("AuthRepository", "Failed to sync local user ${localUser.id} with remote (network error): ${e.message}", e)
+                // No re-lanzamos, ya que el `isOnline` Flow se encargará de reintentar cuando la red vuelva.
+            } catch (e: Exception) { // Captura otras excepciones (ej. errores de servidor)
+                Log.e("AuthRepository", "Failed to sync local user ${localUser.id} with remote (other error): ${e.message}", e)
+                // Aquí podrías decidir si quieres notificar al usuario o tener una lógica de reintento más sofisticada
+                // para errores que no sean de red. Por ahora, solo logueamos.
             }
         } else {
             Log.d("AuthRepository", "No local user to sync.")

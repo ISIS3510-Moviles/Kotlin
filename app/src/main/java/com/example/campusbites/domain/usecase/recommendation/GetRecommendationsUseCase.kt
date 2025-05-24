@@ -1,4 +1,4 @@
-package com.example.campusbites.domain.usecase
+package com.example.campusbites.domain.usecase.recommendation
 
 import com.example.campusbites.domain.model.RecommendationCommentDomain
 import com.example.campusbites.domain.model.RecommendationReservationDomain

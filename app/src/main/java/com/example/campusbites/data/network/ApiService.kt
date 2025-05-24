@@ -20,6 +20,7 @@ import com.example.campusbites.data.dto.UpdateRestaurantCommentsDTO
 import com.example.campusbites.data.dto.UpdateRestaurantDTO
 import com.example.campusbites.data.dto.UserDTO
 import com.example.campusbites.data.dto.UserUpdateDTO
+import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -90,11 +91,11 @@ interface ApiService {
     @POST("user")
     suspend fun createUser(@Body userDTO: UserDTO): Response<Unit>
 
+    @GET("user/{id}")
+    suspend fun getUserByIdRaw(@Path("id") id: String): Response<ResponseBody>
+
     @PATCH("user/{id}")
     suspend fun updateUser(@Path("id") id: String,@Body userDTO: UserUpdateDTO): Boolean
-
-    @GET("user")
-    suspend fun getUsers(): List<UserDTO>
 
     @GET("user/email/{email}")
     suspend fun getUserByEmail(@Path("email") email: String): UserDTO
