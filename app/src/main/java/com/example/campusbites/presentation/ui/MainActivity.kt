@@ -1,7 +1,6 @@
 package com.example.campusbites.presentation.ui
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -11,7 +10,6 @@ import dagger.hilt.android.AndroidEntryPoint
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.rememberNavController
 import com.example.campusbites.presentation.navigation.NavGraph
 import com.example.campusbites.presentation.ui.screens.SignInScreen
 
@@ -28,7 +26,8 @@ class MainActivity : ComponentActivity() {
                 val user by authViewModel.user.collectAsStateWithLifecycle()
 
                 if (user == null) {
-                    SignInScreen()
+                    // Pasar el authViewModel a SignInScreen
+                    SignInScreen(authViewModel = authViewModel)
                 } else {
                     NavGraph(authViewModel = authViewModel)
                 }
