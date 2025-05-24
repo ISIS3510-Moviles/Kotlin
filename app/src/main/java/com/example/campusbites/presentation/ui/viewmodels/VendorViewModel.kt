@@ -6,7 +6,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.campusbites.data.cache.RestaurantLruCache
 import com.example.campusbites.data.dto.UpdateRestaurantDTO
-import com.example.campusbites.data.local.LocalRestaurantDataSource // ¡Importar!
+import com.example.campusbites.data.local.LocalRestaurantDataSource
 import com.example.campusbites.data.network.ConnectivityMonitor
 import com.example.campusbites.data.preferences.HomeDataRepository
 import com.example.campusbites.domain.model.RestaurantDomain
@@ -24,6 +24,10 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.OffsetDateTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 import javax.inject.Inject
 
 @HiltViewModel
@@ -34,7 +38,7 @@ class VendorViewModel @Inject constructor(
     private val restaurantLruCache: RestaurantLruCache,
     private val homeDataRepository: HomeDataRepository,
     private val connectivityMonitor: ConnectivityMonitor,
-    private val localRestaurantDataSource: LocalRestaurantDataSource // ¡Inyectar LocalRestaurantDataSource!
+    private val localRestaurantDataSource: LocalRestaurantDataSource
 ) : AndroidViewModel(application) {
 
     private val _restaurant = MutableStateFlow<RestaurantDomain?>(null)
@@ -73,6 +77,11 @@ class VendorViewModel @Inject constructor(
 
     private var syncJob: Job? = null // Para controlar la corrutina de sincronización
 
+    // Formateador para mostrar la hora en la UI (HH:mm)
+    private val uiTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+    // Formateador para parsear el formato ISO 8601 completo (ej. 2024-03-08T10:00:00.000Z)
+    private val isoDateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME // Para OffsetDateTime
+
     init {
         viewModelScope.launch {
             _restaurant.collect { restaurant ->
@@ -82,8 +91,9 @@ class VendorViewModel @Inject constructor(
                     editableAddress.value = it.address
                     editablePhone.value = it.phone
                     editableEmail.value = it.email
-                    editableOpeningTime.value = it.openingTime
-                    editableClosingTime.value = it.closingTime
+                    // ¡Aquí es donde cambiamos la inicialización para la UI!
+                    editableOpeningTime.value = formatIsoToUiTime(it.openingTime)
+                    editableClosingTime.value = formatIsoToUiTime(it.closingTime)
                     editableOpensWeekends.value = it.opensWeekends
                     editableOpensHolidays.value = it.opensHolidays
                     editableIsActive.value = it.isActive
@@ -105,6 +115,31 @@ class VendorViewModel @Inject constructor(
         }
     }
 
+    // Función de utilidad para formatear la cadena ISO 8601 a HH:mm para la UI
+    private fun formatIsoToUiTime(isoTime: String): String {
+        return try {
+            // Parsear como OffsetDateTime para manejar la 'Z' (zona horaria UTC)
+            val dateTime = OffsetDateTime.parse(isoTime, isoDateTimeFormatter)
+            dateTime.toLocalTime().format(uiTimeFormatter)
+        } catch (e: DateTimeParseException) {
+            Log.e("VendorViewModel", "Error parsing ISO time for UI: $isoTime", e)
+            "" // Devolver cadena vacía si hay un error de parseo
+        }
+    }
+
+    // Función de utilidad para convertir HH:mm de la UI a un formato ISO 8601 completo para el backend
+    private fun formatUiTimeToIso(uiTime: String): String {
+        return try {
+            val localTime = LocalTime.parse(uiTime, uiTimeFormatter)
+            // Combinar con la fecha actual y zona horaria UTC para formar un ISO 8601 completo
+            OffsetDateTime.now().withHour(localTime.hour).withMinute(localTime.minute).withSecond(0).withNano(0)
+                .format(isoDateTimeFormatter)
+        } catch (e: DateTimeParseException) {
+            Log.e("VendorViewModel", "Error parsing UI time to ISO: $uiTime", e)
+            ""
+        }
+    }
+
     fun loadVendorRestaurant(restaurantId: String) {
         if (restaurantId.isBlank()) {
             _errorMessage.value = "Vendor restaurant ID is missing."
@@ -114,7 +149,6 @@ class VendorViewModel @Inject constructor(
         _errorMessage.value = null
 
         viewModelScope.launch {
-            // ... (Tu lógica de carga de caché y red existente, sin cambios aquí) ...
             // 1. Intentar desde LRU Cache
             var cachedRestaurant = restaurantLruCache.get(restaurantId)
             if (cachedRestaurant != null) {
@@ -153,7 +187,6 @@ class VendorViewModel @Inject constructor(
     }
 
     private suspend fun fetchRestaurantFromServer(restaurantId: String, isBackgroundUpdate: Boolean) {
-        // ... (Tu lógica de fetch existente, sin cambios aquí) ...
         if (!isBackgroundUpdate) {
             _isLoading.value = true
         }
@@ -209,8 +242,9 @@ class VendorViewModel @Inject constructor(
                     address = editableAddress.value.takeIf { it != _restaurant.value?.address },
                     phone = editablePhone.value.takeIf { it != _restaurant.value?.phone },
                     email = editableEmail.value.takeIf { it != _restaurant.value?.email },
-                    openingTime = editableOpeningTime.value.takeIf { it != _restaurant.value?.openingTime },
-                    closingTime = editableClosingTime.value.takeIf { it != _restaurant.value?.closingTime },
+                    // Convertir de HH:mm a ISO 8601 para el DTO
+                    openingTime = formatUiTimeToIso(editableOpeningTime.value).takeIf { it != _restaurant.value?.openingTime },
+                    closingTime = formatUiTimeToIso(editableClosingTime.value).takeIf { it != _restaurant.value?.closingTime },
                     opensWeekends = editableOpensWeekends.value.takeIf { it != _restaurant.value?.opensWeekends },
                     opensHolidays = editableOpensHolidays.value.takeIf { it != _restaurant.value?.opensHolidays },
                     isActive = editableIsActive.value.takeIf { it != _restaurant.value?.isActive }
@@ -218,7 +252,7 @@ class VendorViewModel @Inject constructor(
 
                 if (updateDTO.name == null && updateDTO.description == null && updateDTO.address == null &&
                     updateDTO.phone == null && updateDTO.email == null && updateDTO.openingTime == null &&
-                    updateDTO.closingTime == null && updateDTO.closingTime == null && updateDTO.opensWeekends == null &&
+                    updateDTO.closingTime == null && updateDTO.opensWeekends == null &&
                     updateDTO.opensHolidays == null && updateDTO.isActive == null) {
                     _saveErrorMessage.value = "No changes detected."
                     _saveSuccess.value = false
@@ -226,7 +260,7 @@ class VendorViewModel @Inject constructor(
                     return@launch
                 }
 
-                // Actualizar el estado local del restaurante inmediatamente
+                // 1. Actualizar el estado local del restaurante inmediatamente
                 _restaurant.update { current ->
                     current?.copy(
                         name = updateDTO.name ?: current.name,
@@ -234,6 +268,7 @@ class VendorViewModel @Inject constructor(
                         address = updateDTO.address ?: current.address,
                         phone = updateDTO.phone ?: current.phone,
                         email = updateDTO.email ?: current.email,
+                        // Asegúrate de que el _restaurant.value siga teniendo el formato ISO completo
                         openingTime = updateDTO.openingTime ?: current.openingTime,
                         closingTime = updateDTO.closingTime ?: current.closingTime,
                         opensWeekends = updateDTO.opensWeekends ?: current.opensWeekends,
@@ -241,28 +276,41 @@ class VendorViewModel @Inject constructor(
                         isActive = updateDTO.isActive ?: current.isActive
                     )
                 }
-                // Actualizar también los campos editables para reflejar el nuevo estado
+                // Actualizar también los campos editables para reflejar el nuevo estado (en formato HH:mm)
                 _restaurant.value?.let {
                     editableName.value = it.name
                     editableDescription.value = it.description
                     editableAddress.value = it.address
                     editablePhone.value = it.phone
                     editableEmail.value = it.email
-                    editableOpeningTime.value = it.openingTime
-                    editableClosingTime.value = it.closingTime
+                    editableOpeningTime.value = formatIsoToUiTime(it.openingTime) // Usar la función de formateo
+                    editableClosingTime.value = formatIsoToUiTime(it.closingTime) // Usar la función de formateo
                     editableOpensWeekends.value = it.opensWeekends
                     editableOpensHolidays.value = it.opensHolidays
                     editableIsActive.value = it.isActive
                 }
 
-                // Intentar enviar al servidor
+                // 2. PERSISTIR LA ACTUALIZACIÓN EN CACHÉ LRU Y DATASTORE
+                _restaurant.value?.let { updatedRestaurant ->
+                    restaurantLruCache.put(updatedRestaurant.id, updatedRestaurant)
+                    val currentNearby = homeDataRepository.nearbyRestaurantsFlow.first().toMutableList()
+                    val index = currentNearby.indexOfFirst { it.id == updatedRestaurant.id }
+                    if (index != -1) {
+                        currentNearby[index] = updatedRestaurant
+                    } else {
+                        currentNearby.add(updatedRestaurant)
+                    }
+                    homeDataRepository.saveNearbyRestaurants(currentNearby)
+                    Log.d("VendorViewModel", "Restaurant ${updatedRestaurant.id} updated in LRU Cache and DataStore.")
+                }
+
+                // 3. Luego, intenta enviar al servidor
                 val success = updateRestaurantUseCase(currentRestaurantId, updateDTO)
 
                 if (success) {
                     _saveSuccess.value = true
                     _saveErrorMessage.value = null
                     Log.d("VendorViewModel", "Restaurant update successful (API or local pending).")
-                    // Si fue exitoso, no hay necesidad de reintentar inmediatamente
                 } else {
                     _saveSuccess.value = false
                     _saveErrorMessage.value = "Failed to save changes. Will retry when online."

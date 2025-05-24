@@ -22,14 +22,15 @@ class RestaurantRepositoryImpl @Inject constructor(
         return try {
             val response = apiService.updateRestaurant(restaurantId, restaurant)
             if (response.isSuccessful) {
+                Log.d("RestaurantRepository", "API updateRestaurant successful for $restaurantId.")
                 true
             } else {
-                Log.e("RestaurantRepository", "API updateRestaurant failed with code: ${response.code()}. Saving locally.")
+                Log.e("RestaurantRepository", "API updateRestaurant failed with code: ${response.code()} for $restaurantId. Saving locally.")
                 localRestaurantDataSource.savePendingUpdate(restaurantId, restaurant)
                 false
             }
         } catch (e: Exception) {
-            Log.e("RestaurantRepository", "Exception during updateRestaurant. Saving locally.", e)
+            Log.e("RestaurantRepository", "Exception during updateRestaurant for $restaurantId. Saving locally.", e)
             localRestaurantDataSource.savePendingUpdate(restaurantId, restaurant)
             false
         }

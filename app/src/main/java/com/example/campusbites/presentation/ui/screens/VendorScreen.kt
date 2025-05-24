@@ -21,6 +21,9 @@ import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.VendorViewModel
 import kotlinx.coroutines.launch
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.time.format.DateTimeParseException
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -99,14 +102,14 @@ fun VendorScreen(
                 },
             )
         },
-        snackbarHost = { SnackbarHost(snackbarHostState) }, // Añadir SnackbarHost
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         content = { innerPadding ->
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
                     .padding(16.dp)
-                    .verticalScroll(rememberScrollState()), // Habilitar scroll
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (isLoading) {
@@ -146,7 +149,6 @@ fun VendorScreen(
                         )
                     }
                 } else if (restaurant != null) {
-                    // Sección de edición de detalles del restaurante
                     EditableRestaurantDetailsSection(
                         name = editableName,
                         onNameChange = { vendorViewModel.editableName.value = it },
@@ -172,11 +174,10 @@ fun VendorScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botón de Guardar Cambios
                     Button(
                         onClick = { vendorViewModel.saveChanges() },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = !isSaving // Deshabilitar mientras se guarda
+                        enabled = !isSaving
                     ) {
                         if (isSaving) {
                             CircularProgressIndicator(
@@ -190,7 +191,6 @@ fun VendorScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Botones de acción adicionales
                     VendorActionButton(
                         text = "Manage Products",
                         icon = Icons.Filled.Edit,
@@ -244,6 +244,7 @@ private fun VendorActionButton(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // Necesario para TimePicker
 @Composable
 private fun EditableRestaurantDetailsSection(
     name: String, onNameChange: (String) -> Unit,
@@ -251,8 +252,8 @@ private fun EditableRestaurantDetailsSection(
     address: String, onAddressChange: (String) -> Unit,
     phone: String, onPhoneChange: (String) -> Unit,
     email: String, onEmailChange: (String) -> Unit,
-    openingTime: String, onOpeningTimeChange: (String) -> Unit,
-    closingTime: String, onClosingTimeChange: (String) -> Unit,
+    openingTime: String, onOpeningTimeChange: (String) -> Unit, // Ahora es HH:mm
+    closingTime: String, onClosingTimeChange: (String) -> Unit, // Ahora es HH:mm
     opensWeekends: Boolean, onOpensWeekendsChange: (Boolean) -> Unit,
     opensHolidays: Boolean, onOpensHolidaysChange: (Boolean) -> Unit,
     isActive: Boolean, onIsActiveChange: (Boolean) -> Unit
@@ -301,18 +302,65 @@ private fun EditableRestaurantDetailsSection(
             label = { Text("Email") },
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
-        OutlinedTextField(
-            value = openingTime,
-            onValueChange = onOpeningTimeChange,
-            label = { Text("Opening Time (HH:MM)") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+
+        // --- Time Pickers para Opening Time y Closing Time ---
+        // El formato de la UI ya es HH:mm, no necesitamos un formateador aquí para mostrarlo.
+        // Pero sí para parsear la hora inicial del TimePicker.
+        val uiTimeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
+
+        // Opening Time
+        var showOpeningTimePicker by remember { mutableStateOf(false) }
+        TimeInputRow(
+            label = "Opening Time",
+            time = openingTime, // openingTime ya viene en HH:mm del ViewModel
+            onClick = { showOpeningTimePicker = true }
         )
-        OutlinedTextField(
-            value = closingTime,
-            onValueChange = onClosingTimeChange,
-            label = { Text("Closing Time (HH:MM)") },
-            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        if (showOpeningTimePicker) {
+            // Intentar parsear la hora actual para inicializar el TimePicker
+            val initialOpeningLocalTime = try {
+                LocalTime.parse(openingTime, uiTimeFormatter)
+            } catch (e: DateTimeParseException) {
+                LocalTime.of(0, 0) // Valor por defecto si no se puede parsear
+            }
+
+            TimePickerDialog(
+                onDismissRequest = { showOpeningTimePicker = false },
+                onConfirm = { hour, minute ->
+                    val newTime = LocalTime.of(hour, minute).format(uiTimeFormatter)
+                    onOpeningTimeChange(newTime)
+                    showOpeningTimePicker = false
+                },
+                initialHour = initialOpeningLocalTime.hour,
+                initialMinute = initialOpeningLocalTime.minute
+            )
+        }
+
+        // Closing Time
+        var showClosingTimePicker by remember { mutableStateOf(false) }
+        TimeInputRow(
+            label = "Closing Time",
+            time = closingTime, // closingTime ya viene en HH:mm del ViewModel
+            onClick = { showClosingTimePicker = true }
         )
+        if (showClosingTimePicker) {
+            val initialClosingLocalTime = try {
+                LocalTime.parse(closingTime, uiTimeFormatter)
+            } catch (e: DateTimeParseException) {
+                LocalTime.of(0, 0)
+            }
+
+            TimePickerDialog(
+                onDismissRequest = { showClosingTimePicker = false },
+                onConfirm = { hour, minute ->
+                    val newTime = LocalTime.of(hour, minute).format(uiTimeFormatter)
+                    onClosingTimeChange(newTime)
+                    showClosingTimePicker = false
+                },
+                initialHour = initialClosingLocalTime.hour,
+                initialMinute = initialClosingLocalTime.minute
+            )
+        }
+        // --- Fin de Time Pickers ---
 
         // Campos booleanos editables con Switch
         Row(
@@ -340,4 +388,61 @@ private fun EditableRestaurantDetailsSection(
             Switch(checked = isActive, onCheckedChange = onIsActiveChange)
         }
     }
+}
+
+@Composable
+private fun TimeInputRow(
+    label: String,
+    time: String, // Este 'time' ya debería venir en HH:mm del ViewModel
+    onClick: () -> Unit
+) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(label, style = MaterialTheme.typography.bodyLarge)
+            Text(time.ifBlank { "Select Time" }, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    onDismissRequest: () -> Unit,
+    onConfirm: (hour: Int, minute: Int) -> Unit,
+    initialHour: Int,
+    initialMinute: Int
+) {
+    val timeState = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute
+    )
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text("Select Time") },
+        text = {
+            TimePicker(state = timeState)
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(timeState.hour, timeState.minute)
+            }) {
+                Text("OK")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismissRequest) {
+                Text("Cancel")
+            }
+        }
+    )
 }
