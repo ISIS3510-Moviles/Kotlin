@@ -23,5 +23,5 @@ import com.example.campusbites.data.local.entity.ReservationEntity
 abstract class AppDatabase : RoomDatabase() {
     abstract fun reservationDao(): ReservationDao
     abstract fun draftAlertDao(): DraftAlertDao
-    abstract fun pendingProductActionDao(): PendingProductActionDao // Nuevo
+    abstract fun pendingProductActionDao(): PendingProductActionDao
 }

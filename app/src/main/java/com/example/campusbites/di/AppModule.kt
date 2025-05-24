@@ -11,6 +11,8 @@ import androidx.room.Room
 import com.example.campusbites.data.cache.InMemoryReviewCache
 import com.example.campusbites.data.cache.RestaurantLruCache
 import com.example.campusbites.data.cache.SearchCache
+import com.example.campusbites.data.local.LocalRestaurantDataSource
+import com.example.campusbites.data.local.RealmRestaurantDataSource
 import com.example.campusbites.data.local.dao.DraftAlertDao
 import com.example.campusbites.data.local.dao.PendingProductActionDao
 import com.example.campusbites.data.local.dao.ReservationDao
@@ -41,8 +43,8 @@ import com.example.campusbites.data.repository.LocationRepositoryImpl
 import com.example.campusbites.data.repository.ProductRepositoryImpl
 import com.example.campusbites.data.repository.RecommendationRepositoryImpl
 import com.example.campusbites.data.repository.ReservationRepositoryImpl
-import com.example.campusbites.data.repository.RestaurantRepositoryImpl
 import com.example.campusbites.data.repository.UserRepositoryImpl
+import com.example.campusbites.data.repository.impl.RestaurantRepositoryImpl
 import com.example.campusbites.domain.repository.AlertRepository
 import com.example.campusbites.domain.repository.AuthRepository
 import com.example.campusbites.domain.repository.CommentRepository
@@ -70,6 +72,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import com.google.gson.Gson
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -92,6 +95,12 @@ object AppModule {
         @ApplicationContext context: Context
     ): RestaurantPreferencesRepository {
         return RestaurantPreferencesRepository(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
     }
 
     @Provides
@@ -288,8 +297,12 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideRestaurantRepository(apiService: ApiService): RestaurantRepository {
-        return RestaurantRepositoryImpl(apiService)
+    fun provideRestaurantRepository(
+        apiService: ApiService,
+        localRestaurantDataSource: LocalRestaurantDataSource,
+        connectivityMonitor: ConnectivityMonitor
+    ): RestaurantRepository {
+        return RestaurantRepositoryImpl(apiService, localRestaurantDataSource, connectivityMonitor)
     }
 
     @Provides
@@ -354,6 +367,15 @@ object AppModule {
     @Singleton
     fun provideLocationRepository(fusedLocationProviderClient: FusedLocationProviderClient): LocationRepository {
         return LocationRepositoryImpl(fusedLocationProviderClient)
+    }
+
+    @Provides
+    @Singleton
+    fun provideLocalRestaurantDataSource(
+        realmConfig: RealmConfig,
+        gson: Gson
+    ): LocalRestaurantDataSource {
+        return RealmRestaurantDataSource(realmConfig, gson)
     }
 
     @Provides

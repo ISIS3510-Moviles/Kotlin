@@ -133,10 +133,14 @@ fun VendorScreen(
                         }
                     )
                     VendorActionButton(
-                        text = "Edit Restaurant Info (Not Implemented)",
+                        text = "Edit Restaurant Info",
                         icon = Icons.Filled.Edit,
-                        onClick = { /* TODO */ },
-                        enabled = false
+                        onClick = {
+                            restaurant?.id?.let { id ->
+                                navController.navigate(NavigationRoutes.createEditRestaurantRoute(id))
+                            }
+                        },
+                        enabled = true
                     )
                     VendorActionButton(
                         text = "Restaurant Settings (Not Implemented)",
