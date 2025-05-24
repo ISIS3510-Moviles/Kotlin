@@ -1,16 +1,14 @@
 package com.example.campusbites.presentation.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -22,6 +20,7 @@ import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.presentation.navigation.NavigationRoutes
 import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 import com.example.campusbites.presentation.ui.viewmodels.VendorViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,10 +37,51 @@ fun VendorScreen(
     val errorMessage by vendorViewModel.errorMessage.collectAsState()
     val isNetworkAvailable by vendorViewModel.isNetworkAvailable.collectAsState()
 
+    // Estados para los campos editables
+    val editableName by vendorViewModel.editableName.collectAsState()
+    val editableDescription by vendorViewModel.editableDescription.collectAsState()
+    val editableAddress by vendorViewModel.editableAddress.collectAsState()
+    val editablePhone by vendorViewModel.editablePhone.collectAsState()
+    val editableEmail by vendorViewModel.editableEmail.collectAsState()
+    val editableOpeningTime by vendorViewModel.editableOpeningTime.collectAsState()
+    val editableClosingTime by vendorViewModel.editableClosingTime.collectAsState()
+    val editableOpensWeekends by vendorViewModel.editableOpensWeekends.collectAsState()
+    val editableOpensHolidays by vendorViewModel.editableOpensHolidays.collectAsState()
+    val editableIsActive by vendorViewModel.editableIsActive.collectAsState()
+
+    // Estados para el proceso de guardado
+    val isSaving by vendorViewModel.isSaving.collectAsState()
+    val saveSuccess by vendorViewModel.saveSuccess.collectAsState()
+    val saveErrorMessage by vendorViewModel.saveErrorMessage.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(vendorRestaurantId) {
         if (!vendorRestaurantId.isNullOrBlank()) {
             vendorViewModel.loadVendorRestaurant(vendorRestaurantId)
+        }
+    }
+
+    // Mostrar Snackbar para el estado de guardado
+    LaunchedEffect(saveSuccess, saveErrorMessage) {
+        when {
+            saveSuccess == true -> {
+                snackbarHostState.showSnackbar(
+                    message = "Changes saved successfully!",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Short
+                )
+                vendorViewModel.resetSaveStatus()
+            }
+            saveSuccess == false -> {
+                snackbarHostState.showSnackbar(
+                    message = saveErrorMessage ?: "Failed to save changes.",
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Long
+                )
+                vendorViewModel.resetSaveStatus()
+            }
         }
     }
 
@@ -59,12 +99,14 @@ fun VendorScreen(
                 },
             )
         },
+        snackbarHost = { SnackbarHost(snackbarHostState) }, // Añadir SnackbarHost
         content = { innerPadding ->
             Column(
                 modifier = Modifier
                     .padding(innerPadding)
                     .fillMaxSize()
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()), // Habilitar scroll
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (isLoading) {
@@ -81,7 +123,6 @@ fun VendorScreen(
                             modifier = Modifier.padding(16.dp)
                         )
                     }
-                    // Opción de reintentar si el error no es por falta de ID de vendor
                     if (errorMessage != "Vendor restaurant ID is missing." &&
                         errorMessage != "You are not currently assigned as a vendor to any restaurant.") {
                         Spacer(modifier = Modifier.height(16.dp))
@@ -94,7 +135,6 @@ fun VendorScreen(
                         }
                     }
                 } else if (restaurant == null && !vendorRestaurantId.isNullOrBlank() && !isNetworkAvailable) {
-                    // Este caso es cuando no hay caché y no hay red
                     Card(
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
@@ -106,10 +146,51 @@ fun VendorScreen(
                         )
                     }
                 } else if (restaurant != null) {
-                    RestaurantDetailsSection(restaurant = restaurant!!)
+                    // Sección de edición de detalles del restaurante
+                    EditableRestaurantDetailsSection(
+                        name = editableName,
+                        onNameChange = { vendorViewModel.editableName.value = it },
+                        description = editableDescription,
+                        onDescriptionChange = { vendorViewModel.editableDescription.value = it },
+                        address = editableAddress,
+                        onAddressChange = { vendorViewModel.editableAddress.value = it },
+                        phone = editablePhone,
+                        onPhoneChange = { vendorViewModel.editablePhone.value = it },
+                        email = editableEmail,
+                        onEmailChange = { vendorViewModel.editableEmail.value = it },
+                        openingTime = editableOpeningTime,
+                        onOpeningTimeChange = { vendorViewModel.editableOpeningTime.value = it },
+                        closingTime = editableClosingTime,
+                        onClosingTimeChange = { vendorViewModel.editableClosingTime.value = it },
+                        opensWeekends = editableOpensWeekends,
+                        onOpensWeekendsChange = { vendorViewModel.editableOpensWeekends.value = it },
+                        opensHolidays = editableOpensHolidays,
+                        onOpensHolidaysChange = { vendorViewModel.editableOpensHolidays.value = it },
+                        isActive = editableIsActive,
+                        onIsActiveChange = { vendorViewModel.editableIsActive.value = it }
+                    )
 
                     Spacer(modifier = Modifier.height(24.dp))
 
+                    // Botón de Guardar Cambios
+                    Button(
+                        onClick = { vendorViewModel.saveChanges() },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSaving // Deshabilitar mientras se guarda
+                    ) {
+                        if (isSaving) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp),
+                                color = MaterialTheme.colorScheme.onPrimary
+                            )
+                        } else {
+                            Text("Save Changes")
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(24.dp))
+
+                    // Botones de acción adicionales
                     VendorActionButton(
                         text = "Manage Products",
                         icon = Icons.Filled.Edit,
@@ -124,7 +205,7 @@ fun VendorScreen(
                             navController.navigate(NavigationRoutes.VENDOR_RESERVATIONS)
                         }
                     )
-                    } else if (vendorRestaurantId.isNullOrBlank()){
+                } else if (vendorRestaurantId.isNullOrBlank()){
                     Text(
                         "You are not currently assigned as a vendor to any restaurant.",
                         style = MaterialTheme.typography.bodyMedium,
@@ -164,85 +245,99 @@ private fun VendorActionButton(
 }
 
 @Composable
-private fun RestaurantDetailsSection(restaurant: RestaurantDomain) {
+private fun EditableRestaurantDetailsSection(
+    name: String, onNameChange: (String) -> Unit,
+    description: String, onDescriptionChange: (String) -> Unit,
+    address: String, onAddressChange: (String) -> Unit,
+    phone: String, onPhoneChange: (String) -> Unit,
+    email: String, onEmailChange: (String) -> Unit,
+    openingTime: String, onOpeningTimeChange: (String) -> Unit,
+    closingTime: String, onClosingTimeChange: (String) -> Unit,
+    opensWeekends: Boolean, onOpensWeekendsChange: (Boolean) -> Unit,
+    opensHolidays: Boolean, onOpensHolidaysChange: (Boolean) -> Unit,
+    isActive: Boolean, onIsActiveChange: (Boolean) -> Unit
+) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = restaurant.name,
-            style = MaterialTheme.typography.headlineMedium,
+            text = "Restaurant Details",
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = restaurant.description,
-            style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            modifier = Modifier.align(Alignment.Start)
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Sección de Contacto
-        Text(
-            text = "Contact Information",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.align(Alignment.Start)
+        // Campos de texto editables
+        OutlinedTextField(
+            value = name,
+            onValueChange = onNameChange,
+            label = { Text("Restaurant Name") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
-        Spacer(modifier = Modifier.height(8.dp))
-        DetailRow(label = "Address:", value = restaurant.address)
-        DetailRow(label = "Phone:", value = restaurant.phone)
-        DetailRow(label = "Email:", value = restaurant.email)
-        Spacer(modifier = Modifier.height(16.dp))
+        OutlinedTextField(
+            value = description,
+            onValueChange = onDescriptionChange,
+            label = { Text("Description") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            minLines = 3
+        )
+        OutlinedTextField(
+            value = address,
+            onValueChange = onAddressChange,
+            label = { Text("Address") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        )
+        OutlinedTextField(
+            value = phone,
+            onValueChange = onPhoneChange,
+            label = { Text("Phone Number") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        )
+        OutlinedTextField(
+            value = email,
+            onValueChange = onEmailChange,
+            label = { Text("Email") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        )
+        OutlinedTextField(
+            value = openingTime,
+            onValueChange = onOpeningTimeChange,
+            label = { Text("Opening Time (HH:MM)") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        )
+        OutlinedTextField(
+            value = closingTime,
+            onValueChange = onClosingTimeChange,
+            label = { Text("Closing Time (HH:MM)") },
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
+        )
 
-        // Sección de Horarios
-        Text(
-            text = "Operating Hours",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.align(Alignment.Start)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        DetailRow(label = "Opening Time:", value = restaurant.openingTime)
-        DetailRow(label = "Closing Time:", value = restaurant.closingTime)
-        DetailRow(label = "Opens Weekends:", value = if (restaurant.opensWeekends) "Yes" else "No")
-        DetailRow(label = "Opens Holidays:", value = if (restaurant.opensHolidays) "Yes" else "No")
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Sección de Estado y Rating
-        Text(
-            text = "Status & Rating",
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.align(Alignment.Start)
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        DetailRow(label = "Active:", value = if (restaurant.isActive) "Yes" else "No")
-        DetailRow(label = "Rating:", value = String.format("%.1f", restaurant.rating))
-        Spacer(modifier = Modifier.height(16.dp))
+        // Campos booleanos editables con Switch
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Opens Weekends", style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = opensWeekends, onCheckedChange = onOpensWeekendsChange)
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Opens Holidays", style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = opensHolidays, onCheckedChange = onOpensHolidaysChange)
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Is Active", style = MaterialTheme.typography.bodyLarge)
+            Switch(checked = isActive, onCheckedChange = onIsActiveChange)
+        }
     }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.weight(0.4f) // Ocupa el 40% del ancho
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            textAlign = TextAlign.End,
-            modifier = Modifier.weight(0.6f) // Ocupa el 60% del ancho
-        )
-    }
-    Spacer(modifier = Modifier.height(4.dp)) // Espacio entre filas de detalles
 }
