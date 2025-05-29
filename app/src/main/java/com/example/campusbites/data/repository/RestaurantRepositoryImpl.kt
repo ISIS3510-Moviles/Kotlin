@@ -7,9 +7,11 @@ import com.example.campusbites.data.dto.UpdateRestaurantDTO
 import com.example.campusbites.data.network.ApiService
 import com.example.campusbites.domain.repository.RestaurantRepository
 import jakarta.inject.Inject
+import com.example.campusbites.data.local.LocalRestaurantDataSource
 
 class RestaurantRepositoryImpl @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val localRestaurantDataSource: LocalRestaurantDataSource
 ): RestaurantRepository {
 
     override suspend fun getRestaurants(): List<RestaurantDTO> {
@@ -19,8 +21,17 @@ class RestaurantRepositoryImpl @Inject constructor(
     override suspend fun updateRestaurant(restaurantId: String, restaurant: UpdateRestaurantDTO): Boolean {
         return try {
             val response = apiService.updateRestaurant(restaurantId, restaurant)
-            response.isSuccessful
+            if (response.isSuccessful) {
+                Log.d("RestaurantRepository", "API updateRestaurant successful for $restaurantId.")
+                true
+            } else {
+                Log.e("RestaurantRepository", "API updateRestaurant failed with code: ${response.code()} for $restaurantId. Saving locally.")
+                localRestaurantDataSource.savePendingUpdate(restaurantId, restaurant)
+                false
+            }
         } catch (e: Exception) {
+            Log.e("RestaurantRepository", "Exception during updateRestaurant for $restaurantId. Saving locally.", e)
+            localRestaurantDataSource.savePendingUpdate(restaurantId, restaurant)
             false
         }
     }
@@ -47,10 +58,7 @@ class RestaurantRepositoryImpl @Inject constructor(
 
     override suspend fun updateRestaurantComments(restaurantId: String, commentsIds: List<String>): Boolean {
         return try {
-            // Usar el DTO específico en lugar de un Map genérico
             val updateDto = UpdateRestaurantCommentsDTO(commentsIds)
-
-            // Llamar a la API para actualizar el restaurante
             val response = apiService.updateRestaurantComments(restaurantId, updateDto)
             response.isSuccessful
         } catch (e: Exception) {
