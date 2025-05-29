@@ -25,26 +25,34 @@ import com.example.campusbites.presentation.ui.components.SearchBar
 fun SearchingScreen(
     query: String,
     modifier: Modifier = Modifier,
-    onRestaurantClick: (String) -> Unit,
+    onRestaurantClick: (String) -> Unit, // No necesita entrySource aquí, se añade en NavGraph
     onFoodClick: (String) -> Unit,
     viewModel: SearchingScreenViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var selectedCategory by remember { mutableStateOf("Food") }
 
-
     LaunchedEffect(query) {
         if (query.isNotBlank()) {
-            viewModel.performSearch(query)
+            viewModel.performSearch(query) // El ViewModel usa el query de su uiState.searchQuery
         }
     }
+    // Sincronizar el query del ViewModel con el que llega como parámetro si es diferente
+    LaunchedEffect(query, uiState.searchQuery) {
+        if (query != uiState.searchQuery) {
+            viewModel.updateSearchQuery(query) // Actualiza el query en el ViewModel
+            if (query.isNotBlank()) {
+                viewModel.performSearch(query) // Y realiza la búsqueda
+            }
+        }
+    }
+
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
         Spacer(modifier = Modifier.height(16.dp))
 
         Row(
@@ -57,14 +65,13 @@ fun SearchingScreen(
                 query = uiState.searchQuery,
                 onQueryChange = { newQuery ->
                     viewModel.updateSearchQuery(newQuery)
-                                },
-                onSearch = { newQuery -> viewModel.performSearch(newQuery) },
+                },
+                onSearch = { newQuery -> viewModel.performSearch(newQuery) }, // Búsqueda al presionar enter
                 modifier = Modifier.weight(1f),
             )
         }
 
         Spacer(modifier = Modifier.height(16.dp))
-
 
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -110,7 +117,7 @@ fun SearchingScreen(
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         } else {
-                            Text("No products found matching '$query'", style = MaterialTheme.typography.bodyLarge)
+                            Text("No products found matching '${uiState.searchQuery}'", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                     "Restaurants" -> {
@@ -118,12 +125,15 @@ fun SearchingScreen(
                             uiState.filteredRestaurants.forEach { restaurant ->
                                 RestaurantCard(
                                     restaurant = restaurant,
-                                    onRestaurantClick = { onRestaurantClick(restaurant.id) }
+                                    onRestaurantClick = {
+                                        // Aquí onRestaurantClick es (String) -> Unit, la lógica de entrySource está en NavGraph
+                                        onRestaurantClick(restaurant.id)
+                                    }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
                             }
                         } else {
-                            Text("No restaurants found matching '$query'", style = MaterialTheme.typography.bodyLarge)
+                            Text("No restaurants found matching '${uiState.searchQuery}'", style = MaterialTheme.typography.bodyLarge)
                         }
                     }
                 }
