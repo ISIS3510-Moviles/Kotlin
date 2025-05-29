@@ -41,12 +41,12 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(text = "Perfil") },
+                title = { Text(text = "Profile") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "Regresar"
+                            contentDescription = "Return"
                         )
                     }
                 },
@@ -103,7 +103,7 @@ fun ProfileScreen(
                                 }
                             } else {
                                 Text(
-                                    text = "Usuario Estándar",
+                                    text = "Standard User",
                                     style = MaterialTheme.typography.labelLarge,
                                     modifier = Modifier.padding(top = 8.dp),
                                     color = MaterialTheme.colorScheme.onSurfaceVariant

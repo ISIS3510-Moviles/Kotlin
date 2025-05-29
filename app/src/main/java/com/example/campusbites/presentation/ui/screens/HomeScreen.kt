@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -144,21 +145,21 @@ fun HomeScreen(
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Bienvenido a Campus Bites",
+                        text = "Welcome to Campus Bites",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Para ofrecerte la mejor experiencia, necesitamos permiso para enviarte notificaciones sobre promociones, actualizaciones de pedidos y más.",
+                        text = "To offer you the best experience, we need permission to send you notifications about promotions, order updates, and more.",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
                     Spacer(modifier = Modifier.height(24.dp))
                     Button(onClick = { notificationPermissionState.launchPermissionRequest() }) {
-                        Text("Permitir notificaciones")
+                        Text("Allow notifications")
                     }
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(
@@ -202,7 +203,7 @@ fun HomeScreen(
                         title = {
                             Column {
                                 Text(
-                                    text = user?.name ?: "Bienvenido",
+                                    text = user?.name ?: "Welcome",
                                     style = MaterialTheme.typography.titleMedium
                                 )
                                 user?.institution?.let {
@@ -236,9 +237,10 @@ fun HomeScreen(
                                     navController.navigate(NavigationRoutes.VENDOR_SCREEN)
                                 }) {
                                     Icon(
-                                        imageVector = Icons.Filled.Email,
+                                        painter = painterResource(id = R.drawable.ic_restaurant),
                                         contentDescription = "Vendor Section"
                                     )
+
                                 }
                                 IconButton(onClick = {
                                     navController.navigate(NavigationRoutes.VENDOR_RESERVATIONS)
