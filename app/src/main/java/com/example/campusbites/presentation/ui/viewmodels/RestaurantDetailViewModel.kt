@@ -308,22 +308,11 @@ class RestaurantDetailViewModel @Inject constructor(
     }
 
     fun createReview(comment: CommentDomain) {
-        viewModelScope.launch { // Usar Dispatchers.IO si la operación es de red/DB
-            if (!isOnline.value) {
-                // TODO: Implementar guardado de reviews offline si se desea
-                _uiEventFlow.emit(UiEvent.ShowMessage("You are offline. Review cannot be submitted now."))
-                Log.w("RestaurantDetailVM", "Offline. Review submission for ${comment.restaurantDomain?.id} skipped.")
-                return@launch
-            }
+        viewModelScope.launch(Dispatchers.IO) {
             try {
                 val created = createCommentUseCase(comment)
-                // El CommentRepository debería actualizar el InMemoryReviewCache,
-                // lo que debería refrescar la lista de reviews observada.
-                _uiEventFlow.emit(UiEvent.ShowMessage("Review submitted successfully!"))
-                Log.d("RestaurantDetailVM", "Review created: ${created.id}")
             } catch (e: Exception) {
                 Log.e("RestaurantDetailViewModel", "Error creating review: ${e.message}")
-                _uiEventFlow.emit(UiEvent.ShowMessage("Failed to submit review."))
             }
         }
     }
