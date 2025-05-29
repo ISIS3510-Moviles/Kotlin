@@ -1,6 +1,6 @@
 [versions]
 accompanistPermissions = "0.37.2"
-agp = "8.9.2"
+agp = "8.9.1"
 androidxCredentials = "1.0.0"
 androidxCredentialsVersion = "1.5.0"
 coilCompose = "2.7.0"
