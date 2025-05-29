@@ -31,11 +31,11 @@ class RealmConfig @Inject constructor() {
                     PendingFavoriteActionRealmModel::class,
                     PendingReservationRealmModel::class,
                     PendingCompletionRealmModel::class,
-                    PendingRestaurantUpdateRealmModel::class
+                    PendingRestaurantUpdateRealmModel::class // ¡AÑADIR AQUÍ!
                 )
             )
                 .schemaVersion(REALM_VERSION)
-                .deleteRealmIfMigrationNeeded()
+                .deleteRealmIfMigrationNeeded() // Considera una estrategia de migración real para producción
                 .build()
 
             val realmInstance = Realm.open(config)
