@@ -64,7 +64,7 @@ import com.google.firebase.ktx.Firebase
 @Composable
 fun HomeScreen(
     navController: NavHostController,
-    onRestaurantClick: (String) -> Unit,
+    onRestaurantClick: (restaurantId: String, entrySource: String) -> Unit, // Modificado
     onIngredientClick: (IngredientDomain) -> Unit,
     onProductClick: (String) -> Unit,
     onSearch: (String) -> Unit,
@@ -72,29 +72,21 @@ fun HomeScreen(
 ) {
     Log.d("UI", "HomeScreen recomposed")
 
-    // Verificación para Android 13 (API 33) o superior donde se requiere permiso específico para notificaciones
     val notificationPermission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         Manifest.permission.POST_NOTIFICATIONS
     } else {
-        // En versiones anteriores no se necesita permiso explícito para notificaciones
         null
     }
 
-    // Estado para controlar si se debe mostrar el contenido principal después de manejar los permisos
     var showMainContent by remember { mutableStateOf(notificationPermission == null) }
 
-    // Solo solicitar permiso de notificaciones en Android 13 o superior
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !showMainContent) {
         val notificationPermissionState = rememberPermissionState(permission = notificationPermission!!)
-
-        // Verificar estado de permiso y mostrar la UI correspondiente
         when {
             notificationPermissionState.status.isGranted -> {
-                // Permiso concedido, mostrar contenido principal
                 showMainContent = true
             }
             notificationPermissionState.status.shouldShowRationale -> {
-                // Mostrar explicación de por qué se necesita el permiso
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -108,34 +100,26 @@ fun HomeScreen(
                         modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Text(
                         text = "Notification permissions",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Text(
                         text = "Notifications are important for the proper functioning of the app. Without this permission, some features may not be available.",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
-
                     Spacer(modifier = Modifier.height(24.dp))
-
                     Button(onClick = { notificationPermissionState.launchPermissionRequest() },
                         modifier = Modifier.padding(top = 8.dp)) {
                         Text("Grant Permission")
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Button(
                         onClick = { showMainContent = true },
                         modifier = Modifier.padding(top = 8.dp)
@@ -145,7 +129,6 @@ fun HomeScreen(
                 }
             }
             else -> {
-                // Primera vez que se solicita el permiso
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -159,33 +142,25 @@ fun HomeScreen(
                         modifier = Modifier.size(72.dp),
                         tint = MaterialTheme.colorScheme.primary
                     )
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Text(
                         text = "Bienvenido a Campus Bites",
                         style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center
                     )
-
                     Spacer(modifier = Modifier.height(8.dp))
-
                     Text(
                         text = "Para ofrecerte la mejor experiencia, necesitamos permiso para enviarte notificaciones sobre promociones, actualizaciones de pedidos y más.",
                         style = MaterialTheme.typography.bodyLarge,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.padding(horizontal = 16.dp)
                     )
-
                     Spacer(modifier = Modifier.height(24.dp))
-
                     Button(onClick = { notificationPermissionState.launchPermissionRequest() }) {
                         Text("Permitir notificaciones")
                     }
-
                     Spacer(modifier = Modifier.height(16.dp))
-
                     Button(
                         onClick = { showMainContent = true },
                         modifier = Modifier.padding(top = 8.dp)
@@ -197,9 +172,7 @@ fun HomeScreen(
         }
     }
 
-    // Mostrar el contenido principal si no se necesita permiso o si el usuario ya tomó una decisión
     if (showMainContent) {
-        // Solicitar permiso de ubicación si es necesario
         val locationPermissionState = rememberPermissionState(permission = Manifest.permission.ACCESS_FINE_LOCATION)
 
         if (!locationPermissionState.status.isGranted) {
@@ -259,8 +232,6 @@ fun HomeScreen(
                             }
 
                             if (user?.role == "vendor"){
-
-
                                 IconButton(onClick = {
                                     navController.navigate(NavigationRoutes.VENDOR_SCREEN)
                                 }) {
@@ -269,7 +240,6 @@ fun HomeScreen(
                                         contentDescription = "Vendor Section"
                                     )
                                 }
-
                                 IconButton(onClick = {
                                     navController.navigate(NavigationRoutes.VENDOR_RESERVATIONS)
                                 }) {
@@ -293,9 +263,7 @@ fun HomeScreen(
                                     param("user_id", user?.id ?: "anonymous")
                                     param("user_institution", user?.institution?.name ?: "none")
                                 }
-
                                 Log.i("Analytics", "Community Updates button clicked")
-
                                 navController.navigate(NavigationRoutes.ALERTS_SCREEN)
                             }) {
                                 Icon(
@@ -328,7 +296,7 @@ fun HomeScreen(
                                 SearchBar(
                                     query = uiState.searchQuery,
                                     onQueryChange = viewModel::onSearchQueryChanged,
-                                    onSearch = onSearch,
+                                    onSearch = onSearch, // Cuando se presiona "buscar" en el teclado
                                     modifier = Modifier.padding(horizontal = 16.dp)
                                 )
 
@@ -362,15 +330,12 @@ fun HomeScreen(
                                             color = MaterialTheme.colorScheme.primary,
                                             modifier = Modifier.padding(start = 16.dp)
                                         )
-
                                         Text(
                                             text = "Explore our complete ingredient selection",
                                             style = MaterialTheme.typography.bodySmall,
                                             modifier = Modifier.padding(start = 16.dp, top = 4.dp, bottom = 4.dp)
                                         )
-
                                         Spacer(modifier = Modifier.height(8.dp))
-
                                         IngredientGrid(
                                             ingredients = uiState.ingredients,
                                             onIngredientClick = onIngredientClick,
@@ -384,8 +349,8 @@ fun HomeScreen(
                                         name = stringResource(R.string.near_to_you),
                                         description = stringResource(R.string.the_nearest_restaurants_waiting_for_you),
                                         restaurants = uiState.restaurants,
-                                        onRestaurantClick = { restaurantId ->
-                                            navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
+                                        onRestaurantClick = { restaurantId -> // Modificado para pasar entrySource
+                                            onRestaurantClick(restaurantId, "home_list_nearby")
                                         },
                                         modifier = Modifier.padding(horizontal = 16.dp, vertical= 8.dp)
                                     )
@@ -415,7 +380,14 @@ fun HomeScreen(
 
                                 if (uiState.recommendationRestaurants.isNotEmpty()) {
                                     Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
-                                        RestaurantListRow("Suggested", "The ones according to your preferences", uiState.recommendationRestaurants, onRestaurantClick)
+                                        RestaurantListRow( // Modificado
+                                            name = "Suggested",
+                                            description = "The ones according to your preferences",
+                                            restaurants = uiState.recommendationRestaurants,
+                                            onRestaurantClick = { restaurantId ->
+                                                onRestaurantClick(restaurantId, "home_list_suggested")
+                                            }
+                                        )
                                     }
                                 }
 
