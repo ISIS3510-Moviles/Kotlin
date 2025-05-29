@@ -12,7 +12,7 @@ import com.example.campusbites.domain.model.RecommendationRestaurantDomain
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.model.UserDomain
 import com.example.campusbites.domain.repository.AuthRepository
-import com.example.campusbites.domain.usecase.GetRecommendationsUseCase
+import com.example.campusbites.domain.usecase.recommendation.GetRecommendationsUseCase
 import com.example.campusbites.domain.usecase.ingredient.IncrementIngredientClicksUseCase
 import com.example.campusbites.domain.usecase.product.GetIngredientsUseCase
 import com.example.campusbites.domain.usecase.product.GetProductsUseCase

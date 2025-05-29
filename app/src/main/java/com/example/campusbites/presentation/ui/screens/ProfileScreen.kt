@@ -192,7 +192,7 @@ fun ProfileScreen(
                             Button(
                                 onClick = {
                                     user?.id?.let { userId ->
-                                        profileViewModel.updateUserRole(userId, "analyst")
+                                        profileViewModel.updateUserRole("analyst")
                                         Toast.makeText(context, "Attempting to upgrade to Analyst", Toast.LENGTH_SHORT).show()
                                     } ?: run {
                                         Toast.makeText(context, "User ID not available", Toast.LENGTH_SHORT).show()
@@ -205,7 +205,7 @@ fun ProfileScreen(
                             Button(
                                 onClick = {
                                     user?.id?.let { userId ->
-                                        profileViewModel.updateUserRole(userId, "vendor")
+                                        profileViewModel.updateUserRole("vendor")
                                         Toast.makeText(context, "Attempting to upgrade to Vendor", Toast.LENGTH_SHORT).show()
                                     } ?: run {
                                         Toast.makeText(context, "User ID not available", Toast.LENGTH_SHORT).show()

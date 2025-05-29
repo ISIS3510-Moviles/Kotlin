@@ -8,7 +8,7 @@ data class UserDomain(
     val name: String,
     val phone: String,
     val email: String,
-    val role: String,
+    var role: String,
     val isPremium: Boolean,
     val badgesIds: List<String>,
     val schedulesIds: List<String>,
