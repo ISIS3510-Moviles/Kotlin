@@ -72,6 +72,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.analytics
+import com.google.gson.Gson
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -96,6 +97,11 @@ object AppModule {
         return RestaurantPreferencesRepository(context)
     }
 
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
+    }
 
     @Provides
     @Singleton
@@ -293,9 +299,8 @@ object AppModule {
     @Singleton
     fun provideRestaurantRepository(
         apiService: ApiService,
-        localRestaurantDataSource: LocalRestaurantDataSource
     ): RestaurantRepository {
-        return RestaurantRepositoryImpl(apiService, localRestaurantDataSource)
+        return RestaurantRepositoryImpl(apiService)
     }
 
     @Provides
@@ -366,8 +371,9 @@ object AppModule {
     @Singleton
     fun provideLocalRestaurantDataSource(
         realmConfig: RealmConfig,
+        gson: Gson
     ): LocalRestaurantDataSource {
-        return RealmRestaurantDataSource(realmConfig)
+        return RealmRestaurantDataSource(realmConfig, gson)
     }
 
     @Provides

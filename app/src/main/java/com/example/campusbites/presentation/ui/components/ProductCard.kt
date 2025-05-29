@@ -101,12 +101,10 @@ fun ProductCard(
 
                 Spacer(modifier = Modifier.height(8.dp))
 
-                val tagName = product.foodTags.firstOrNull()?.name ?: "No tag"
                 TagChip(
-                    tagName,
+                    product.foodTags.first().name,
                     modifier = Modifier.padding(top = 2.dp)
                 )
-
             }
         }
     }
