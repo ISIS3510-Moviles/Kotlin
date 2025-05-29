@@ -18,6 +18,8 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.serialization.MissingFieldException
+import kotlinx.serialization.json.Json
 import java.util.concurrent.ConcurrentHashMap
 import javax.inject.Inject
 
@@ -38,11 +40,17 @@ class AlertRepositoryImpl @Inject constructor(
                 async {
                     userDtoCache[id] ?: try {
                         Log.d("AlertRepoImpl", "Fetching UserDTO for id: $id")
-                        val fetchedUser = apiService.getUserById(id)
-                        fetchedUser?.let { userDtoCache[id] = it }
-                        fetchedUser
-                    } catch (e: Exception) {
-                        Log.e("AlertRepoImpl", "Failed to fetch UserDTO for id: $id. Error: ${e.message}", e)
+
+                        val response = apiService.getUserByIdRaw(id)
+                        val json = response.body()?.string()
+
+                        Log.d("AlertRepoImpl", "Raw response: $json")
+
+                        val user = Json.decodeFromString<UserDTO>(json ?: "")
+                        userDtoCache[id] = user
+                        user
+                    } catch (e: MissingFieldException) {
+                        Log.e("AlertRepoImpl", "Missing field: ${e.missingFields}", e)
                         null
                     }
                 }
