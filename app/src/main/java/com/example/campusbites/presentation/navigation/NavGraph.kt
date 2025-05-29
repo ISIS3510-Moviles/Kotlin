@@ -4,7 +4,6 @@ import android.util.Log
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.navigation.NavHostController // Importa NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -16,8 +15,8 @@ import com.example.campusbites.presentation.ui.screens.DraftAlertsScreen
 import com.example.campusbites.presentation.ui.screens.EditRestaurantScreen
 import com.example.campusbites.presentation.ui.screens.FoodDetailScreen
 import com.example.campusbites.presentation.ui.screens.HomeScreen
-import com.example.campusbites.presentation.ui.screens.ManageProductsScreen
-import com.example.campusbites.presentation.ui.screens.ProductFormScreen
+import com.example.campusbites.presentation.ui.screens.ManageProductsScreen // Nuevo
+import com.example.campusbites.presentation.ui.screens.ProductFormScreen // Nuevo
 import com.example.campusbites.presentation.ui.screens.ProfileScreen
 import com.example.campusbites.presentation.ui.screens.ReservationsScreen
 import com.example.campusbites.presentation.ui.screens.ReservationsVendorScreen
@@ -29,25 +28,23 @@ import com.example.campusbites.presentation.ui.viewmodels.AuthViewModel
 
 object NavigationRoutes {
     const val HOME_SCREEN = "home_screen"
-    // Modificado: Añadir entrySource a la ruta
-    const val RESTAURANT_DETAIL = "restaurant_detail/{id}/{entrySource}"
+    const val RESTAURANT_DETAIL = "restaurant_detail/{id}"
     const val PROFILE_SCREEN = "profile_screen"
     const val ALERTS_SCREEN = "alerts_screen"
     const val SEARCHING_SCREEN = "searching_screen/{query}"
     const val FOOD_DETAIL = "food_detail/{id}"
     const val RESERVATIONS_SCREEN = "reservations_screen"
-    const val VENDOR_SCREEN = "vendor_section_screen"
+    const val VENDOR_SCREEN = "vendor_section_screen" // Esta pantalla se convertirá en "ManageRestaurantScreen"
     const val VENDOR_RESERVATIONS = "vendor_reservations_screen"
-    const val MANAGE_PRODUCTS_SCREEN = "manage_products_screen/{restaurantId}"
-    const val PRODUCT_FORM_SCREEN = "product_form_screen/{restaurantId}?productId={productId}"
+    const val MANAGE_PRODUCTS_SCREEN = "manage_products_screen/{restaurantId}" // Nuevo
+    const val PRODUCT_FORM_SCREEN = "product_form_screen/{restaurantId}?productId={productId}" // Nuevo, productId es opcional
     const val EDIT_RESTAURANT_SCREEN = "edit_restaurant_screen/{restaurantId}"
 
-    // Modificado: Añadir entrySource al método helper
-    fun createRestaurantDetailRoute(id: String, entrySource: String) = "restaurant_detail/$id/$entrySource"
+    fun createRestaurantDetailRoute(id: String) = "restaurant_detail/$id"
     fun createSearchingRoute(query: String) = "searching_screen/$query"
     fun createFoodDetailRoute(id: String) = "food_detail/$id"
-    fun createManageProductsRoute(restaurantId: String) = "manage_products_screen/$restaurantId"
-    fun createProductFormRoute(restaurantId: String, productId: String? = null): String {
+    fun createManageProductsRoute(restaurantId: String) = "manage_products_screen/$restaurantId" // Nuevo
+    fun createProductFormRoute(restaurantId: String, productId: String? = null): String { // Nuevo
         return if (productId != null) {
             "product_form_screen/$restaurantId?productId=$productId"
         } else {
@@ -60,8 +57,9 @@ object NavigationRoutes {
 }
 
 @Composable
-fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = rememberNavController()) { // Añadir NavHostController como parámetro con valor por defecto
-    // val alertsViewModel: AlertsViewModel = hiltViewModel() // No es necesario aquí
+fun NavGraph(authViewModel: AuthViewModel) {
+    val navController = rememberNavController()
+    val alertsViewModel: AlertsViewModel = hiltViewModel() // No es ideal obtenerlo aquí si solo se usa en una pantalla
 
     NavHost(
         navController = navController,
@@ -70,8 +68,8 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
         composable(NavigationRoutes.HOME_SCREEN) {
             HomeScreen(
                 navController = navController,
-                onRestaurantClick = { restaurantId, entrySource -> // Modificado para aceptar entrySource
-                    navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId, entrySource))
+                onRestaurantClick = { restaurantId ->
+                    navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
                 },
                 onIngredientClick = { ingredient ->
                     navController.navigate(NavigationRoutes.createSearchingRoute(ingredient.name))
@@ -80,7 +78,6 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
                     navController.navigate(NavigationRoutes.createFoodDetailRoute(productId))
                 },
                 onSearch = { query ->
-                    // Desde la búsqueda en HomeScreen, la entrada a detalles será desde SearchingScreen
                     navController.navigate(NavigationRoutes.createSearchingRoute(query))
                 },
                 authViewModel = authViewModel
@@ -89,17 +86,11 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
 
         composable(
             route = NavigationRoutes.RESTAURANT_DETAIL,
-            arguments = listOf(
-                navArgument("id") { type = NavType.StringType },
-                navArgument("entrySource") { type = NavType.StringType } // Nuevo argumento
-            )
+            arguments = listOf(navArgument("id") { type = NavType.StringType })
         ) {
             val restaurantId = it.arguments?.getString("id") ?: ""
-            val entrySource = it.arguments?.getString("entrySource") ?: "unknown" // Nuevo
             RestaurantDetailScreen(
-                navController = navController, // Pasar navController
                 restaurantId = restaurantId,
-                entrySource = entrySource, // Pasar entrySource
                 authViewModel = authViewModel,
                 onProductClick = { productId -> navController.navigate(NavigationRoutes.createFoodDetailRoute(productId)) }
             )
@@ -113,10 +104,11 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
             )
         }
 
+        // Vendor Screen ahora lleva a ManageRestaurant, que tendrá el botón para productos
         composable(NavigationRoutes.VENDOR_SCREEN) {
-            VendorScreen(
+            VendorScreen( // Esta pantalla será rediseñada
                 navController = navController,
-                authViewModel = authViewModel
+                authViewModel = authViewModel // Necesitará el authViewModel para obtener el ID del restaurante del vendor
             )
         }
 
@@ -124,7 +116,7 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
             AlertsScreen(
                 navController = navController,
                 onBackClick = { navController.popBackStack() },
-                viewModel = hiltViewModel()
+                viewModel = hiltViewModel() // Mejor obtenerlo aquí
             )
         }
 
@@ -151,8 +143,7 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
             SearchingScreen(
                 query = query,
                 onRestaurantClick = { restaurantId ->
-                    // Desde SearchingScreen, la fuente es "search"
-                    navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId, "search"))
+                    navController.navigate(NavigationRoutes.createRestaurantDetailRoute(restaurantId))
                 },
                 onFoodClick = { foodId ->
                     navController.navigate(NavigationRoutes.createFoodDetailRoute(foodId))
@@ -197,6 +188,7 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
             }
         }
 
+        // --- Nuevas Rutas para Gestión de Productos ---
         composable(
             route = NavigationRoutes.MANAGE_PRODUCTS_SCREEN,
             arguments = listOf(navArgument("restaurantId") { type = NavType.StringType })
@@ -221,7 +213,7 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
             )
         ) { backStackEntry ->
             val restaurantId = backStackEntry.arguments?.getString("restaurantId") ?: ""
-            val productId = backStackEntry.arguments?.getString("productId")
+            val productId = backStackEntry.arguments?.getString("productId") // Puede ser null
             ProductFormScreen(
                 restaurantId = restaurantId,
                 productId = productId,
@@ -229,5 +221,6 @@ fun NavGraph(authViewModel: AuthViewModel, navController: NavHostController = re
                 viewModel = hiltViewModel()
             )
         }
+        // --- Fin Nuevas Rutas ---
     }
 }

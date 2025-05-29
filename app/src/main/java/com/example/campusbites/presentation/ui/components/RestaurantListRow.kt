@@ -25,13 +25,13 @@ fun RestaurantListRow(
     name: String,
     description: String,
     restaurants: List<RestaurantDomain>,
-    onRestaurantClick: (String) -> Unit, // Mantenemos la firma original para onRestaurantClick
-    modifier: Modifier = Modifier,
-    // entrySourcePrefix: String // Ya no es necesario, onRestaurantClick lo manejará en HomeScreen
+    onRestaurantClick: (String) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
     val crashlytics = remember { FirebaseCrashlytics.getInstance() }
 
+    // Registra información sobre el renderizado
     crashlytics.log("Rendering restaurant list: $name with ${restaurants.size} items")
 
     Column(
@@ -72,8 +72,8 @@ fun RestaurantListRow(
                         onRestaurantClick = {
                             scope.launch {
                                 try {
-                                    crashlytics.log("User clicked on restaurant: ${restaurant.id} from list: $name")
-                                    onRestaurantClick(restaurant.id) // El HomeScreen se encargará de pasar el entrySource
+                                    crashlytics.log("User clicked on restaurant: ${restaurant.id}")
+                                    onRestaurantClick(restaurant.id)
                                 } catch (e: Exception) {
                                     Log.e("Error", "Error when clicking restaurant", e)
                                     crashlytics.apply {
@@ -97,6 +97,7 @@ fun RestaurantListRow(
 @Composable
 fun ErrorFallbackComponent(errorMessage: String) {
     val crashlytics = remember { FirebaseCrashlytics.getInstance() }
+    // Registra el error en crashlytics
     crashlytics.log("Showing error fallback UI: $errorMessage")
 
     Text(
