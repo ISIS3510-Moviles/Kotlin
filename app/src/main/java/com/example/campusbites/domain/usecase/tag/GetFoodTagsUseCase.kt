@@ -8,12 +8,6 @@ class GetFoodTagsUseCase @Inject constructor(
     private val repository: FoodTagRepository
 ) {
     suspend operator fun invoke(): List<FoodTagDomain> {
-        return repository.getFoodTags().map { dto ->
-            FoodTagDomain(
-                id = dto.id,
-                name = dto.name,
-                description = dto.description
-            )
-        }
+        return repository.getFoodTags()
     }
 }
