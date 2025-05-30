@@ -7,12 +7,7 @@ import javax.inject.Inject
 class GetDietaryTagByIdUseCase @Inject constructor(
     private val repository: DietaryTagRepository
 ) {
-    suspend operator fun invoke(id: String): DietaryTagDomain {
-        val dietaryTagDTO = repository.getDietaryTagById(id)
-        return DietaryTagDomain(
-            id = dietaryTagDTO.id,
-            name = dietaryTagDTO.name,
-            description = dietaryTagDTO.description
-        )
+    suspend operator fun invoke(id: String): DietaryTagDomain? { // Devuelve nullable
+        return repository.getDietaryTagById(id)
     }
 }

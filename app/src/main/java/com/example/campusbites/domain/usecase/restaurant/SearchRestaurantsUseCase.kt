@@ -1,49 +1,22 @@
 package com.example.campusbites.domain.usecase.restaurant
 
+import com.example.campusbites.data.mapper.RestaurantMapper // Importar RestaurantMapper
 import com.example.campusbites.domain.model.RestaurantDomain
 import com.example.campusbites.domain.repository.RestaurantRepository
-import com.example.campusbites.domain.usecase.tag.GetDietaryTagByIdUseCase
-import com.example.campusbites.domain.usecase.tag.GetFoodTagByIdUseCase
 import javax.inject.Inject
 
 class SearchRestaurantsUseCase @Inject constructor(
     private val repository: RestaurantRepository,
-    private val getFoodTagByIdUseCase: GetFoodTagByIdUseCase,
-    private val getDietaryTagByIdUseCase: GetDietaryTagByIdUseCase
+    private val restaurantMapper: RestaurantMapper // Inyectar RestaurantMapper
 ) {
     suspend operator fun invoke(query: String): List<RestaurantDomain> {
+        // repository.searchRestaurants(query) devuelve List<RestaurantDTO>
         val dtos = repository.searchRestaurants(query)
 
+        // Mapear cada RestaurantDTO a RestaurantDomain usando el mapper
+        // El mapper se encarga de los tags nulables.
         return dtos.map { dto ->
-            RestaurantDomain(
-                id = dto.id,
-                name = dto.name,
-                description = dto.description,
-                latitude = dto.latitude,
-                longitude = dto.longitude,
-                routeIndications = dto.routeIndications,
-                openingTime = dto.openingTime,
-                closingTime = dto.closingTime,
-                opensHolidays = dto.opensHolidays,
-                opensWeekends = dto.opensWeekends,
-                isActive = dto.isActive,
-                rating = dto.rating,
-                address = dto.address,
-                phone = dto.phone,
-                email = dto.email,
-                overviewPhoto = dto.overviewPhoto,
-                profilePhoto = dto.profilePhoto,
-                photos = dto.photos,
-
-                foodTags = dto.foodTagsIds.map { getFoodTagByIdUseCase(it) },
-                dietaryTags = dto.dietaryTagsIds.map { getDietaryTagByIdUseCase(it) },
-
-                alertsIds = dto.alertsIds,
-                reservationsIds = dto.reservationsIds,
-                suscribersIds = dto.suscribersIds,
-                visitsIds = dto.visitsIds,
-                commentsIds = dto.commentsIds
-            )
+            restaurantMapper.mapDtoToDomain(dto)
         }
     }
 }

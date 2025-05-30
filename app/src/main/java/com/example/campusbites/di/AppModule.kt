@@ -13,7 +13,10 @@ import com.example.campusbites.data.cache.RestaurantLruCache
 import com.example.campusbites.data.cache.SearchCache
 import com.example.campusbites.data.local.LocalRestaurantDataSource
 import com.example.campusbites.data.local.RealmRestaurantDataSource
+import com.example.campusbites.data.local.dao.DietaryTagDao
 import com.example.campusbites.data.local.dao.DraftAlertDao
+import com.example.campusbites.data.local.dao.FoodTagDao
+import com.example.campusbites.data.local.dao.IngredientDao
 import com.example.campusbites.data.local.dao.PendingProductActionDao
 import com.example.campusbites.data.local.dao.ReservationDao
 import com.example.campusbites.data.local.realm.PendingCancellationLocalDataSource
@@ -96,7 +99,6 @@ object AppModule {
         return RestaurantPreferencesRepository(context)
     }
 
-
     @Provides
     @Singleton
     fun provideJson(): Json = Json {
@@ -105,7 +107,6 @@ object AppModule {
         encodeDefaults = true
     }
 
-    // --- Provisión de Mappers ---
     @Provides
     @Singleton
     fun provideReservationMapper(): ReservationMapper {
@@ -158,8 +159,6 @@ object AppModule {
     fun provideAlertMapper(): AlertMapper {
         return AlertMapper()
     }
-    // --- Fin Provisión de Mappers ---
-
 
     @Provides
     @Singleton
@@ -217,7 +216,6 @@ object AppModule {
         return PendingCancellationLocalDataSource(realmConfig)
     }
 
-
     @Provides
     @Singleton
     fun provideDraftAlertRepository(draftAlertDao: DraftAlertDao): DraftAlertRepository {
@@ -236,6 +234,26 @@ object AppModule {
         return appDatabase.pendingProductActionDao()
     }
 
+    // DAOs para Tags e Ingredientes
+    @Provides
+    @Singleton
+    fun provideFoodTagDao(appDatabase: AppDatabase): FoodTagDao {
+        return appDatabase.foodTagDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideDietaryTagDao(appDatabase: AppDatabase): DietaryTagDao {
+        return appDatabase.dietaryTagDao()
+    }
+
+    @Provides
+    @Singleton
+    fun provideIngredientDao(appDatabase: AppDatabase): IngredientDao {
+        return appDatabase.ingredientDao()
+    }
+
+
     @Provides
     @Singleton
     fun provideConnectivityMonitor(@ApplicationContext context: Context): ConnectivityMonitor {
@@ -251,7 +269,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideApplicationScope(): CoroutineScope {
-        return CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        return CoroutineScope(SupervisorJob() + Dispatchers.Default) // Usar Dispatchers.Default o IO
     }
 
     @Provides
@@ -276,7 +294,6 @@ object AppModule {
     fun provideInMemoryReviewCache(applicationScope: CoroutineScope): InMemoryReviewCache {
         return InMemoryReviewCache(applicationScope)
     }
-
 
     @Provides
     fun provideCredentialManager(@ApplicationContext context: Context): CredentialManager {
@@ -306,14 +323,22 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideFoodTagRepository(apiService: ApiService): FoodTagRepository {
-        return FoodTagRepositoryImpl(apiService)
+    fun provideFoodTagRepository(
+        apiService: ApiService,
+        foodTagDao: FoodTagDao, // Añadir DAO
+        tagMapper: TagMapper   // Añadir Mapper
+    ): FoodTagRepository {
+        return FoodTagRepositoryImpl(apiService, foodTagDao, tagMapper)
     }
 
     @Provides
     @Singleton
-    fun provideDietaryTagRepository(apiService: ApiService): DietaryTagRepository {
-        return DietaryTagRepositoryImpl(apiService)
+    fun provideDietaryTagRepository(
+        apiService: ApiService,
+        dietaryTagDao: DietaryTagDao, // Añadir DAO
+        tagMapper: TagMapper      // Añadir Mapper
+    ): DietaryTagRepository {
+        return DietaryTagRepositoryImpl(apiService, dietaryTagDao, tagMapper)
     }
 
     @Provides
@@ -335,10 +360,9 @@ object AppModule {
         productMapper: ProductMapper,
         pendingProductActionDao: PendingProductActionDao,
         connectivityMonitor: ConnectivityMonitor,
-        homeDataRepository: HomeDataRepository, // Inyectar HomeDataRepository
+        homeDataRepository: HomeDataRepository,
         applicationScope: CoroutineScope
     ): ProductRepository {
-        // Pasar homeDataRepository al constructor de ProductRepositoryImpl
         return ProductRepositoryImpl(apiService, productMapper, pendingProductActionDao, connectivityMonitor, homeDataRepository, applicationScope)
     }
 
@@ -354,7 +378,6 @@ object AppModule {
     fun provideFusedLocationProviderClient(@ApplicationContext context: Context): FusedLocationProviderClient {
         return LocationServices.getFusedLocationProviderClient(context)
     }
-
 
     @Provides
     @Singleton
@@ -372,8 +395,11 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideIngredientRepository(apiService: ApiService): IngredientRepository {
-        return IngredientRepositoryImpl(apiService)
+    fun provideIngredientRepository(
+        apiService: ApiService,
+        ingredientDao: IngredientDao // Añadir DAO
+    ): IngredientRepository {
+        return IngredientRepositoryImpl(apiService, ingredientDao)
     }
 
     @Provides
@@ -387,7 +413,6 @@ object AppModule {
     fun provideCreateCommentUseCase(
         commentRepository: CommentRepository
     ) = CreateCommentUseCase(commentRepository)
-
 
     @Module
     @InstallIn(SingletonComponent::class)
@@ -416,8 +441,8 @@ object AppModule {
     object FirebaseModule {
         @Provides
         @Singleton
-        fun provideFirebaseAnalytics(): FirebaseAnalytics {
-            return Firebase.analytics
+        fun provideFirebaseAnalytics(@ApplicationContext context: Context): FirebaseAnalytics { // ApplicationContext para Firebase
+            return FirebaseAnalytics.getInstance(context)
         }
     }
 }
