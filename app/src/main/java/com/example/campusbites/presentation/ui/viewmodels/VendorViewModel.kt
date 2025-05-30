@@ -53,7 +53,6 @@ class VendorViewModel @Inject constructor(
     val isNetworkAvailable: StateFlow<Boolean> = connectivityMonitor.isNetworkAvailable
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), true)
 
-    // Estados para los campos editables
     val editableName = MutableStateFlow("")
     val editableDescription = MutableStateFlow("")
     val editableAddress = MutableStateFlow("")
@@ -65,7 +64,6 @@ class VendorViewModel @Inject constructor(
     val editableOpensHolidays = MutableStateFlow(false)
     val editableIsActive = MutableStateFlow(false)
 
-    // Estados para el proceso de guardado
     private val _isSaving = MutableStateFlow(false)
     val isSaving: StateFlow<Boolean> = _isSaving.asStateFlow()
 
@@ -75,12 +73,10 @@ class VendorViewModel @Inject constructor(
     private val _saveErrorMessage = MutableStateFlow<String?>(null)
     val saveErrorMessage: StateFlow<String?> = _saveErrorMessage.asStateFlow()
 
-    private var syncJob: Job? = null // Para controlar la corrutina de sincronización
+    private var syncJob: Job? = null
 
-    // Formateador para mostrar la hora en la UI (HH:mm)
     private val uiTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-    // Formateador para parsear el formato ISO 8601 completo (ej. 2024-03-08T10:00:00.000Z)
-    private val isoDateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME // Para OffsetDateTime
+    private val isoDateTimeFormatter = DateTimeFormatter.ISO_OFFSET_DATE_TIME
 
     init {
         viewModelScope.launch {
@@ -91,7 +87,6 @@ class VendorViewModel @Inject constructor(
                     editableAddress.value = it.address
                     editablePhone.value = it.phone
                     editableEmail.value = it.email
-                    // ¡Aquí es donde cambiamos la inicialización para la UI!
                     editableOpeningTime.value = formatIsoToUiTime(it.openingTime)
                     editableClosingTime.value = formatIsoToUiTime(it.closingTime)
                     editableOpensWeekends.value = it.opensWeekends
@@ -101,7 +96,6 @@ class VendorViewModel @Inject constructor(
             }
         }
 
-        // Observar la conectividad para iniciar la sincronización cuando la red esté disponible
         viewModelScope.launch {
             isNetworkAvailable.collect { isConnected ->
                 if (isConnected) {
@@ -109,29 +103,25 @@ class VendorViewModel @Inject constructor(
                     syncPendingRestaurantUpdates()
                 } else {
                     Log.d("VendorViewModel", "Network lost. Pausing sync attempts.")
-                    syncJob?.cancel() // Cancelar cualquier intento de sincronización en curso
+                    syncJob?.cancel()
                 }
             }
         }
     }
 
-    // Función de utilidad para formatear la cadena ISO 8601 a HH:mm para la UI
     private fun formatIsoToUiTime(isoTime: String): String {
         return try {
-            // Parsear como OffsetDateTime para manejar la 'Z' (zona horaria UTC)
             val dateTime = OffsetDateTime.parse(isoTime, isoDateTimeFormatter)
             dateTime.toLocalTime().format(uiTimeFormatter)
         } catch (e: DateTimeParseException) {
             Log.e("VendorViewModel", "Error parsing ISO time for UI: $isoTime", e)
-            "" // Devolver cadena vacía si hay un error de parseo
+            ""
         }
     }
 
-    // Función de utilidad para convertir HH:mm de la UI a un formato ISO 8601 completo para el backend
     private fun formatUiTimeToIso(uiTime: String): String {
         return try {
             val localTime = LocalTime.parse(uiTime, uiTimeFormatter)
-            // Combinar con la fecha actual y zona horaria UTC para formar un ISO 8601 completo
             OffsetDateTime.now().withHour(localTime.hour).withMinute(localTime.minute).withSecond(0).withNano(0)
                 .format(isoDateTimeFormatter)
         } catch (e: DateTimeParseException) {
@@ -149,24 +139,21 @@ class VendorViewModel @Inject constructor(
         _errorMessage.value = null
 
         viewModelScope.launch {
-            // 1. Intentar desde LRU Cache
             var cachedRestaurant = restaurantLruCache.get(restaurantId)
             if (cachedRestaurant != null) {
                 _restaurant.value = cachedRestaurant
                 _isLoading.value = false
                 Log.d("VendorViewModel", "Restaurant $restaurantId loaded from LRU Cache.")
-                // Si hay red, intentar actualizar en segundo plano
                 if (isNetworkAvailable.value) {
                     fetchRestaurantFromServer(restaurantId, true)
                 }
                 return@launch
             }
 
-            // 2. Intentar desde HomeDataRepository (DataStore) si no está en LRU
             cachedRestaurant = homeDataRepository.nearbyRestaurantsFlow.first().find { it.id == restaurantId }
             if (cachedRestaurant != null) {
                 _restaurant.value = cachedRestaurant
-                restaurantLruCache.put(restaurantId, cachedRestaurant) // Añadir a LRU
+                restaurantLruCache.put(restaurantId, cachedRestaurant)
                 _isLoading.value = false
                 Log.d("VendorViewModel", "Restaurant $restaurantId loaded from HomeDataRepository.")
                 if (isNetworkAvailable.value) {
@@ -175,7 +162,6 @@ class VendorViewModel @Inject constructor(
                 return@launch
             }
 
-            // 3. Si no está en caché, intentar desde la red si hay conexión
             if (isNetworkAvailable.value) {
                 fetchRestaurantFromServer(restaurantId, false)
             } else {
@@ -260,7 +246,6 @@ class VendorViewModel @Inject constructor(
                     return@launch
                 }
 
-                // 1. Actualizar el estado local del restaurante inmediatamente
                 _restaurant.update { current ->
                     current?.copy(
                         name = updateDTO.name ?: current.name,
@@ -268,7 +253,6 @@ class VendorViewModel @Inject constructor(
                         address = updateDTO.address ?: current.address,
                         phone = updateDTO.phone ?: current.phone,
                         email = updateDTO.email ?: current.email,
-                        // Asegúrate de que el _restaurant.value siga teniendo el formato ISO completo
                         openingTime = updateDTO.openingTime ?: current.openingTime,
                         closingTime = updateDTO.closingTime ?: current.closingTime,
                         opensWeekends = updateDTO.opensWeekends ?: current.opensWeekends,
@@ -276,21 +260,19 @@ class VendorViewModel @Inject constructor(
                         isActive = updateDTO.isActive ?: current.isActive
                     )
                 }
-                // Actualizar también los campos editables para reflejar el nuevo estado (en formato HH:mm)
                 _restaurant.value?.let {
                     editableName.value = it.name
                     editableDescription.value = it.description
                     editableAddress.value = it.address
                     editablePhone.value = it.phone
                     editableEmail.value = it.email
-                    editableOpeningTime.value = formatIsoToUiTime(it.openingTime) // Usar la función de formateo
-                    editableClosingTime.value = formatIsoToUiTime(it.closingTime) // Usar la función de formateo
+                    editableOpeningTime.value = formatIsoToUiTime(it.openingTime)
+                    editableClosingTime.value = formatIsoToUiTime(it.closingTime)
                     editableOpensWeekends.value = it.opensWeekends
                     editableOpensHolidays.value = it.opensHolidays
                     editableIsActive.value = it.isActive
                 }
 
-                // 2. PERSISTIR LA ACTUALIZACIÓN EN CACHÉ LRU Y DATASTORE
                 _restaurant.value?.let { updatedRestaurant ->
                     restaurantLruCache.put(updatedRestaurant.id, updatedRestaurant)
                     val currentNearby = homeDataRepository.nearbyRestaurantsFlow.first().toMutableList()
@@ -304,7 +286,6 @@ class VendorViewModel @Inject constructor(
                     Log.d("VendorViewModel", "Restaurant ${updatedRestaurant.id} updated in LRU Cache and DataStore.")
                 }
 
-                // 3. Luego, intenta enviar al servidor
                 val success = updateRestaurantUseCase(currentRestaurantId, updateDTO)
 
                 if (success) {
@@ -315,7 +296,6 @@ class VendorViewModel @Inject constructor(
                     _saveSuccess.value = false
                     _saveErrorMessage.value = "Failed to save changes. Will retry when online."
                     Log.w("VendorViewModel", "Restaurant update failed, saved locally for retry.")
-                    // Si falló, iniciar o reanudar la sincronización
                     syncPendingRestaurantUpdates()
                 }
 
@@ -323,20 +303,17 @@ class VendorViewModel @Inject constructor(
                 _saveSuccess.value = false
                 _saveErrorMessage.value = "An error occurred: ${e.localizedMessage}"
                 Log.e("VendorViewModel", "Error saving restaurant changes: ${e.message}", e)
-                syncPendingRestaurantUpdates() // Asegurarse de que se intente sincronizar
+                syncPendingRestaurantUpdates()
             } finally {
                 _isSaving.value = false
             }
         }
     }
 
-    // Lógica de sincronización sin WorkManager
     fun syncPendingRestaurantUpdates() {
-        // Cancelar cualquier trabajo de sincronización anterior para evitar duplicados
         syncJob?.cancel()
 
         syncJob = viewModelScope.launch {
-            // Solo intentar sincronizar si hay red
             if (!isNetworkAvailable.value) {
                 Log.d("VendorViewModel", "No network available for sync. Waiting...")
                 return@launch
@@ -345,9 +322,9 @@ class VendorViewModel @Inject constructor(
             Log.d("VendorViewModel", "Starting pending restaurant updates sync...")
             var hasMoreUpdates = true
             var retryCount = 0
-            val maxRetries = 3 // Limitar los reintentos para evitar bucles infinitos
-            val initialDelayMs = 1000L // 1 segundo
-            val maxDelayMs = 10000L // 10 segundos
+            val maxRetries = 3
+            val initialDelayMs = 1000L
+            val maxDelayMs = 10000L
 
             while (hasMoreUpdates && retryCount < maxRetries) {
                 val pendingUpdates = localRestaurantDataSource.getAllPendingUpdates().firstOrNull() ?: emptyList()
@@ -363,7 +340,7 @@ class VendorViewModel @Inject constructor(
                     try {
                         val updateDTO = localRestaurantDataSource.deserializeUpdatePayload(update.updatePayloadJson)
                         Log.d("VendorViewModel", "Attempting to sync update for restaurant: ${update.restaurantId}")
-                        val success = updateRestaurantUseCase(update.restaurantId, updateDTO) // Esto ya maneja el guardado local si falla
+                        val success = updateRestaurantUseCase(update.restaurantId, updateDTO)
 
                         if (success) {
                             Log.d("VendorViewModel", "Successfully synced update for restaurant: ${update.restaurantId}. Deleting from local storage.")
@@ -371,12 +348,10 @@ class VendorViewModel @Inject constructor(
                         } else {
                             Log.w("VendorViewModel", "Failed to sync update for restaurant: ${update.restaurantId}. Will retry.")
                             currentBatchSuccessful = false
-                            // No eliminamos la actualización, se reintentará en el próximo ciclo
                         }
                     } catch (e: Exception) {
                         Log.e("VendorViewModel", "Exception during sync for restaurant: ${update.restaurantId}", e)
                         currentBatchSuccessful = false
-                        // No eliminamos la actualización
                     }
                 }
 
@@ -384,9 +359,8 @@ class VendorViewModel @Inject constructor(
                     retryCount++
                     val delayTime = (initialDelayMs * (1 shl (retryCount - 1))).coerceAtMost(maxDelayMs)
                     Log.w("VendorViewModel", "Batch failed. Retrying in ${delayTime / 1000} seconds. Retry count: $retryCount")
-                    delay(delayTime) // Esperar antes de reintentar
+                    delay(delayTime)
                 } else {
-                    // Si el batch fue exitoso, intentar el siguiente inmediatamente
                     Log.d("VendorViewModel", "Batch successful. Checking for more updates.")
                 }
             }
@@ -404,6 +378,6 @@ class VendorViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        syncJob?.cancel() // Asegurarse de cancelar el trabajo de sincronización cuando el ViewModel se destruye
+        syncJob?.cancel()
     }
 }

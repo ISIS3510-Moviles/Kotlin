@@ -167,16 +167,16 @@ class FoodDetailViewModel @Inject constructor(
                 try {
                     Log.d("FoodDetailVM", "Online. Updating user ${currentUser.id} favorites on server for product $productId to $newFavoriteState")
                     updateUserUseCase(currentUser.id, userWithTargetFavorites)
-                    _uiEvent.emit(UiEvent.ShowMessage(if (newFavoriteState) "Agregado a favoritos" else "Eliminado de favoritos"))
+                    _uiEvent.emit(UiEvent.ShowMessage(if (newFavoriteState) "Added to favorites" else "Removed from favorites"))
                 } catch (e: Exception) {
                     Log.e("FoodDetailVM", "Error updating user on server for $productId, queueing: ${e.message}", e)
                     pendingFavoriteActionDataSource.addOrUpdateAction(currentUser.id, productId, newFavoriteState)
-                    _uiEvent.emit(UiEvent.ShowMessage("Error de red. Tu cambio de favorito se guardó y se procesará más tarde."))
+                    _uiEvent.emit(UiEvent.ShowMessage("Network error. Your favorite change was saved and will be processed later."))
                 }
             } else {
                 Log.d("FoodDetailVM", "Offline. Queueing favorite action for user ${currentUser.id}, product $productId to $newFavoriteState")
                 pendingFavoriteActionDataSource.addOrUpdateAction(currentUser.id, productId, newFavoriteState)
-                _uiEvent.emit(UiEvent.ShowMessage("Estás offline. Tu cambio de favorito se guardó y se procesará cuando vuelvas a estar en línea."))
+                _uiEvent.emit(UiEvent.ShowMessage("You're offline. Your favorite change was saved and will be processed when you're back online."))
             }
         }
     }
@@ -263,7 +263,7 @@ class FoodDetailViewModel @Inject constructor(
                     currentUserState = userToUpdateOnServer // Mantener nuestro estado local sincronizado
 
                     pendingFavoriteActionDataSource.removeAction(action.id)
-                    _uiEvent.emit(UiEvent.ShowMessage("Acción pendiente de favorito para '${action.productId}' procesada."))
+                    _uiEvent.emit(UiEvent.ShowMessage("Pending favorite action for '${action.productId}' has been processed."))
                     Log.i("FoodDetailVM", "Successfully processed pending action for product ${action.productId}")
                 } catch (e: Exception) {
                     Log.e("FoodDetailVM", "Flush: Failed to process pending favorite action for product ${action.productId} on server: ${e.message}", e)

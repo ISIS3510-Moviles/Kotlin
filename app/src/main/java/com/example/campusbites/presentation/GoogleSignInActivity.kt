@@ -182,7 +182,7 @@ class GoogleSignInActivity : AppCompatActivity() {
                 onFailure = { error ->
                     Log.e(TAG, "❌ Error al registrar el usuario: ${error.message}")
                     runOnUiThread {
-                        Toast.makeText(this, "Error al registrar usuario", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this, "Error registering user", Toast.LENGTH_SHORT).show()
                     }
                 }
             )

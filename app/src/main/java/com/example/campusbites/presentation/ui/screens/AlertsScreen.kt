@@ -81,7 +81,7 @@ fun AlertsScreen(
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
-                            text = "No hay alertas para mostrar en este momento. ¡Intenta refrescar o crea una nueva!",
+                            text = "There are no alerts to display at the moment. Try refreshing or create a new one!",
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
