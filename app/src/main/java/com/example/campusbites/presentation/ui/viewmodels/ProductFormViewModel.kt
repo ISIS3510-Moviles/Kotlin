@@ -1,5 +1,7 @@
 package com.example.campusbites.presentation.ui.viewmodels
 
+import android.os.Bundle
+import android.provider.Settings.Global.putString
 import android.util.Log
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -16,6 +18,7 @@ import com.example.campusbites.domain.usecase.product.GetProductByIdUseCase
 import com.example.campusbites.domain.usecase.product.UpdateProductUseCase
 import com.example.campusbites.domain.usecase.tag.GetDietaryTagsUseCase
 import com.example.campusbites.domain.usecase.tag.GetFoodTagsUseCase
+import com.google.firebase.analytics.FirebaseAnalytics
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,7 +41,9 @@ class ProductFormViewModel @Inject constructor(
     private val getFoodTagsUseCase: GetFoodTagsUseCase,
     private val getDietaryTagsUseCase: GetDietaryTagsUseCase,
     private val getIngredientsUseCase: GetIngredientsUseCase,
-    private val connectivityMonitor: ConnectivityMonitor
+    private val connectivityMonitor: ConnectivityMonitor,
+    private val firebaseAnalytics: FirebaseAnalytics
+  
 ) : ViewModel() {
 
     val restaurantId: String = savedStateHandle.get<String>("restaurantId") ?: ""
@@ -168,8 +173,17 @@ class ProductFormViewModel @Inject constructor(
                         dietaryTagsIds = currentState.selectedDietaryTagIds.toList(),
                         ingredientsIds = currentState.selectedIngredientIds.toList()
                     )
-                    createProductUseCase(createDto)
+                    val createdProduct = createProductUseCase(createDto)
+
                     _uiEvent.emit(UiEvent.ShowMessage("Product created successfully!"))
+
+                    val params = Bundle().apply {
+                        putString("restaurant_id", restaurantId)
+                        putString("product_id", createdProduct.id)
+                        putString("product_name", createdProduct.name)
+                    }
+                    firebaseAnalytics.logEvent("product_added", params)
+                    Log.d("Analytics", "Logged product_added event for restaurant: $restaurantId, product: ${createdProduct?.name}")
                 }
                 _uiEvent.emit(UiEvent.NavigateBack)
             } catch (e: Exception) {
