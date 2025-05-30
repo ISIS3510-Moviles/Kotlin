@@ -40,7 +40,6 @@ fun VendorScreen(
     val errorMessage by vendorViewModel.errorMessage.collectAsState()
     val isNetworkAvailable by vendorViewModel.isNetworkAvailable.collectAsState()
 
-    // Estados para los campos editables
     val editableName by vendorViewModel.editableName.collectAsState()
     val editableDescription by vendorViewModel.editableDescription.collectAsState()
     val editableAddress by vendorViewModel.editableAddress.collectAsState()
@@ -52,7 +51,6 @@ fun VendorScreen(
     val editableOpensHolidays by vendorViewModel.editableOpensHolidays.collectAsState()
     val editableIsActive by vendorViewModel.editableIsActive.collectAsState()
 
-    // Estados para el proceso de guardado
     val isSaving by vendorViewModel.isSaving.collectAsState()
     val saveSuccess by vendorViewModel.saveSuccess.collectAsState()
     val saveErrorMessage by vendorViewModel.saveErrorMessage.collectAsState()
@@ -66,7 +64,6 @@ fun VendorScreen(
         }
     }
 
-    // Mostrar Snackbar para el estado de guardado
     LaunchedEffect(saveSuccess, saveErrorMessage) {
         when {
             saveSuccess == true -> {
@@ -252,8 +249,8 @@ private fun EditableRestaurantDetailsSection(
     address: String, onAddressChange: (String) -> Unit,
     phone: String, onPhoneChange: (String) -> Unit,
     email: String, onEmailChange: (String) -> Unit,
-    openingTime: String, onOpeningTimeChange: (String) -> Unit, // Ahora es HH:mm
-    closingTime: String, onClosingTimeChange: (String) -> Unit, // Ahora es HH:mm
+    openingTime: String, onOpeningTimeChange: (String) -> Unit,
+    closingTime: String, onClosingTimeChange: (String) -> Unit,
     opensWeekends: Boolean, onOpensWeekendsChange: (Boolean) -> Unit,
     opensHolidays: Boolean, onOpensHolidaysChange: (Boolean) -> Unit,
     isActive: Boolean, onIsActiveChange: (Boolean) -> Unit
@@ -270,7 +267,6 @@ private fun EditableRestaurantDetailsSection(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Campos de texto editables
         OutlinedTextField(
             value = name,
             onValueChange = onNameChange,
@@ -303,9 +299,6 @@ private fun EditableRestaurantDetailsSection(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp)
         )
 
-        // --- Time Pickers para Opening Time y Closing Time ---
-        // El formato de la UI ya es HH:mm, no necesitamos un formateador aquí para mostrarlo.
-        // Pero sí para parsear la hora inicial del TimePicker.
         val uiTimeFormatter = remember { DateTimeFormatter.ofPattern("HH:mm") }
 
         // Opening Time
@@ -316,11 +309,10 @@ private fun EditableRestaurantDetailsSection(
             onClick = { showOpeningTimePicker = true }
         )
         if (showOpeningTimePicker) {
-            // Intentar parsear la hora actual para inicializar el TimePicker
             val initialOpeningLocalTime = try {
                 LocalTime.parse(openingTime, uiTimeFormatter)
             } catch (e: DateTimeParseException) {
-                LocalTime.of(0, 0) // Valor por defecto si no se puede parsear
+                LocalTime.of(0, 0)
             }
 
             TimePickerDialog(
@@ -339,7 +331,7 @@ private fun EditableRestaurantDetailsSection(
         var showClosingTimePicker by remember { mutableStateOf(false) }
         TimeInputRow(
             label = "Closing Time",
-            time = closingTime, // closingTime ya viene en HH:mm del ViewModel
+            time = closingTime,
             onClick = { showClosingTimePicker = true }
         )
         if (showClosingTimePicker) {
@@ -360,9 +352,6 @@ private fun EditableRestaurantDetailsSection(
                 initialMinute = initialClosingLocalTime.minute
             )
         }
-        // --- Fin de Time Pickers ---
-
-        // Campos booleanos editables con Switch
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -393,7 +382,7 @@ private fun EditableRestaurantDetailsSection(
 @Composable
 private fun TimeInputRow(
     label: String,
-    time: String, // Este 'time' ya debería venir en HH:mm del ViewModel
+    time: String,
     onClick: () -> Unit
 ) {
     OutlinedButton(

@@ -45,7 +45,7 @@ fun ManageProductsScreen(
     val uiState by viewModel.uiState.collectAsState()
     val isNetworkAvailable by viewModel.isNetworkAvailable.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current // No se usa, pero puede ser útil para Toasts si se necesitan
+    val context = LocalContext.current
 
     LaunchedEffect(key1 = Unit) {
         viewModel.uiEvent.collect { event ->
@@ -59,13 +59,6 @@ fun ManageProductsScreen(
             }
         }
     }
-
-    // Este LaunchedEffect ya no es necesario porque la carga inicial se maneja en el init del ViewModel.
-    // El ViewModel se crea una vez para esta pantalla (con el restaurantId del SavedStateHandle),
-    // y su bloque init se encargará de la carga.
-    // LaunchedEffect(restaurantId) {
-    //    viewModel.refreshProducts() // O viewModel.tryInitialRefresh() si prefieres ese nombre
-    // }
 
 
     Scaffold(
@@ -119,18 +112,17 @@ fun ManageProductsScreen(
                 }
             }
 
-            if (uiState.isLoading) { // isLoading ahora cubre la carga inicial y los refrescos
+            if (uiState.isLoading) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             } else if (uiState.errorMessage != null) {
                 Box(modifier = Modifier.fillMaxSize().padding(16.dp), contentAlignment = Alignment.Center) {
                     Text(
-                        text = uiState.errorMessage!!, // !! es seguro aquí porque la condición lo verifica
+                        text = uiState.errorMessage!!,
                         color = MaterialTheme.colorScheme.error,
                         textAlign = TextAlign.Center
                     )
-                    // Podrías añadir un botón de reintento aquí
                     Spacer(modifier = Modifier.height(16.dp))
                     Button(onClick = { viewModel.refreshProducts() }) {
                         Text("Retry")

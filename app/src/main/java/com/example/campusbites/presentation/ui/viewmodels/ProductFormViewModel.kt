@@ -37,7 +37,7 @@ class ProductFormViewModel @Inject constructor(
     private val getProductByIdUseCase: GetProductByIdUseCase,
     private val getFoodTagsUseCase: GetFoodTagsUseCase,
     private val getDietaryTagsUseCase: GetDietaryTagsUseCase,
-    private val getIngredientsUseCase: GetIngredientsUseCase, // Inyectar GetIngredientsUseCase
+    private val getIngredientsUseCase: GetIngredientsUseCase,
     private val connectivityMonitor: ConnectivityMonitor
 ) : ViewModel() {
 
@@ -65,11 +65,11 @@ class ProductFormViewModel @Inject constructor(
             try {
                 val foodTags = getFoodTagsUseCase()
                 val dietaryTags = getDietaryTagsUseCase()
-                val ingredients = getIngredientsUseCase() // Cargar todos los ingredientes
+                val ingredients = getIngredientsUseCase()
                 _uiState.update { it.copy(
                     allFoodTags = foodTags,
                     allDietaryTags = dietaryTags,
-                    allIngredients = ingredients // Actualizar estado con todos los ingredientes
+                    allIngredients = ingredients
                 )}
 
                 if (isEditMode && productId != null) {
@@ -82,7 +82,7 @@ class ProductFormViewModel @Inject constructor(
                             photoUrl = product.photo,
                             selectedFoodTagIds = product.foodTags.map { tag -> tag.id }.toSet(),
                             selectedDietaryTagIds = product.dietaryTags.map { tag -> tag.id }.toSet(),
-                            selectedIngredientIds = product.ingredientsIds.toSet(), // Pre-seleccionar ingredientes
+                            selectedIngredientIds = product.ingredientsIds.toSet(),
                             isLoading = false
                         )
                     }
@@ -197,13 +197,13 @@ class ProductFormViewModel @Inject constructor(
         val name: String = "",
         val description: String = "",
         val price: String = "",
-        val photoUrl: String = "",
+        val photoUrl: String = "https://img.freepik.com/free-vector/hand-drawn-pantry_23-2148708474.jpg?semt=ais_hybrid&w=740",
         val selectedFoodTagIds: Set<String> = emptySet(),
         val selectedDietaryTagIds: Set<String> = emptySet(),
-        val selectedIngredientIds: Set<String> = emptySet(), // Nuevo estado para ingredientes seleccionados
+        val selectedIngredientIds: Set<String> = emptySet(),
         val allFoodTags: List<FoodTagDomain> = emptyList(),
         val allDietaryTags: List<DietaryTagDomain> = emptyList(),
-        val allIngredients: List<IngredientDomain> = emptyList(), // Nuevo estado para todos los ingredientes
+        val allIngredients: List<IngredientDomain> = emptyList(),
         val isLoading: Boolean = false,
         val formError: String? = null
     )
